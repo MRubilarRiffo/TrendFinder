@@ -1,46 +1,17 @@
 const axios = require("axios");
 const { createProduct } = require("../handlers/product/createProduct");
-const { createStock } = require("../handlers/stock/createStock");
 const { getCategoryByName } = require("../handlers/category/getCategoryByName");
 const { createCategory } = require("../handlers/category/createCategory");
 const { getProductFindByPk } = require("../handlers/product/getProductFindByPk");
+const { createSale } = require("../handlers/Sale/createSale");
+const { getStockFindOne } = require("../handlers/stock/getStockFindOne");
+const { createStock } = require("../handlers/stock/createStock");
 
 const API = process.env.API_DROPI_GET_PRODUCTS;
 
-const categories = [
-    "Mascotas",
-    "Moda",
-    "Tecnología",
-    "Cocina",
-    "Belleza",
-    "Salud",
-    "Hogar",
-    "Natural Home",
-    "Deportes",
-    "Sex shop",
-    "Bebé",
-    "Aseo",
-    "Bienestar",
-    "Camping",
-    "Pesca",
-    "Defensa personal",
-    "Vehículo",
-    "Juguetería",
-    "Otro"
-];
-
-const getProducts = async (currentPage = 1) => {
+const scraper = async (currentPage = 1) => {
     try {
-        if (currentPage === 1) {
-            for (const category of categories) {
-                let categoryInstance = await getCategoryByName(category);
-                if (!categoryInstance) {
-                    categoryInstance = await createCategory({ name: category });
-                };
-            };
-        };
-
-        const limit = 10;
+        const limit = 500;
         const offset = (currentPage - 1) * limit;
 
         const body = {
@@ -95,37 +66,44 @@ const getProducts = async (currentPage = 1) => {
                     name: name,
                     image: images.join(',')
                 });
-                
-            }
+
+                if (categories && categories.length > 0) {
+                    // Iteramos sobre cada objeto de la array de categorías
+                    for (const catObj of categories) {
+                        // Verificamos que exista la propiedad 'name' en el objeto
+                        if (catObj && catObj.name) {
+                            // Obtenemos el nombre de la categoría del objeto
+                            const categoryName = catObj.name;
+                            // Buscamos la categoría en la base de datos
+                            let categoryInstance = await getCategoryByName(categoryName);
+                            // Si la categoría no existe, la creamos
+                            if (!categoryInstance) {
+                                categoryInstance = await createCategory({ name: categoryName });
+                            };
+                            // Asociamos la categoría con el producto
+                            await product.addCategory(categoryInstance);
+                        };
+                    };
+                };
+            };
             
             if (!product.id) return null;
 
-            if (categories && categories.length > 0) {
-                // Iteramos sobre cada objeto de la array de categorías
-                for (const catObj of categories) {
-                    // Verificamos que exista la propiedad 'name' en el objeto
-                    if (catObj && catObj.name) {
-                        // Obtenemos el nombre de la categoría del objeto
-                        const categoryName = catObj.name;
-                        // Buscamos la categoría en la base de datos
-                        let categoryInstance = await getCategoryByName(categoryName);
-                        // Si la categoría no existe, la creamos
-                        if (!categoryInstance) {
-                            categoryInstance = await createCategory({ name: categoryName });
-                        }
-                        // Asociamos la categoría con el producto
-                        await product.addCategory(categoryInstance);
-                    }
-                }
-            }
+
+            const lastStock = await getStockFindOne(product.id);
             
+            if (lastStock) {
+                const unitsSold = lastStock.quantity - stock;
+                await createSale(product.id, unitsSold);
+            };
+
             return createStock(product.id, stock);
         });
 
         await Promise.all(productPromises);
 
-        if (currentPage !== totalPages) {
-            await getProducts(currentPage + 1, count);
+        if (currentPage < totalPages) {
+            await scraper(currentPage + 1, count);
         };
 
         return;
@@ -134,4 +112,4 @@ const getProducts = async (currentPage = 1) => {
     };
 };
 
-module.exports = { getProducts };
+module.exports = { scraper };

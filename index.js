@@ -1,7 +1,8 @@
 const server = require('./src/server');
 const cron = require('node-cron');
 const { conn } = require('./src/db');
-const { getProducts } = require('./src/scraper/getProducts');
+const { scraper } = require('./src/scraper/scraper');
+const { verifyCategory } = require('./src/scraper/verifyCategory');
 
 const PORT = 3001;
 
@@ -11,7 +12,8 @@ const executeTask = async () => {
 
 conn.sync({ force: false })
     .then( async () => {
-        await getProducts();
+        await verifyCategory();
+        await scraper();
     })
     .then(() => {
         server.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
