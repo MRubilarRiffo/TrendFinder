@@ -1,6 +1,6 @@
 const { Product } = require('../../db');
 
-const updateProducts_h = async (productId, updateProduct) => {
+const updateProduct = async (productId, updateProduct) => {
     try {
         const product = await Product.findByPk(productId);
 
@@ -14,4 +14,4 @@ const updateProducts_h = async (productId, updateProduct) => {
     };
 };
 
-module.exports = { updateProducts_h };
+module.exports = { updateProduct };

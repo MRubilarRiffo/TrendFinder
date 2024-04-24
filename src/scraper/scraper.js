@@ -8,6 +8,14 @@ const { getStockFindOne } = require("../handlers/stock/getStockFindOne");
 const { createStock } = require("../handlers/stock/createStock");
 
 const API = process.env.API_DROPI_GET_PRODUCTS;
+const DROPI_IMG_URL = process.env.DROPI_IMG_URL;
+const DROPI_IMG_URLS3 = process.env.DROPI_IMG_URLS3;
+const DROPI_DETAILS_PRODUCTS = process.env.DROPI_DETAILS_PRODUCTS;
+
+function convertirString(inputString) {
+    const outputString = inputString.toLowerCase().replace(/ /g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+    return outputString;
+  }
 
 const scraper = async (currentPage = 1) => {
     try {
@@ -17,7 +25,7 @@ const scraper = async (currentPage = 1) => {
         const body = {
             "privated_product": false,
             "bod": null,
-            "stockmayor": 1,
+            "stockmayor": null,
             "no_count": false,
             "order_by": "id",
             "order_type": "asc",
@@ -43,28 +51,31 @@ const scraper = async (currentPage = 1) => {
 
         console.log("page " + currentPage + " de " + totalPages);
 
-        const productPromises = objects.map(async ({ id, name, stock, gallery, categories }) => {
+        const productPromises = objects.map(async ({ id, name, stock, gallery, categories, description, sale_price }) => {
             if (!id || !name || !stock) return null;
-
-            let images = [];
-
-            if (gallery && gallery.length > 0) {
-                gallery.forEach(item => {
-                    if (item.url) {
-                        images.push(`https://api.dropi.cl/${item.url}`);
-                    } else if (item.urlS3) {
-                        images.push(`https://d39ru7awumhhs2.cloudfront.net/${item.urlS3}`);
-                    };
-                });
-            };
 
             let product = await getProductFindByPk(id);
 
             if (!product) {
+                let images = [];
+
+                if (gallery && gallery.length > 0) {
+                    gallery.forEach(item => {
+                        if (item.url) {
+                            images.push(`${DROPI_IMG_URL}${item.url}`);
+                        } else if (item.urlS3) {
+                            images.push(`${DROPI_IMG_URLS3}${item.urlS3}`);
+                        };
+                    });
+                };
+
                 product = await createProduct({
                     id: id,
                     name: name,
-                    image: images.join(',')
+                    image: images.join(','),
+                    description: description,
+                    sale_price: sale_price,
+                    url: `${DROPI_DETAILS_PRODUCTS}${id}/${convertirString(name)}`,
                 });
 
                 if (categories && categories.length > 0) {
@@ -89,10 +100,9 @@ const scraper = async (currentPage = 1) => {
             
             if (!product.id) return null;
 
-
             const lastStock = await getStockFindOne(product.id);
             
-            if (lastStock) {
+            if (lastStock && lastStock.quantity > stock) {
                 const unitsSold = lastStock.quantity - stock;
                 await createSale(product.id, unitsSold);
             };

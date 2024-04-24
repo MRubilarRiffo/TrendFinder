@@ -13,6 +13,15 @@ module.exports = (sequelize) => {
         },
         image: {
             type: DataTypes.TEXT,
-        }
+        },
+        description: {
+            type: DataTypes.TEXT,
+        },
+        sale_price: {
+            type: DataTypes.INTEGER,
+        },
+        url: {
+            type: DataTypes.STRING,
+        },
     });
 };
