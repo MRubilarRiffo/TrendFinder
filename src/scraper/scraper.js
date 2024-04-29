@@ -6,6 +6,7 @@ const { getProductFindByPk } = require("../handlers/product/getProductFindByPk")
 const { createSale } = require("../handlers/Sale/createSale");
 const { getStockFindOne } = require("../handlers/stock/getStockFindOne");
 const { createStock } = require("../handlers/stock/createStock");
+const { logMessage } = require("../helpers/logMessage");
 
 const API = process.env.API_DROPI_GET_PRODUCTS;
 const DROPI_IMG_URL = process.env.DROPI_IMG_URL;
@@ -15,7 +16,7 @@ const DROPI_DETAILS_PRODUCTS = process.env.DROPI_DETAILS_PRODUCTS;
 function convertirString(inputString) {
     const outputString = inputString.toLowerCase().replace(/ /g, '-').replace(/[^a-zA-Z0-9-]/g, '');
     return outputString;
-  }
+}
 
 const scraper = async (currentPage = 1) => {
     try {
@@ -49,7 +50,7 @@ const scraper = async (currentPage = 1) => {
 
         const totalPages = Math.ceil(count / limit);
 
-        console.log("page " + currentPage + " de " + totalPages);
+        logMessage("page " + currentPage + " de " + totalPages);
 
         const productPromises = objects.map(async ({ id, name, stock, gallery, categories, description, sale_price }) => {
             if (!id || !name || !stock) return null;
@@ -105,9 +106,15 @@ const scraper = async (currentPage = 1) => {
             if (lastStock && lastStock.quantity > stock) {
                 const unitsSold = lastStock.quantity - stock;
                 await createSale(product.id, unitsSold);
+                lastStock.quantity = stock;
+                await lastStock.save();
             };
 
-            return createStock(product.id, stock);
+            if (!lastStock) {
+                await createStock(product.id, stock);
+            };
+
+            return null;
         });
 
         await Promise.all(productPromises);
@@ -118,7 +125,7 @@ const scraper = async (currentPage = 1) => {
 
         return;
     } catch (error) {
-        console.log(error);
+        logMessage(error);
     };
 };
 

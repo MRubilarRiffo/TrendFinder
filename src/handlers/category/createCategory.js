@@ -1,4 +1,5 @@
 const { Category } = require('../../db');
+const { logMessage } = require('../../helpers/logMessage');
 
 const createCategory = async (props) => {
     try {
@@ -6,7 +7,7 @@ const createCategory = async (props) => {
 
         return createdCategory;
     } catch (error) {
-        console.error('Error al crear la categoría:', error);
+        logMessage('Error al crear la categoría:', error);
         throw error; // Propaga el error para que sea manejado por el código que llama a esta función
     };
 };

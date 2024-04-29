@@ -1,10 +1,12 @@
 const { createProducts_h } = require('../../handlers/product/createProduct');
+const { logMessage } = require('../../helpers/logMessage');
 
 const createProduct = async (req, res, next) => {
     try {
         const { name, id, stock, image, category } = req.body;
 
         if (!name || !id || stock < 0) {
+            logMessage('missing data for registration');
             throw Error('missing data for registration');
         }
 

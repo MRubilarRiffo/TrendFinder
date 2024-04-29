@@ -1,4 +1,5 @@
 const { Sale } = require('../../db');
+const { logMessage } = require('../../helpers/logMessage');
 
 const createSale = async (productId, unitsSold) => {
     try {
@@ -6,7 +7,7 @@ const createSale = async (productId, unitsSold) => {
 
         return sale;
     } catch (error) {
-        console.error('Error al crear Sale:', error);
+        logMessage('Error al crear Sale:', error);
         throw error;
     }
 };

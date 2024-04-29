@@ -3,7 +3,6 @@ const { getProductFindByPk } = require("../../handlers/product/getProductFindByP
 const getProductById = async (req, res, next) => {
     try {
         const { id } = req.params;
-        console.log(id);
 
         const product = await getProductFindByPk(id);
 

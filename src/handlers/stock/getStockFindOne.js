@@ -1,4 +1,5 @@
 const { Stock } = require('../../db');
+const { logMessage } = require('../../helpers/logMessage');
 
 const getStockFindOne = async (productId) => {
     try {
@@ -9,7 +10,7 @@ const getStockFindOne = async (productId) => {
 
         return stock;
     } catch (error) {
-        console.log('Error al obtener stock: ' + error);
+        logMessage('Error al obtener stock: ' + error);
         throw error;
     };
 };

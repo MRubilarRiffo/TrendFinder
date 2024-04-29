@@ -28,10 +28,10 @@ fs.readdirSync(path.join(__dirname, '/models'))
 	let capsEntries = entries.map((entry) => [entry[0][0].toUpperCase() + entry[0].slice(1), entry[1]]);
 	sequelize.models = Object.fromEntries(capsEntries);
 	
-	const { Product, Stock, Category, Sale } = sequelize.models;
+	const { Product, Stock, Category, Sale, DailySale, WeeklySale, MonthlySale } = sequelize.models;
 
 	//Relaciones aquí
-	Product.hasMany(Stock); // Un producto puede tener muchos registros de stock
+	Product.hasOne(Stock);
 	Stock.belongsTo(Product); // Cada registro de stock pertenece a un único producto
 
 	Product.belongsToMany(Category, { through: 'ProductCategory' });
@@ -39,6 +39,15 @@ fs.readdirSync(path.join(__dirname, '/models'))
 
 	Product.hasMany(Sale); // Un producto puede tener muchas ventas
 	Sale.belongsTo(Product); // Cada venta pertenece a un único producto
+	
+	Product.hasMany(DailySale);
+	DailySale.belongsTo(Product);
+
+	Product.hasMany(WeeklySale);
+	WeeklySale.belongsTo(Product);
+
+	Product.hasMany(MonthlySale);
+	MonthlySale.belongsTo(Product);
 
 	
 module.exports = {

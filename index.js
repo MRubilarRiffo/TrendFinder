@@ -2,21 +2,21 @@ const server = require('./src/server');
 const CronJob = require('cron').CronJob;
 const { conn } = require('./src/db');
 const { scraper } = require('./src/scraper/scraper');
+const { logMessage } = require('./src/helpers/logMessage');
 const { verifyCategory } = require('./src/scraper/verifyCategory');
 
 const PORT = 3001;
 
 conn.sync({ force: false })
-    .then( async () => {
+    .then(async () => {
         // await verifyCategory();
     })
     .then(() => {
-        server.listen(PORT, () => console.log(`Server listening on port ${PORT}`));
+        server.listen(PORT, () => logMessage(`Server listening on port ${PORT}`));
     })
     .then(() => {
-        // m h d
-        // const scheduledTask = new CronJob('0 */2 * * *', () => {
-        //     scraper();
+        // const scheduledTask = new CronJob('0 */2 * * *', async () => {
+        //     await scraper();
         // }, null, true);
 
         // function timeRemainingUntilNextExecution(cronJob) {
@@ -29,4 +29,6 @@ conn.sync({ force: false })
         //     return { minutes: minutesRemaining, seconds: extraSeconds };
         // };
     })
-    .catch(error => console.error('Error occurred during startup:', error));
+    .catch(error => {
+        logMessage(`Error occurred during startup: ${error}`)
+    });
