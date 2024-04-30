@@ -1,4 +1,4 @@
-const { Category } = require('../../db');
+const { Category } = require('../../infrastructure/config/database');
 const { logMessage } = require('../../helpers/logMessage');
 
 const createCategory = async (props) => {

@@ -1,4 +1,4 @@
-const { Product, License, Review, Cart, Order, User, CartProduct } = require("../db");
+const { Product, License, Review, Cart, Order, User, CartProduct } = require("../infrastructure/config/database");
 
 const includedClause = (included) => {
     const allowedIncluded = [

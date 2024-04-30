@@ -1,4 +1,4 @@
-const { Product } = require('../../db');
+const { Product } = require('../../infrastructure/config/database');
 
 const getTotalProducts = async (props) => {
     try {

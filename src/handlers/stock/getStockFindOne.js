@@ -1,4 +1,4 @@
-const { Stock } = require('../../db');
+const { Stock } = require('../../infrastructure/config/database');
 const { logMessage } = require('../../helpers/logMessage');
 
 const getStockFindOne = async (productId) => {

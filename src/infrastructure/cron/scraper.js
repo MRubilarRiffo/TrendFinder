@@ -1,12 +1,12 @@
 const axios = require("axios");
-const { createProduct } = require("../handlers/product/createProduct");
-const { getCategoryByName } = require("../handlers/category/getCategoryByName");
-const { createCategory } = require("../handlers/category/createCategory");
-const { getProductFindByPk } = require("../handlers/product/getProductFindByPk");
-const { createSale } = require("../handlers/Sale/createSale");
-const { getStockFindOne } = require("../handlers/stock/getStockFindOne");
-const { createStock } = require("../handlers/stock/createStock");
-const { logMessage } = require("../helpers/logMessage");
+const { createProduct } = require("../../handlers/product/createProduct");
+const { getCategoryByName } = require("../../handlers/category/getCategoryByName");
+const { createCategory } = require("../../handlers/category/createCategory");
+const { getProductFindByPk } = require("../../handlers/product/getProductFindByPk");
+const { createSale } = require("../../handlers/Sale/createSale");
+const { getStockFindOne } = require("../../handlers/stock/getStockFindOne");
+const { createStock } = require("../../handlers/stock/createStock");
+const { logMessage } = require("../../helpers/logMessage");
 
 const API = process.env.API_DROPI_GET_PRODUCTS;
 const DROPI_IMG_URL = process.env.DROPI_IMG_URL;
@@ -105,7 +105,13 @@ const scraper = async (currentPage = 1) => {
             
             if (lastStock && lastStock.quantity > stock) {
                 const unitsSold = lastStock.quantity - stock;
-                await createSale(product.id, unitsSold);
+                
+                const sale = await createSale(product.id, unitsSold);
+
+                if (sale.error){
+                    logMessage(sale.error);
+                };
+
                 lastStock.quantity = stock;
                 await lastStock.save();
             };
