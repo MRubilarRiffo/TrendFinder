@@ -6,5 +6,12 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
+        date: {
+            type: DataTypes.DATEONLY,
+            allowNull: false,
+        },
+    },
+    {
+        timestamps: false,
     });
 };

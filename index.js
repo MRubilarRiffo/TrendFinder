@@ -13,9 +13,7 @@ conn.sync({ force: false })
         // await configCategory();
         // await configCron();
 
-        await dailySaleReport();
-        // const sale = await getSale({ where: { ProductId: 1 } });
-        // console.log(sale);
+        // await dailySaleReport();
     })
     .then(() => {
         server.listen(PORT, () => logMessage(`Server listening on port ${PORT}`));

@@ -1,7 +1,7 @@
 const { logMessage } = require('../../helpers/logMessage');
 const { MothlySale } = require('../../infrastructure/config/database');
 
-const createMothlySale = async (productId, unitsSold) => {
+const createMothlySale = async (productId, unitsSold, date) => {
     try {
         if (!productId) {
             throw new Error('Falta productId');
@@ -11,7 +11,7 @@ const createMothlySale = async (productId, unitsSold) => {
             throw new Error('Falta unitsSold');
         };
 
-        const mothlySales = await MothlySale.create({ ProductId: productId, unitsSold });
+        const mothlySales = await MothlySale.create({ ProductId: productId, unitsSold, date });
 
         if (!mothlySales) {
             throw new Error('Error al crear venta mensual');

@@ -1,35 +1,42 @@
 const { Op } = require("sequelize");
 const { getSale } = require("../../handlers/Sale/getSale");
 const { sumSale } = require("../../handlers/Sale/sumSale");
+const { createDailySale } = require("../../handlers/Sale/createDailySale");
+const { logMessage } = require("../../helpers/logMessage");
 
 const dailySaleReport = async () => {
-    let currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0);
+    let today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-    const props = {
+    let yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const whereDate = {
+        [Op.gte]: yesterday,
+        [Op.lt]: today
+    };
+    
+    const queryOptions = {
         attributes: [ 'ProductId' ],
         group: [ 'ProductId' ],
         where: {
-            createdAt: {
-                [Op.gte]: currentDate
-            }
+            createdAt: whereDate
         }
     };
 
-    const sales = await getSale(props);
-
-    const sale = await sumSale(3222, currentDate);
-
-    console.log(sale);
-
-    // const salesPromises = sales.map(async ({ ProductId }) => {
-    //     const sale = await sumSale(ProductId, currentDate);
-
-    //     return sale;
-    // });
-
-    // await Promise.all(salesPromises);
-    console.log(sales.length);
+    try {
+        const sales = await getSale(queryOptions);
+            
+        const salesPromises = sales.map(async ({ ProductId }) => {
+            const totalUnitsSold = await sumSale(ProductId, whereDate);
+            await createDailySale(ProductId, totalUnitsSold, yesterday);
+            return totalUnitsSold;
+        });
+    
+        await Promise.all(salesPromises);
+    } catch (error) {
+        logMessage("Error en el informe diario de ventas:", error);
+    };
 };
 
 module.exports = { dailySaleReport };

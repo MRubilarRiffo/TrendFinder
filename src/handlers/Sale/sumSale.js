@@ -15,9 +15,7 @@ const sumSale = async (productId, date) => {
         const unitsSold = await Sale.sum('unitsSold', {
             where: {
                 ProductId: productId,
-                createdAt: {
-                    [Op.gte]: date
-                },
+                createdAt: date,
             },
         });
 
