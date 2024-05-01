@@ -1,7 +1,7 @@
 const { logMessage } = require('../../helpers/logMessage');
-const { createWeeklySale } = require('../../infrastructure/config/database');
+const { WeeklySale } = require('../../infrastructure/config/database');
 
-const createWeeklySale = async (productId, unitsSold, date) => {
+const createWeeklySale = async (productId, unitsSold, dateStart, dateEnd) => {
     try {
         if (!productId) {
             throw new Error('Falta productId');
@@ -11,13 +11,13 @@ const createWeeklySale = async (productId, unitsSold, date) => {
             throw new Error('Falta unitsSold');
         };
 
-        const createWeeklySales = await createWeeklySale.create({ ProductId: productId, unitsSold, date });
+        const weeklySales = await WeeklySale.create({ ProductId: productId, unitsSold, dateStart, dateEnd });
 
-        if (!createWeeklySales) {
+        if (!weeklySales) {
             throw new Error('Error al crear venta semanal');
         };
 
-        return createWeeklySales;
+        return weeklySales;
     } catch (error) {
         logMessage(`Error al crear venta semanal: ${error.message}`);
         return { error: error.message };

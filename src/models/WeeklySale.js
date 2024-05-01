@@ -6,7 +6,11 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
-        date: {
+        dateStart: {
+            type: DataTypes.DATEONLY,
+            allowNull: false,
+        },
+        dateEnd: {
             type: DataTypes.DATEONLY,
             allowNull: false,
         },

@@ -10,7 +10,7 @@ const dailySaleReport = async () => {
 
     let yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     const whereDate = {
         [Op.gte]: yesterday,
         [Op.lt]: today
@@ -35,7 +35,7 @@ const dailySaleReport = async () => {
     
         await Promise.all(salesPromises);
     } catch (error) {
-        logMessage("Error en el informe diario de ventas:", error);
+        logMessage(`Error en el informe diario de ventas: ${error.message}`);
     };
 };
 
