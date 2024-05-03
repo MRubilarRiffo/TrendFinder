@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 function logMessage(message) {
-    const logsDirectory = 'Logs';
+    const logsDirectory = 'logs';
     if (!fs.existsSync(logsDirectory)) {
         fs.mkdirSync(logsDirectory);
     }

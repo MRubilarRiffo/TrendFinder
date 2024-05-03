@@ -8,8 +8,8 @@ const PORT = 3001;
 
 conn.sync({ force: false })
     .then(async () => {
-        // await configCategory();
-        // await configCron();
+        await configCategory();
+        await configCron();
     })
     .then(() => {
         server.listen(PORT, () => logMessage(`Server listening on port ${PORT}`));

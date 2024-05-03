@@ -4,22 +4,33 @@ const { logMessage } = require("../../helpers/logMessage");
 const { validations } = require("../../helpers/validations");
 const bcrypt = require("bcrypt");
 
-const createUser_Controller = async (req, res) => {
+const createUser_Controller = async (req, res, next) => {
     try {
         const { name, lastName, email, password } = req.body;
 
-        const error = validations({ name, lastName, email, password });
-        if (error && error.length > 0) {
-            return res.status(400).json({
-                message: 'Por favor, proporcione todos los campos requeridos.',
-                error: error
-            });
+        const validationRules = {
+            name: { type: 'string', required: true, length: { min: 2, max: 30 } },
+            lastName: { type: 'string', required: true, length: { min: 2, max: 30 } },
+            password: { type: 'string', required: true, length: { min: 8 } },
+            email: { type: 'email', required: true }
+        };
+        
+        const errors = validations({ name, lastName, email, password }, validationRules );
+
+        if (Object.keys(errors).length > 0) {
+            const error = new Error('Se encontraron errores de validación.');
+            error.statusCode = 400;
+            error.validationErrors = errors
+            throw error;
         };
 
         const queryOptions = { where: { email } };
         const existingUser = await getUserFindOne(queryOptions);
+
         if (existingUser) {
-            return res.status(400).json({ error: 'El correo electrónico ya está en uso.' });
+            const error = new Error('El correo electrónico ya está en uso.');
+            error.statusCode = 400;
+            throw error;
         };
 
         const saltRounds = 10;
@@ -27,15 +38,9 @@ const createUser_Controller = async (req, res) => {
 
         const newUser = await createUser(name, lastName, email, hashedPassword);
 
-        if (newUser.error) {
-            return res.status(400).json({ error: newUser.error });
-        };
-
         return res.status(201).json(newUser);
     } catch (error) {
-        const errorMessage = `Hubo un problema al procesar su solicitud: ${error.message}`;
-        logMessage(errorMessage);
-        return res.status(500).json({ error: errorMessage });
+        next(error);
     };
 };
 
