@@ -2,7 +2,7 @@ const { getUserFindOne } = require("../../handlers/user/getUserFindOne");
 const { createUser } = require("../../handlers/user/createUser");
 const { logMessage } = require("../../helpers/logMessage");
 const { validations } = require("../../helpers/validations");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 const createUser_Controller = async (req, res, next) => {
     try {

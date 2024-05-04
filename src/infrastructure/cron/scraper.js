@@ -16,7 +16,7 @@ const DROPI_DETAILS_PRODUCTS = process.env.DROPI_DETAILS_PRODUCTS;
 function convertirString(inputString) {
     const outputString = inputString.toLowerCase().replace(/ /g, '-').replace(/[^a-zA-Z0-9-]/g, '');
     return outputString;
-}
+};
 
 const scraper = async (currentPage = 1) => {
     try {

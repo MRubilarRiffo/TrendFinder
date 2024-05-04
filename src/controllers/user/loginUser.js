@@ -1,10 +1,8 @@
 require('dotenv').config();
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { validations } = require("../../helpers/validations");
 const { getUserFindOne } = require("../../handlers/user/getUserFindOne");
-const { logMessage } = require('../../helpers/logMessage');
-
 
 const loginUser = async (req, res, next) => {
     try {
