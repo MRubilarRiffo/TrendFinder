@@ -36,6 +36,9 @@ const dailySaleReport = async () => {
         await Promise.all(salesPromises);
     } catch (error) {
         logMessage(`Error en el informe diario de ventas: ${error.message}`);
+        if (error.validationErrors) {
+            logMessage(JSON.stringify(error.validationErrors));
+        };
     };
 };
 

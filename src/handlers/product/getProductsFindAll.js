@@ -1,18 +1,18 @@
 const { Product } = require('../../infrastructure/config/database');
 
-const getTotalProducts = async (queryOptions) => {
+const getProductsFindAll = async (queryOptions) => {
     try {
         if (!queryOptions) {
             const error = new Error('Faltan opciones de consulta para realizar la busqueda.');
             throw error;
         };
 
-        const totalProducts = await Product.count(queryOptions);
-
-        return totalProducts;
+        const products = await Product.findAll(queryOptions);
+    
+        return products;
     } catch (error) {
         throw error;
     };
 };
 
-module.exports = { getTotalProducts };
+module.exports = { getProductsFindAll };

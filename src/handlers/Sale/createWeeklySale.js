@@ -1,26 +1,33 @@
-const { logMessage } = require('../../helpers/logMessage');
+const { validations } = require('../../helpers/validations');
 const { WeeklySale } = require('../../infrastructure/config/database');
 
 const createWeeklySale = async (productId, unitsSold, dateStart, dateEnd) => {
     try {
-        if (!productId) {
-            throw new Error('Falta productId');
+        const validationRules = {
+            productId: { type: 'number', required: true },
+            unitsSold: { type: 'number', required: true },
+            dateStart: { required: true },
+            dateEnd: { required: true },
         };
+        
+        const errors = validations({ productId, unitsSold, dateStart, dateEnd }, validationRules );
 
-        if (!unitsSold) {
-            throw new Error('Falta unitsSold');
+        if (Object.keys(errors).length > 0) {
+            const error = new Error('Se encontraron errores de validación.');
+            error.validationErrors = errors;
+            throw error;
         };
 
         const weeklySales = await WeeklySale.create({ ProductId: productId, unitsSold, dateStart, dateEnd });
 
         if (!weeklySales) {
-            throw new Error('Error al crear venta semanal');
+            const error = new Error('Reporte de venta semanal no creada.');
+            throw error;
         };
 
         return weeklySales;
     } catch (error) {
-        logMessage(`Error al crear venta semanal: ${error.message}`);
-        return { error: error.message };
+        throw error;
     };
 };
 

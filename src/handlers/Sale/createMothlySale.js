@@ -1,26 +1,34 @@
-const { logMessage } = require('../../helpers/logMessage');
+const { validations } = require('../../helpers/validations');
 const { MothlySale } = require('../../infrastructure/config/database');
 
 const createMothlySale = async (productId, unitsSold, date) => {
     try {
-        if (!productId) {
-            throw new Error('Falta productId');
+        const validationRules = {
+            productId: { required: true },
+            unitsSold: { type: 'number', required: true },
+            date: { required: true },
+        };
+        
+        const errors = validations({ productId, unitsSold, date }, validationRules );
+
+        if (Object.keys(errors).length > 0) {
+            const error = new Error('Se encontraron errores de validación.');
+            error.validationErrors = errors;
+            throw error;
         };
 
-        if (!unitsSold) {
-            throw new Error('Falta unitsSold');
-        };
+        const queryOptions = { ProductId: productId, unitsSold, date };
 
-        const mothlySales = await MothlySale.create({ ProductId: productId, unitsSold, date });
+        const mothlySales = await MothlySale.create(queryOptions);
 
         if (!mothlySales) {
-            throw new Error('Error al crear venta mensual');
+            const error = new Error('Reporte de venta mensual no creada.');
+            throw error;
         };
 
         return mothlySales;
     } catch (error) {
-        logMessage(`Error al crear venta mensual: ${error.message}`);
-        return { error: error.message };
+        throw error;
     };
 };
 

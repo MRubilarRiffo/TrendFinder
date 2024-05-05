@@ -1,13 +1,25 @@
+const { validations } = require('../../helpers/validations');
 const { Stock } = require('../../infrastructure/config/database');
-const { logMessage } = require('../../helpers/logMessage');
 
 const createStock = async (productId, quantity) => {
     try {
+        const validationRules = {
+            productId: { required: true },
+            quantity: { required: true },
+        };
+        
+        const errors = validations({ id, name, stock }, validationRules );
+
+        if (Object.keys(errors).length > 0) {
+            const error = new Error('Se encontraron errores de validación.');
+            error.validationErrors = errors;
+            throw error;
+        };
+
         const stock = await Stock.create({ ProductId: productId, quantity });
 
         return stock;
     } catch (error) {
-        logMessage('Error al crear stock:', error);
         throw error;
     }
 };

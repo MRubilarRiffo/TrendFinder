@@ -1,32 +1,38 @@
-const { Op } = require('sequelize');
 const { Sale } = require('../../infrastructure/config/database');
-const { logMessage } = require('../../helpers/logMessage');
+const { validations } = require('../../helpers/validations');
 
 const sumSale = async (productId, date) => {
     try {
-        if (!productId) {
-            throw new Error('Falta "productId"')
+        const validationRules = {
+            productId: { required: true },
+            date: { required: true },
+        };
+        
+        const errors = validations({ productId, date }, validationRules );
+
+        if (Object.keys(errors).length > 0) {
+            const error = new Error('Se encontraron errores de validación.');
+            error.validationErrors = errors;
+            throw error;
         };
 
-        if (!date) {
-            throw new Error('Falta "date"')
-        };
-
-        const unitsSold = await Sale.sum('unitsSold', {
+        const queryOptions = {
             where: {
                 ProductId: productId,
                 createdAt: date,
             },
-        });
+        };
+
+        const unitsSold = await Sale.sum('unitsSold', queryOptions);
 
         if (!unitsSold) {
-            throw new Error(`No hay ventas para productId = ${productId}`);
+            const error = new Error(`No hay ventas para el producto ${productId}`);
+            throw error;
         };
 
         return unitsSold;
     } catch (error) {
-        logMessage(`Error al sumar ventas: ${error.message}`);
-        return { error: error.message };
+        throw error;
     };
 };
 

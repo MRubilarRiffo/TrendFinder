@@ -1,9 +1,9 @@
-const { getProducts_h } = require('../../handlers/product/getProducts_h');
+const { getProductsFindAll } = require('../../handlers/product/getProductsFindAll');
 const { whereClause } = require('../../helpers/whereClause');
 const { getTotalProducts } = require('../../handlers/product/getTotalProducts');
 const { includedClause } = require('../../helpers/includedClause');
 
-const getProducts = async (req, res) => {
+const getProducts = async (req, res, next) => {
     try {
         const limit = 10;
         const currentPage = req.query.page > 0 ? req.query.page : 1;
@@ -28,30 +28,31 @@ const getProducts = async (req, res) => {
 
         const include = req.query.included ? includedClause(req.query.included) : [];
         
-        const props = { where, order, limit, offset, attributes, include };
+        const queryOptions = { where, order, limit, offset, attributes, include };
 
-        const products = await getProducts_h(props);
+        const products = await getProductsFindAll(queryOptions);
 
-        if (products.error) {
-            return res.status(400).send(products.error);
-        } else {
-            const totalProducts = await getTotalProducts(props);
+        if (!products) {
+            const error = new Error('No se encontraron productos en la base de datos.');
+            error.statusCode = 400;
+            throw error;
+        };
 
-            const totalPages = Math.ceil(totalProducts / limit);
+        const totalProducts = await getTotalProducts(queryOptions);
+        const totalPages = Math.ceil(totalProducts / limit);
 
-            const response = {
-                Metadata: {
-                    'Total Products': totalProducts,
-                    'Total Pages': totalPages,
-                    'Current Page': currentPage
-                },
-                Data: products
-            };
+        const response = {
+            Metadata: {
+                'Total Products': totalProducts,
+                'Total Pages': totalPages,
+                'Current Page': currentPage
+            },
+            Data: products
+        };
 
-            return res.json(response);
-        };  
+        return res.json(response);
     } catch (error) {
-        return res.status(500).json({ error: 'Error al obtener productos' });
+        next(error);
     };
 };
 

@@ -1,22 +1,22 @@
 const { Sale } = require('../../infrastructure/config/database');
-const { logMessage } = require('../../helpers/logMessage');
 
-const getSale = async (props) => {
+const getSale = async (queryOptions) => {
     try {
-        if (!props) {
-            throw new Error('Faltan parámetros para ejecutar la operación');
+        if (!queryOptions) {
+            const error = new Error('Faltan opciones de consulta para realizar la busqueda.');
+            throw error;
         };
 
-        const sales = await Sale.findAll(props);
+        const sales = await Sale.findAll(queryOptions);
 
-        if (!sales || sales.length === 0) {
-            throw new Error('Ventas no encontradas');
+        if (!sales) {
+            const error = new Error('No hay ventas disponibles.');
+            throw error;
         };
 
         return sales;
     } catch (error) {
-        logMessage(`Error al buscar ventas: ${error.message}`);
-        return { error: error.message };
+        throw error;
     };
 };
 

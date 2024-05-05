@@ -4,22 +4,25 @@ const { scraper } = require("../cron/scraper");
 const { weeklySaleReport } = require("../cron/weeklySaleReport");
 const CronJob = require('cron').CronJob;
 
-const configCron = async () => {
+const configCron = () => {
     logMessage('Configurando Cron');
     
     new CronJob('0 */2 * * *', async () => {
+        logMessage('Scraper iniciado');
         await scraper();
-        logMessage('Scraper ejecutado');
+        logMessage('Scraper terminado');
     }, null, true);
 
     new CronJob('0 3 * * *', async () => {
+        logMessage('Reporte diario iniciado');
         await dailySaleReport();
-        logMessage('Daily sale report ejecutado');
+        logMessage('Reporte diario terminado');
     }, null, true);
 
     new CronJob('30 3 * * 1', async () => {
+        logMessage('Reporte semanal iniciado');
         await weeklySaleReport();
-        logMessage('Weekly sale report ejecutado');
+        logMessage('Reporte semanal terminado');
     }, null, true);
     
     logMessage('Cron configurado');

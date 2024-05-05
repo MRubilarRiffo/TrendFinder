@@ -3,7 +3,8 @@ const { User } = require("../../infrastructure/config/database");
 const getUserFindOne = async (queryOptions) => {
     try {
         if (!queryOptions) {
-            throw new Error('Falta parámetro "queryOptions".');
+            const error = new Error('Faltan opciones de consulta para realizar la busqueda.');
+            throw error;
         };
 
         const user = await User.findOne(queryOptions);

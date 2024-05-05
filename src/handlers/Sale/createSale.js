@@ -1,26 +1,31 @@
 const { Sale } = require('../../infrastructure/config/database');
-const { logMessage } = require('../../helpers/logMessage');
+const { validations } = require('../../helpers/validations');
 
 const createSale = async (productId, unitsSold) => {
     try {
-        if (!productId) {
-            throw new Error('Falta productId');
+        const validationRules = {
+            productId: { type: 'number', required: true },
+            unitsSold: { type: 'number', required: true },
         };
+        
+        const errors = validations({ productId, unitsSold, date }, validationRules );
 
-        if (!unitsSold) {
-            throw new Error('Falta unitsSold');
+        if (Object.keys(errors).length > 0) {
+            const error = new Error('Se encontraron errores de validación.');
+            error.validationErrors = errors;
+            throw error;
         };
 
         const sale = await Sale.create({ ProductId: productId, unitsSold });
 
         if (!sale) {
-            throw new Error('Error al crear una venta');
+            const error = new Error(`Error al crear venta del producto ${productId}.`);
+            throw error;
         };
 
         return sale;
     } catch (error) {
-        logMessage(`Error al crear venta: ${error.message}`);
-        return { error: error.message };
+        throw error;
     };
 };
 

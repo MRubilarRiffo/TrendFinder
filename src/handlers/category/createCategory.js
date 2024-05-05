@@ -1,14 +1,27 @@
+const { validations } = require('../../helpers/validations');
 const { Category } = require('../../infrastructure/config/database');
-const { logMessage } = require('../../helpers/logMessage');
 
-const createCategory = async (props) => {
+const createCategory = async (name) => {
     try {
-        const createdCategory = await Category.create(props);
+        const validationRules = {
+            name: { type: 'string', required: true }
+        };
+        
+        const errors = validations({ name }, validationRules );
+
+        if (Object.keys(errors).length > 0) {
+            const error = new Error('Se encontraron errores de validación.');
+            error.validationErrors = errors;
+            throw error;
+        };
+
+        const queryOptions = { name };
+
+        const createdCategory = await Category.create(queryOptions);
 
         return createdCategory;
     } catch (error) {
-        logMessage('Error al crear la categoría:', error);
-        throw error; // Propaga el error para que sea manejado por el código que llama a esta función
+        throw error;
     };
 };
 

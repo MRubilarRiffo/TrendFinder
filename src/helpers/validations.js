@@ -11,7 +11,9 @@ const validators = {
             return false;
         };
         return true;
-    }
+    },
+    greaterThan: (value, threshold) => value > threshold,
+    lessThan: (value, threshold) => value < threshold
 };
 
 const validations = (data, rules) => {
@@ -33,6 +35,10 @@ const validations = (data, rules) => {
             } else if (rule.length.max !== undefined) {
                 errors[field] = `El campo ${field} debe tener como máximo ${rule.length.max} caracteres`;
             };
+        } else if (rule.greaterThan && !validators.greaterThan(value, rule.greaterThan)) {
+            errors[field] = `El campo ${field} debe ser mayor que ${rule.greaterThan}`;
+        } else if (rule.lessThan && !validators.lessThan(value, rule.lessThan)) {
+            errors[field] = `El campo ${field} debe ser menor que ${rule.lessThan}`;
         } else if (rule.custom && !rule.custom(value)) {
             errors[field] = `El campo ${field} no cumple con la validación personalizada`;
         };

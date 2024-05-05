@@ -39,7 +39,10 @@ const weeklySaleReport = async () => {
         await Promise.all(salesPromises);
     } catch (error) {
         logMessage(`Error en el informe semanal de ventas: ${error.message}`);
-    }
+        if (error.validationErrors) {
+            logMessage(JSON.stringify(error.validationErrors));
+        };
+    };
 };
 
 module.exports = { weeklySaleReport };
