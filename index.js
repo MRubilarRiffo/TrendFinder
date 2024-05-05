@@ -3,13 +3,15 @@ const { conn } = require('./src/infrastructure/config/database');
 const { logMessage } = require('./src/helpers/logMessage');
 const { configCategory } = require('./src/infrastructure/config/configCategory');
 const { configCron } = require('./src/infrastructure/config/configCron');
+const { scraper } = require('./src/infrastructure/cron/scraper');
 
 const PORT = 3001;
 
 conn.sync({ force: false })
     .then(async () => {
-        await configCategory();
-        configCron();
+        // await configCategory();
+        // configCron();
+        await scraper();
     })
     .then(() => {
         server.listen(PORT, () => logMessage(`Server listening on port ${PORT}`));
