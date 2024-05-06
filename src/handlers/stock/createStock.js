@@ -8,7 +8,7 @@ const createStock = async (productId, quantity) => {
             quantity: { required: true },
         };
         
-        const errors = validations({ id, name, stock }, validationRules );
+        const errors = validations({ productId, quantity }, validationRules );
 
         if (Object.keys(errors).length > 0) {
             const error = new Error('Se encontraron errores de validación.');

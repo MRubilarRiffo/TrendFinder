@@ -7,11 +7,10 @@ const createProduct = async (id, name, image, description, sale_price, url) => {
             id: { required: true },
             name: { type: 'string', required: true },
             image: { type: 'string' },
-            description: { type: 'string' },
             url: { type: 'string' }
         };
         
-        const errors = validations({ id, name, image, description, url }, validationRules );
+        const errors = validations({ id, name, image, url }, validationRules );
 
         if (Object.keys(errors).length > 0) {
             const error = new Error('Se encontraron errores de validación.');
