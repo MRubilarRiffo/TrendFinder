@@ -1,16 +1,17 @@
 const { getCategoryByName } = require("../../handlers/category/getCategoryByName");
 const { createCategory } = require("../../handlers/category/createCategory");
 const { logMessage } = require("../../helpers/logMessage");
+const { config } = require("./config");
 
 const configCategory = async () => {
     try {
         logMessage('Configurando categorías');
-        const categories = process.env.DROPI_CATEGORIES.split(',');
+        const categories = config.dropi_categories;
 
         for (const category of categories) {
             let categoryInstance = await getCategoryByName(category);
             if (!categoryInstance) {
-                categoryInstance = await createCategory({ name: category });
+                categoryInstance = await createCategory(category);
             };
         };
         logMessage('Categorías configuradas');

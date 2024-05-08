@@ -1,8 +1,8 @@
-require('dotenv').config();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { validations } = require("../../helpers/validations");
 const { getUserFindOne } = require("../../handlers/user/getUserFindOne");
+const { config } = require('../../infrastructure/config/config');
 
 const loginUser = async (req, res, next) => {
     try {
@@ -39,7 +39,8 @@ const loginUser = async (req, res, next) => {
             throw error;
         };
 
-        const jwtSecret = process.env.JWT_SECRET;
+        const jwtSecret = config.jwt_secret;
+        
         const accessToken = jwt.sign(
             { userId: user.id, email: user.email },
             jwtSecret,

@@ -5,7 +5,10 @@ module.exports = (sequelize) => {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
-            autoIncrement: false,
+            autoIncrement: true,
+        },
+        dropiId: {
+            type: DataTypes.INTEGER,
         },
         name: {
             type: DataTypes.STRING,
@@ -18,10 +21,14 @@ module.exports = (sequelize) => {
             type: DataTypes.TEXT,
         },
         sale_price: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.DECIMAL(10, 2),
         },
         url: {
             type: DataTypes.STRING,
+        },
+        country: {
+            type: DataTypes.ENUM('Colombia', 'México', 'Panamá', 'Chile', 'Ecuador', 'Perú', 'España'),
+            allowNull: false
         },
     });
 };

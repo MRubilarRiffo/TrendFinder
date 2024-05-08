@@ -7,11 +7,7 @@ const CronJob = require('cron').CronJob;
 const configCron = () => {
     logMessage('Configurando Cron');
     
-    new CronJob('0 */2 * * *', async () => {
-        logMessage('Scraper iniciado');
-        await scraper();
-        logMessage('Scraper terminado');
-    }, null, true);
+    new CronJob('0 */2 * * *', async () => { await scraper() }, null, true);
 
     new CronJob('0 3 * * *', async () => {
         logMessage('Reporte diario iniciado');
