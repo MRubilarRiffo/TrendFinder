@@ -10,7 +10,7 @@ const getCategoryByName = async (name) => {
         const errors = validations({ name }, validationRules );
 
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Se encontraron errores de validación.');
+            const error = new Error('Se encontraron errores de validación al buscar una categoría.');
             error.validationErrors = errors;
             throw error;
         };

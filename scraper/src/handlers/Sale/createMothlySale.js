@@ -12,7 +12,7 @@ const createMothlySale = async (productId, unitsSold, date) => {
         const errors = validations({ productId, unitsSold, date }, validationRules );
 
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Se encontraron errores de validación.');
+            const error = new Error('Se encontraron errores de validaciónal crear el reporte de ventas mensual.');
             error.validationErrors = errors;
             throw error;
         };

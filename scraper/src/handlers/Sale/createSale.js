@@ -11,7 +11,7 @@ const createSale = async (productId, unitsSold) => {
         const errors = validations({ productId, unitsSold }, validationRules );
 
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Se encontraron errores de validación.');
+            const error = new Error('Se encontraron errores de validación al crear el reporte de ventas.');
             error.validationErrors = errors;
             throw error;
         };

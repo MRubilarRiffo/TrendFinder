@@ -58,7 +58,7 @@ const validator = (id, name, stock) => {
     const errors = validations({ id, name, stock }, validationRules );
 
     if (Object.keys(errors).length > 0) {
-        const error = new Error('Se encontraron errores de validación.');
+        const error = new Error(`Se encontraron errores de validación: id ${id ? id : 'null'}, name ${name ? name : 'null'}, stock ${stock ? stock : 'null'}.`);
         error.validationErrors = errors;
         throw error;
     };
@@ -90,28 +90,40 @@ const existingProductsFunctions = async (existingProducts) => {
 };
 
 const nonexistentProductsFunctions = async (nonexistentProducts, DROPI_IMG_URL, DROPI_DETAILS_PRODUCTS, country) => {
-    try {
-        const nonexistentProductsCreating = nonexistentProducts.map(({ id, name, stock, gallery, categories, description, sale_price }) => {
+    let nonexistentProductsCreating = nonexistentProducts.map(({ id, name, stock, gallery, categories, description, sale_price }) => {
+        try {
             validator(id, name, stock);
-            
-            let images = [];
-
-            if (gallery && gallery.length > 0) {
-                gallery.forEach(item => {
-                    if (item.url) {
-                        images.push(`${DROPI_IMG_URL}${item.url}`);
-                    };
-                    if (item.urlS3) {
-                        images.push(`${DROPI_IMG_URLS3}${item.urlS3}`);
-                    };
-                });
+        } catch (error) {
+            logMessage(`Error al scrapear productos: ${error.message}`);
+            if (error.validationErrors) {
+                logMessage(JSON.stringify(error.validationErrors));
             };
-            
-            const image = images.join(',');
-            const url = `${DROPI_DETAILS_PRODUCTS}${id}/${convertirString(name)}`;
+            return null;
+        };
+        
+        let images = [];
 
-            return { id, name, stock, image, categories, description, sale_price, url, country };
-        });
+        if (gallery && gallery.length > 0) {
+            gallery.forEach(item => {
+                if (item.url) {
+                    images.push(`${DROPI_IMG_URL}${item.url}`);
+                };
+                if (item.urlS3) {
+                    images.push(`${DROPI_IMG_URLS3}${item.urlS3}`);
+                };
+            });
+        };
+        
+        const image = images.join(',');
+        const url = `${DROPI_DETAILS_PRODUCTS}${id}/${convertirString(name)}`;
+
+        return { id, name, stock, image, categories, description, sale_price, url, country };
+    });
+
+    nonexistentProductsCreating = await Promise.all(nonexistentProductsCreating);
+    nonexistentProductsCreating = nonexistentProductsCreating.filter(item => item);
+
+    try {
 
         const createNonexistentProducts = await createBulkProduct(nonexistentProductsCreating);
         let categoriesArray = await getCategoryFindAll();

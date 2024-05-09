@@ -13,7 +13,7 @@ const createWeeklySale = async (productId, unitsSold, dateStart, dateEnd) => {
         const errors = validations({ productId, unitsSold, dateStart, dateEnd }, validationRules );
 
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Se encontraron errores de validación.');
+            const error = new Error('Se encontraron errores de validaciónal crear el reporte de ventas semanal.');
             error.validationErrors = errors;
             throw error;
         };

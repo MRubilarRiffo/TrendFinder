@@ -11,7 +11,7 @@ const sumSale = async (productId, date) => {
         const errors = validations({ productId, date }, validationRules );
 
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Se encontraron errores de validación.');
+            const error = new Error('Se encontraron errores de validación al obtener el total de ventas.');
             error.validationErrors = errors;
             throw error;
         };

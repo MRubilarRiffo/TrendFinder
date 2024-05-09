@@ -14,7 +14,7 @@ const createProduct = async (id, name, image, description, sale_price, url, coun
         const errors = validations({ id, name, image, url, country }, validationRules );
 
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Se encontraron errores de validación.');
+            const error = new Error('Se encontraron errores de validación al crear un producto.');
             error.validationErrors = errors;
             throw error;
         };

@@ -10,7 +10,7 @@ const getProductFindByPk = async (productId) => {
         const errors = validations({ productId }, validationRules );
 
         if (Object.keys(errors).length > 0) {
-            const error = new Error('Se encontraron errores de validación.');
+            const error = new Error('Se encontraron errores de validación al buscar un producto.');
             error.validationErrors = errors;
             throw error;
         };
