@@ -1,13 +1,13 @@
 const { logMessage } = require("../../helpers/logMessage");
 const { dailySaleReport } = require("../cron/dailySaleReport");
-const { scraper } = require("../cron/scraper");
+const { scraperConfig } = require("../cron/scraper");
 const { weeklySaleReport } = require("../cron/weeklySaleReport");
 const CronJob = require('cron').CronJob;
 
 const configCron = () => {
     logMessage('Configurando Cron');
     
-    new CronJob('0 */2 * * *', async () => { await scraper() }, null, true);
+    new CronJob('0 */2 * * *', async () => { await scraperConfig() }, null, true);
 
     new CronJob('0 3 * * *', async () => {
         logMessage('Reporte diario iniciado');
