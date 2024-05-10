@@ -1,4 +1,4 @@
-const axios = require("axios");
+const { post } = require("axios");
 const { config } = require("../config/config");
 const { getCategoryFindAll } = require("../../handlers/category/getCategoryFindAll");
 const { createCategory } = require("../../handlers/category/createCategory");
@@ -30,17 +30,38 @@ const body = {
     "keywords": null
 };
 
-function compararStrings(str1, str2) {
-    const eliminarPlural = (str) => {
-        if (str.endsWith("s")) {
-            return str.slice(0, -1); // Eliminar la 's' final
-        };
-        return str;
+const compareCategories = (cat1, cat2) => {
+    const normalizarCadena = (str) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    cat1 = normalizarCadena(cat1);
+    cat2 = normalizarCadena(cat2);
+
+    const palabrasClave = {
+        "entretenimiento adulto": ["sex", "cosmetologia erotica", "lubricantes", "dildos", "vibradores", "aceites para masajes", "bienestar sexual"],
+        "cuidado personal": ["cuidado personal", "belleza", "capilar", "corporal"],
+        "deportes y fitness": ["deportes", "fitness"],
+        "juguetes": ["juguetes"],
+        "automoviles": ["vehiculo", "vehiculos", "accesorios para vehiculos (carro, moto, bicicleta)"],
+        "defensa personal": ["defensa personal"],
+        "mascotas": ["mascotas"],
+        "tecnologia": ["tecnologia", "vaporizadores", "vaporizador", "electrodomesticos", "gadgets", "gadget", "electronica"],
+        "otros": ["otro", "combo", "otra"],
+        "audio y video": ["audio", "video"],
+        "smartphones y celulares": ["smartphone", "celulares"],
+        "calzado": ["calzado"],
+        "ferreteria y cacharro": ["ferreteria", "cacharro"]
     };
 
-    const normalizarCadena = (str) => eliminarPlural(str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+    const palabras = palabrasClave[cat1];
+    if (palabras) {
+        for (const palabra of palabras) {
+            if (cat2.includes(palabra)) {
+                return true;
+            };
+        };
+    };
 
-    return normalizarCadena(str1) === normalizarCadena(str2);
+    return false;
 };
 
 const convertirString = (inputString) => {
@@ -124,17 +145,20 @@ const nonexistentProductsFunctions = async (nonexistentProducts, DROPI_IMG_URL, 
     nonexistentProductsCreating = nonexistentProductsCreating.filter(item => item);
 
     try {
-
         const createNonexistentProducts = await createBulkProduct(nonexistentProductsCreating);
+
         let categoriesArray = await getCategoryFindAll();
 
         const idsAndStocks = createNonexistentProducts.map(async product => {
             const correspondingProduct = nonexistentProductsCreating.find(item => item.id == product.dropiId);
 
             const creatingCategory = correspondingProduct.categories.map(async category => {
-                let categoryInstance = categoriesArray.find(({ name }) => compararStrings(name, category.name));
+                let categoryInstance = categoriesArray.find(({ name }) => compareCategories(name, category.name));
                 if (!categoryInstance) {
                     categoryInstance = await createCategory(category.name);
+                    if (categoryInstance) {
+                        logMessage(`Se creó la categoría ${category.name}`);
+                    };
                     categoriesArray.push(categoryInstance);
                 } else {
                     await product.addCategory(categoryInstance);
@@ -153,7 +177,7 @@ const nonexistentProductsFunctions = async (nonexistentProducts, DROPI_IMG_URL, 
     };
 };
 
-const scraper = async (env, headers) => {
+const scraper = async (env, headers, pagesPerBatch = 3) => {
     const API = env.dropi_api_products;
     const DROPI_IMG_URL = env.dropi_img_url;
     const DROPI_DETAILS_PRODUCTS = env.dropi_details_products;
@@ -162,57 +186,67 @@ const scraper = async (env, headers) => {
     let hasMoreResults = true;
 
     while (hasMoreResults) {
-        const offset = (currentPage - 1) * limit;
-        body.startData = offset;
+        const batchRequests = [];
+        
+        for (let i = 0; i < pagesPerBatch; i++) {
+            const page = currentPage + i;
+            const offset = (page - 1) * limit;
+            body.startData = offset;
 
-        try {
-            const response = await axios.post(API, body, { headers } );
-    
-            const { objects } = response.data;
-    
-            if (objects.length === 0) {
-                logMessage(`No se encontraron más productos en la página ${currentPage}`);
-                hasMoreResults = false;
-                continue;
-            };
-    
-            logMessage(`Analizando ${limit * currentPage} productos (${env.country})`);
+            const requestPromise = (async () => {
+                try {
+                    const response = await post(API, body, { headers });
+                    const { objects } = response.data;
+        
+                    if (objects.length === 0) {
+                        logMessage(`No se encontraron más productos en la página ${page}`);
+                        hasMoreResults = false;
+                        return;
+                    };
+        
+                    const idsArray = objects.map(({ id }) => id);
 
-            const idsArray = objects.map(({ id }) => id);
+                    const queryOptionsProducts = { attributes: ['id', 'dropiId'], where: { dropiId: idsArray, country: env.country } };
+                    const productArray = await getProductsFindAll(queryOptionsProducts);
 
-            const queryOptionsProducts = { attributes: ['id', 'dropiId'], where: { dropiId: idsArray, country: env.country } };
-            const productArray = await getProductsFindAll(queryOptionsProducts);
+                    const productIds = productArray.map(product => product.dropiId);
 
-            const productIds = productArray.map(product => product.dropiId);
+                    const nonexistentProducts = objects.filter(obj => !productIds.includes(obj.id));
+                    const existingProducts = productArray.filter(obj => objects.map(({ id }) => id).includes(obj.dropiId));
 
-            const nonexistentProducts = objects.filter(obj => !productIds.includes(obj.id));
-            const existingProducts = productArray.filter(obj => objects.map(({ id }) => id).includes(obj.dropiId));
+                    const existingProductsWithStock = existingProducts.map(obj => {
+                        const objectWithStock = objects.find(({ id }) => id === obj.dropiId);
+                        return {
+                            id: obj.id,
+                            stock: objectWithStock.stock
+                        };
+                    });
 
-            const existingProductsWithStock = existingProducts.map(obj => {
-                const objectWithStock = objects.find(({ id }) => id === obj.dropiId);
-                return {
-                    id: obj.id,
-                    stock: objectWithStock.stock
-                };
-            });
+                    let functionArray = [];
+                    if (existingProducts && existingProducts.length > 0) {
+                        functionArray.push(existingProductsFunctions(existingProductsWithStock));
+                    };
+                    if (nonexistentProducts && nonexistentProducts.length > 0) {
+                        functionArray.push(nonexistentProductsFunctions(nonexistentProducts, DROPI_IMG_URL, DROPI_DETAILS_PRODUCTS, env.country));
+                    };
 
-            let functionArray = [];
-            if (existingProducts && existingProducts.length > 0) {
-                functionArray.push(existingProductsFunctions(existingProductsWithStock));
-            };
-            if (nonexistentProducts && nonexistentProducts.length > 0) {
-                functionArray.push(nonexistentProductsFunctions(nonexistentProducts, DROPI_IMG_URL, DROPI_DETAILS_PRODUCTS, env.country));
-            };
-
-            await Promise.all(functionArray);
-    
-            currentPage++;
-        } catch (error) {
-            logMessage(`Error al scrapear productos: ${error.message}`);
-            if (error.validationErrors) {
-                logMessage(JSON.stringify(error.validationErrors));
-            };
+                    await Promise.all(functionArray);
+        
+                    logMessage(`Página ${page}: ${limit * page} productos en total analizados (${env.country})`);
+                } catch (error) {
+                    logMessage(`Error al scrapear productos de la página ${page}: ${error.message}`);
+                    if (error.validationErrors) {
+                        logMessage(JSON.stringify(error.validationErrors));
+                    }
+                }
+            })();
+            
+            batchRequests.push(requestPromise);
         };
+
+        await Promise.all(batchRequests);
+
+        currentPage += pagesPerBatch;
     };
 };
 
