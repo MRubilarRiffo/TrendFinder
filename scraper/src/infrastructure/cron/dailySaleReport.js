@@ -5,6 +5,7 @@ const { createDailySale } = require("../../handlers/Sale/createDailySale");
 const { logMessage } = require("../../helpers/logMessage");
 
 const dailySaleReport = async () => {
+    logMessage('Reporte diario iniciado');
     let today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -40,6 +41,7 @@ const dailySaleReport = async () => {
             logMessage(JSON.stringify(error.validationErrors));
         };
     };
+    logMessage('Reporte diario terminado');
 };
 
 module.exports = { dailySaleReport };

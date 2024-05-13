@@ -1,7 +1,6 @@
 const { post } = require("axios");
 const { config } = require("../config/config");
 const { getCategoryFindAll } = require("../../handlers/category/getCategoryFindAll");
-const { createCategory } = require("../../handlers/category/createCategory");
 const { createSale } = require("../../handlers/Sale/createSale");
 const { getStockFindAll } = require("../../handlers/stock/getStockFindAll");
 const { logMessage } = require("../../helpers/logMessage");
@@ -37,19 +36,24 @@ const compareCategories = (cat1, cat2) => {
     cat2 = normalizarCadena(cat2);
 
     const palabrasClave = {
-        "entretenimiento adulto": ["sex", "cosmetologia erotica", "lubricantes", "dildos", "vibradores", "aceites para masajes", "bienestar sexual"],
-        "cuidado personal": ["cuidado personal", "belleza", "capilar", "corporal"],
-        "deportes y fitness": ["deportes", "fitness"],
-        "juguetes": ["juguetes"],
+        "moda": ["bolsos", "ropa", "accesorios moda", "moda", "ropa deportiva", "bisuteria"],
+        "salud y belleza": ["tobilleras", "salud y belleza", "corporal", "capilar", "belleza y cuidado personal", "cuidado personal", "belleza", "bienestar", "salud", "salud y bienestar", "cuidado personal y salud"],
+        "hogar": ["hogar y accesorios", "aseo", "hogar", "cocina", "natural home", "electrodomestico", "electrodomesticos", "limpieza y aseo"],
+        "deportes y fitness": ["deportes", "deporte", "fitness", "deportes y fitness"],
+        "juguetes": ["jugueteria", "juguetes", "pinateria"],
         "automoviles": ["vehiculo", "vehiculos", "accesorios para vehiculos (carro, moto, bicicleta)"],
         "defensa personal": ["defensa personal"],
         "mascotas": ["mascotas"],
-        "tecnologia": ["tecnologia", "vaporizadores", "vaporizador", "electrodomesticos", "gadgets", "gadget", "electronica"],
-        "otros": ["otro", "combo", "otra"],
-        "audio y video": ["audio", "video"],
-        "smartphones y celulares": ["smartphone", "celulares"],
-        "calzado": ["calzado"],
-        "ferreteria y cacharro": ["ferreteria", "cacharro"]
+        "tecnologia": ["tecnologia", "vaporizadores", "gadgets", "electronica"],
+        "otros": ["casual", "otro", "combo", "otra", "mad", "novedades"],
+        "entretenimiento adulto": ["sex shop", "lubricantes", "cosmetologia erotica", "dildos", "vibradores", "aceites para masajes", "bienestar sexual"],
+        "audio y video": ["audio y video"],
+        "smartphones y celulares": ["smartphone y celulares"],
+        "calzado": ["sandalias", "tenis", "calzado"],
+        "ferreteria y cacharro": ["ferreteria y cacharro", "herramientas", "herramienta"],
+        "ninos y bebes": ["bebe", "bebes y materno"],
+        "camping y pesca": ["camping", "pesca"],
+        "accesorios y joyeria": ["manillas", "cadenas", "accesorios"]
     };
 
     const palabras = palabrasClave[cat1];
@@ -73,7 +77,7 @@ const validator = (id, name, stock) => {
     const validationRules = {
         id: { required: true },
         name: { required: true },
-        stock: { required: true }
+        stock: { required: true, greaterThan: -1 }
     };
     
     const errors = validations({ id, name, stock }, validationRules );
@@ -93,12 +97,24 @@ const existingProductsFunctions = async (existingProducts) => {
         const existingStock = await getStockFindAll(queryOptionsStock);
         
         const existingProductsPromises = existingProducts.map(async ({ id, stock }) => {
-            validator(id, true, stock);
-    
+            try {
+                validator(id, true, stock);
+            } catch (error) {
+                logMessage(`Error al validar productos a crear: ${error.message}`);
+                if (error.validationErrors) {
+                    logMessage(JSON.stringify(error.validationErrors));
+                };
+                return null;
+            };
+            
             const stockInfo = existingStock.find(stockItem => stockItem.ProductId === id);
             if (stockInfo && stockInfo.quantity > stock) {
                 const unitsSold = stockInfo.quantity - stock;
                 await createSale(id, unitsSold);
+                stockInfo.quantity = stock;
+                await stockInfo.save();
+            };
+            if ((stockInfo && stockInfo.quantity < stock)) {
                 stockInfo.quantity = stock;
                 await stockInfo.save();
             };
@@ -115,15 +131,14 @@ const nonexistentProductsFunctions = async (nonexistentProducts, DROPI_IMG_URL, 
         try {
             validator(id, name, stock);
         } catch (error) {
-            logMessage(`Error al scrapear productos: ${error.message}`);
+            logMessage(`Error al validar productos a crear: ${error.message}`);
             if (error.validationErrors) {
                 logMessage(JSON.stringify(error.validationErrors));
             };
             return null;
         };
-        
-        let images = [];
 
+        let images = [];
         if (gallery && gallery.length > 0) {
             gallery.forEach(item => {
                 if (item.url) {
@@ -134,14 +149,13 @@ const nonexistentProductsFunctions = async (nonexistentProducts, DROPI_IMG_URL, 
                 };
             });
         };
-        
+
         const image = images.join(',');
         const url = `${DROPI_DETAILS_PRODUCTS}${id}/${convertirString(name)}`;
 
         return { id, name, stock, image, categories, description, sale_price, url, country };
     });
 
-    nonexistentProductsCreating = await Promise.all(nonexistentProductsCreating);
     nonexistentProductsCreating = nonexistentProductsCreating.filter(item => item);
 
     try {
@@ -152,22 +166,24 @@ const nonexistentProductsFunctions = async (nonexistentProducts, DROPI_IMG_URL, 
         const idsAndStocks = createNonexistentProducts.map(async product => {
             const correspondingProduct = nonexistentProductsCreating.find(item => item.id == product.dropiId);
 
-            const creatingCategory = correspondingProduct.categories.map(async category => {
+            let findCategory = correspondingProduct.categories.map(category => {
                 let categoryInstance = categoriesArray.find(({ name }) => compareCategories(name, category.name));
                 if (!categoryInstance) {
-                    categoryInstance = await createCategory(category.name);
-                    if (categoryInstance) {
-                        logMessage(`Se creó la categoría ${category.name}`);
-                    };
-                    categoriesArray.push(categoryInstance);
-                } else {
-                    await product.addCategory(categoryInstance);
+                    categoryInstance = categoriesArray.find(({ name }) => name == 'Otros');
                 };
-                return true;
+                return categoryInstance;
             });
-            await Promise.all(creatingCategory);
 
-            await createStock(product.id, correspondingProduct.stock);
+            findCategory = await Promise.all(findCategory);
+
+            let setFindCategory = [...new Set(findCategory)];
+            setFindCategory = setFindCategory.filter(item => item);
+
+            await Promise.all([
+                product.addCategory(setFindCategory),
+                createStock(product.id, correspondingProduct.stock)
+            ]);
+
             return true;
         });
 
