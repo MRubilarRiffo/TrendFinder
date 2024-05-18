@@ -12,14 +12,15 @@ const getProducts = async (req, res, next) => {
         const filters = {
             name: req.query.name,
             slug: req.query.slug,
-            id: req.query.id
+            id: req.query.productId,
+            country: req.query.country
         };
 
-        const where = whereClause(filters)
+        const where = whereClause(filters);
 
         const sortOrder = req.query.sortOrder || 'asc';
         let order = [
-            [ 'name' , sortOrder === 'desc' ? 'DESC' : 'ASC' ]
+            [ 'id' , sortOrder === 'desc' ? 'DESC' : 'ASC' ]
         ];
 
         const allowedFields = [ 'id', 'name', 'description', 'shortDescription', 'price', 'priceOffert', 'slug', 'averageRating', 'immediateDelivery', 'image', 'category', 'bulkPrice', 'createdAt', 'updatedAt' ];

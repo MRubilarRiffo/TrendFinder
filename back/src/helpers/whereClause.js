@@ -13,8 +13,8 @@ const whereClause = (filters) => {
         };
     };
 
-    if (filters.id) {
-        whereClause.id = parseInt(filters.id);
+    if (filters.productId) {
+        whereClause.id = parseInt(filters.productId);
     };
 
     if (filters.UserId) {
@@ -23,6 +23,10 @@ const whereClause = (filters) => {
 
     if (filters.slug) {
         whereClause.slug = filters.slug;
+    };
+
+    if (filters.country) {
+        whereClause.country = filters.country;
     };
 
     return whereClause;

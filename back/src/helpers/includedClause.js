@@ -1,13 +1,12 @@
-const { Product, License, Review, Cart, Order, User, CartProduct } = require("../infrastructure/config/database");
+const { Product, Category, DailySale, Stock, Sale } = require("../infrastructure/config/database");
 
 const includedClause = (included) => {
     const allowedIncluded = [
         { text: 'product', table: Product },
-        { text: 'license', table: License },
-        { text: 'review', table: Review },
-        { text: 'cart', table: Cart },
-        { text: 'order', table: Order },
-        { text: 'user', table: User },
+        { text: 'category', table: Category },
+        { text: 'dailysale', table: DailySale },
+        { text: 'stock', table: Stock },
+        { text: 'sale', table: Sale },
     ];
     
     const selectedIncluded = included.split(',');

@@ -1,0 +1,17 @@
+.containerCard {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    gap: 20px;
+}
+
+.containerCard > div {
+    margin-bottom: 1em;
+}
+
+@media (max-width: 767px) {
+    .containerCard {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+}

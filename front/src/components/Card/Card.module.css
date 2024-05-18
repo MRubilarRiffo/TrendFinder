@@ -1,0 +1,96 @@
+.card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    border-radius: 8px;
+    position: relative;
+}
+
+.containerImg {
+    width: 100%;
+    background-color: #0F161C;
+    border-radius: 8px;
+}
+
+.containerImg div {
+    width: 100%;
+    aspect-ratio: 1/1;
+    overflow: hidden;
+}
+
+.containerImg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cardInformation {
+    padding: 15px 10px;
+}
+
+.nameProduct {
+    font-size: var(--product-title-font-size);
+    font-weight: var(--product-title-font-weight);
+    line-height: var(--product-title-line-height);
+    letter-spacing: var(--product-title-letter-spacing);
+    text-transform: var(--product-title-text-transform);
+    color: var(--product-title-color);
+    margin: 0 0 var(--product-title-margin-bottom) 0;
+}
+
+.countryProduct {
+    overflow: hidden;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    font-size: var(--product-vendor-font-size);
+    font-weight: var(--product-vendor-font-weight);
+    font-style: var(--product-vendor-font-style);
+    color: var(--product-vendor-color);
+    line-height: var(--product-vendor-line-height);
+    letter-spacing: var(--product-vendor-letter-spacing);
+    text-transform: var(--product-vendor-text-transform);
+    width: 100%;
+    margin-bottom: var(--product-vendor-margin-bottom);
+    margin-top: var(--product-vendor-margin-top);
+}
+
+.countryProduct a {
+    font-size: inherit;
+    font-weight: inherit;
+    color: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+}
+
+.salesCount {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40px;
+    color: var(--bundle-badge-color);
+    background-color: var(--bundle-badge-bg);
+    font-size: var(--badge-font-size);
+    font-weight: var(--badge-font-weight);
+    text-transform: var(--badge-text-transform);
+    letter-spacing: var(--badge-letter-spacing);
+    line-height: var(--badge-line-height);
+    border-radius: var(--badge-border-radius);
+    height: auto;
+    padding: var(--badge-padding-top) var(--badge-padding-left-right) var(--badge-padding-bottom) var(--badge-padding-left-right);
+    text-align: center;
+    word-break: break-word;
+}
+
+@media (max-width: 767px) {
+    .card {
+        padding: 9px;
+    }
+}
+
+/* @media (max-width: 1024px) {
+
+} */

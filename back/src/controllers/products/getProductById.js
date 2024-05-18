@@ -1,4 +1,5 @@
 const { getProductFindByPk } = require("../../handlers/product/getProductFindByPk");
+const { splitImages } = require("../../helpers/splitImages");
 const { validations } = require("../../helpers/validations");
 
 const getProductById = async (req, res, next) => {
@@ -18,13 +19,15 @@ const getProductById = async (req, res, next) => {
             throw error;
         };
 
-        const product = await getProductFindByPk(id);
+        let product = await getProductFindByPk(id);
 
         if (!product) {
             const error = new Error(`No se encontró el producto ${id}`);
             error.statusCode = 400;
             throw error;
         };
+
+        product.image = splitImages(product.image);
 
         return res.json(product);
     } catch (error) {

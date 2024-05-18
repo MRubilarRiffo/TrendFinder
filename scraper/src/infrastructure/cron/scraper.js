@@ -77,7 +77,7 @@ const validator = (id, name, stock) => {
     const validationRules = {
         id: { required: true },
         name: { required: true },
-        stock: { required: true, greaterThan: -1 }
+        stock: { type: 'number', required: true, greaterThan: -1 }
     };
     
     const errors = validations({ id, name, stock }, validationRules );
@@ -97,6 +97,8 @@ const existingProductsFunctions = async (existingProducts) => {
         const existingStock = await getStockFindAll(queryOptionsStock);
         
         const existingProductsPromises = existingProducts.map(async ({ id, stock }) => {
+            stock = parseInt(stock)
+
             try {
                 validator(id, true, stock);
             } catch (error) {
@@ -108,15 +110,15 @@ const existingProductsFunctions = async (existingProducts) => {
             };
             
             const stockInfo = existingStock.find(stockItem => stockItem.ProductId === id);
-            if (stockInfo && stockInfo.quantity > stock) {
-                const unitsSold = stockInfo.quantity - stock;
-                await createSale(id, unitsSold);
-                stockInfo.quantity = stock;
-                await stockInfo.save();
-            };
-            if ((stockInfo && stockInfo.quantity < stock)) {
-                stockInfo.quantity = stock;
-                await stockInfo.save();
+
+            if (stockInfo) {
+                if (stockInfo.quantity > stock) {
+                    const unitsSold = stockInfo.quantity - stock;
+                    await createSale(id, unitsSold);
+                };
+                if (stockInfo.quantity !== stock) {
+                    await stockInfo.update({ quantity: stock });
+                };
             };
         });
 
@@ -128,6 +130,8 @@ const existingProductsFunctions = async (existingProducts) => {
 
 const nonexistentProductsFunctions = async (nonexistentProducts, DROPI_IMG_URL, DROPI_DETAILS_PRODUCTS, country) => {
     let nonexistentProductsCreating = nonexistentProducts.map(({ id, name, stock, gallery, categories, description, sale_price }) => {
+        stock = parseInt(stock);
+
         try {
             validator(id, name, stock);
         } catch (error) {
@@ -141,11 +145,10 @@ const nonexistentProductsFunctions = async (nonexistentProducts, DROPI_IMG_URL, 
         let images = [];
         if (gallery && gallery.length > 0) {
             gallery.forEach(item => {
-                if (item.url) {
-                    images.push(`${DROPI_IMG_URL}${item.url}`);
-                };
                 if (item.urlS3) {
                     images.push(`${DROPI_IMG_URLS3}${item.urlS3}`);
+                } else if (item.url) {
+                    images.push(`${DROPI_IMG_URL}${item.url}`);
                 };
             });
         };
