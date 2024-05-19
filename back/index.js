@@ -28,9 +28,9 @@ conn.sync({ force: false })
         
     //     await conn.models.CountSale.bulkCreate(salesArray);
     // })
-    .then(async () => {
-        await configCategory();
-    })
+    // .then(async () => {
+    //     await configCategory();
+    // })
     .then(() => {
         server.listen(PORT, () => logMessage(`Server listening on port ${PORT}`));
     })

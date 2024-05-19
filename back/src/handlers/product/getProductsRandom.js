@@ -1,5 +1,5 @@
-const { Sequelize } = require("sequelize");
-const { Product, DailySale, Sale } = require("../../config/database");
+const { Sequelize, Op } = require("sequelize");
+const { Product, Sale, CountSale } = require("../../config/database");
 
 const getProductsRandom = async (country, limit = 5) => {
     try {
@@ -8,23 +8,19 @@ const getProductsRandom = async (country, limit = 5) => {
         twoDaysAgo.setDate(today.getDate() - 2);
 
         const queryOptions = {
-            limit,
-            attributes: [
-                'ProductId',
-                [Sequelize.fn('COUNT', Sequelize.col('*')), 'Repeticiones']
-            ],
+            where: {
+                repeat: { [Op.gte]: 50 },
+            },
             include: [{
                 model: Product,
                 where: { country },
                 attributes: ['id', 'dropiId', 'name', 'image', 'country'],
-                include: Sale
             }],
-            group: ['Sale.ProductId'],
-            order: [[Sequelize.literal('Repeticiones'), 'DESC']],
-            having: Sequelize.literal('COUNT(*) > 5')
+            order: [['repeat', 'DESC']],
+            limit
         };
 
-        const products = await Sale.findAll(queryOptions);
+        const products = CountSale.findAll(queryOptions);
 
         return products;
     } catch (error) {

@@ -8,27 +8,21 @@ const getProductsRandom_controllers = async (req, res, next) => {
 
         const limit = 5;
 
-        let promisesDailySales = countries.map(async country => {
-            const dailySales = await getProductsRandom(country, limit);
+        let promisesCountSales = countries.map(async country => {
+            const countSales = await getProductsRandom(country, limit);
             let products;
-            if (dailySales && dailySales.length > 0) {
-                products = dailySales.map(({ Product }) => {
+            if (countSales && countSales.length > 0) {
+                products = countSales.map(({ Product, totalSales }) => {
                     Product.image = splitImages(Product.image);
 
-                    let sales = Product.Sales.map(sale => sale.unitsSold);
-
-                    const sumSales = sales.reduce((acumulador, valorActual) => acumulador + valorActual, 0);
-
-                    // console.log(sales);
-
-                    return { id: Product.id, dropiId: Product.dropiId, name: Product.name, image: Product.image, country: Product.country, unitsSold: sumSales };
+                    return { id: Product.id, dropiId: Product.dropiId, name: Product.name, image: Product.image, country: Product.country, unitsSold: totalSales };
                 });
             };
 
             return { country, products };
         });
 
-        let products = await Promise.all(promisesDailySales);
+        let products = await Promise.all(promisesCountSales);
 
         products = products.filter(item => item.products.length > 0);
 
