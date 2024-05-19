@@ -1,5 +1,5 @@
 const { validations } = require('../../helpers/validations');
-const { MothlySale } = require('../../infrastructure/config/database');
+const { MothlySale } = require('../../config/database');
 
 const createMothlySale = async (productId, unitsSold, date) => {
     try {

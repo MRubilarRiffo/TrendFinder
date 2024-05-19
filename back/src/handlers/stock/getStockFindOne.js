@@ -1,5 +1,5 @@
 const { validations } = require('../../helpers/validations');
-const { Stock } = require('../../infrastructure/config/database');
+const { Stock } = require('../../config/database');
 
 const getStockFindOne = async (productId) => {
     try {

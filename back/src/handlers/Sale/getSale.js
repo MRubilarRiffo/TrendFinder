@@ -1,4 +1,4 @@
-const { Sale } = require('../../infrastructure/config/database');
+const { Sale } = require('../../config/database');
 
 const getSale = async (queryOptions) => {
     try {

@@ -1,4 +1,4 @@
-const { Product, Category, DailySale, Stock, Sale } = require("../infrastructure/config/database");
+const { Product, Category, DailySale, Stock, Sale } = require("../config/database");
 
 const includedClause = (included) => {
     const allowedIncluded = [

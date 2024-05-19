@@ -1,5 +1,5 @@
 const { validations } = require('../../helpers/validations');
-const { Category } = require('../../infrastructure/config/database');
+const { Category } = require('../../config/database');
 
 const getCategoryByName = async (name) => {
     try {

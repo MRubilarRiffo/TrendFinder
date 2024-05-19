@@ -1,4 +1,4 @@
-const { Sale } = require('../../infrastructure/config/database');
+const { Sale } = require('../../config/database');
 const { validations } = require('../../helpers/validations');
 
 const createSale = async (productId, unitsSold) => {

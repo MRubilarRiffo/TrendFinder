@@ -1,5 +1,5 @@
 const { validations } = require('../../helpers/validations');
-const { User } = require('../../infrastructure/config/database');
+const { User } = require('../../config/database');
 
 const getUserFindByPk = async (userId) => {
     try {

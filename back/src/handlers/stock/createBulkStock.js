@@ -1,4 +1,4 @@
-const { Stock } = require('../../infrastructure/config/database');
+const { Stock } = require('../../config/database');
 
 const createBulkStock = async (stocks) => {
     try {

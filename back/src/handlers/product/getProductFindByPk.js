@@ -1,4 +1,4 @@
-const { Product, Sale } = require('../../infrastructure/config/database');
+const { Product, Sale } = require('../../config/database');
 
 const getProductFindByPk = async (productId) => {
     try {       

@@ -1,5 +1,5 @@
 const { validations } = require("../../helpers/validations");
-const { Subscription } = require("../../infrastructure/config/database");
+const { Subscription } = require("../../config/database");
 
 const createSubscription = async (userId, level, duration, dateStart, dateEnd) => {
     try {

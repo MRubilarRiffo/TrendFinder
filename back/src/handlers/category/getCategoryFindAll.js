@@ -1,4 +1,4 @@
-const { Category } = require('../../infrastructure/config/database');
+const { Category } = require('../../config/database');
 
 const getCategoryFindAll = async () => {
     try {

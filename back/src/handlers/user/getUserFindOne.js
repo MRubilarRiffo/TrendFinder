@@ -1,4 +1,4 @@
-const { User } = require("../../infrastructure/config/database");
+const { User } = require("../../config/database");
 
 const getUserFindOne = async (queryOptions) => {
     try {

@@ -1,5 +1,5 @@
 const { logMessage } = require("../../helpers/logMessage");
-const { DailySale } = require("../../infrastructure/config/database");
+const { DailySale } = require("../../config/database");
 
 const getDailySale = async (queryOptions) => {
     try {

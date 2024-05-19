@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { validations } = require("../../helpers/validations");
 const { getUserFindOne } = require("../../handlers/user/getUserFindOne");
-const { config } = require('../../infrastructure/config/config');
+const { config } = require('../../config/config');
 
 const loginUser = async (req, res, next) => {
     try {

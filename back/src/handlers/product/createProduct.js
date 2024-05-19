@@ -1,5 +1,5 @@
 const { validations } = require('../../helpers/validations');
-const { Product } = require('../../infrastructure/config/database');
+const { Product } = require('../../config/database');
 
 const createProduct = async (id, name, image, description, sale_price, url, country) => {
     try {

@@ -1,5 +1,5 @@
 const { Sequelize } = require("sequelize");
-const { Product, DailySale, Sale } = require("../../infrastructure/config/database");
+const { Product, DailySale, Sale } = require("../../config/database");
 
 const getProductsRandom = async (country, limit = 5) => {
     try {
