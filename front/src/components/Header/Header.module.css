@@ -1,0 +1,36 @@
+.headerContainer {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: var(--height-header);
+    background-color: var(--color-background-20);
+    border-bottom: 1px solid var(--header-border);
+    padding: 0 var(--space-between-elements);
+    position: fixed;
+    top: 0;
+    z-index: 5;
+}
+
+.searchContainer {
+    padding: calc(32px* .5) 0;
+    position: relative;
+}
+
+.iconSearch {
+    font-size: 16px;
+    color: #878a99;
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.iconClose {
+    font-size: 20px;
+    color: #878a99;
+    position: absolute;
+    right: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+}

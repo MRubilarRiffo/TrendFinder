@@ -1,20 +1,14 @@
-import { useState } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom';
 import './App.css'
-import { Home } from './pages/home/Home';
-import { Product } from './pages/product/Product';
+import { Routes, Route } from 'react-router-dom';
+import { Dashboard } from './pages/Dashboard/Dashboard';
 
 function App() {
-
-	return (
-		<>
-			<Routes>
-				<Route path='*' element={<h3>Error</h3>} />
-				<Route path='/' element={<Home />} />
-				<Route path='/product/:country/:name/:id' element={<Product />} />
-			</Routes>
-		</>
+	return (		
+		<Routes>
+			<Route path='*' element={<h3>Error</h3>} />
+			<Route path="/dashboard/*" element={<Dashboard />} />
+		</Routes>
 	);
 };
 
-export default App
+export default App;

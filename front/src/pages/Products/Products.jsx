@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getProductsRandomByCountry } from "../../redux/actions";
-import { Card } from "../../components/Card/Card";
-import { containerCard } from "./Home.module.css";
+import { getProductsRandomByCountry } from '../../redux/actions';
+import { Card } from '../../components/Card/Card';
+import { containerCard } from './Products.module.css';
 
-const Home = () => {
+const Products = () => {
     const dispatch = useDispatch()
 
     useEffect(() => {
@@ -25,14 +25,14 @@ const Home = () => {
     };
 
     const bestSellersHome = [
-        { title: 'Lo Más Vendido Ayer En Chile', products: productsChile },
-        { title: 'Lo Más Vendido Ayer En Colombia', products: productsColombia }
+        { title: 'Lo Más Vendido En Chile', products: productsChile },
+        { title: 'Lo Más Vendido En Colombia', products: productsColombia }
     ];
 
     return (
         <div>
-            {bestSellersHome.map(({ title, products }) => 
-                <div>
+            {bestSellersHome.map(({ title, products }, index) => 
+                <div key={`${index}-${title}`}>
                     <h3>{title}</h3>
                     <div className={containerCard}>
                         {products.map(product => 
@@ -48,4 +48,4 @@ const Home = () => {
     );
 };
 
-export { Home };
+export { Products };

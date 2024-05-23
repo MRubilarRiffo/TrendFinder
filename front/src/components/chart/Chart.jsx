@@ -1,15 +1,19 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { createChart } from 'lightweight-charts';
 
 const Chart = ({ data }) => {
+    const chartContainerRef = useRef();
     useEffect(() => {
         if (data && data.length > 0) {
-            const chart = createChart(document.body, { 
-                width: 400, 
+            const chart = createChart(chartContainerRef.current, { 
+                width: 600, 
                 height: 250,
                 layout: {
-                    textColor: '#232323',
-                    backgroundColor: '#000000'
+                    textColor: '#fff',
+                    background: {
+                        type: 'solid',
+                        color: 'transparent'
+                    },
                 },
                 timeScale: {
                     timeVisible: true,
@@ -55,6 +59,8 @@ const Chart = ({ data }) => {
             };
         };
     }, []);
+
+    return <div ref={chartContainerRef} />;
 };
 
 export { Chart };
