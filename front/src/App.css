@@ -38,6 +38,13 @@ h3 {
 	line-height: var(--heading-line-height);
 }
 
+p {
+	color: var(--color-text2);
+	margin-top: 0;
+	margin-bottom: 0;
+	font-size: 13px;
+}
+
 input {
     border: none;
     height: 38px;

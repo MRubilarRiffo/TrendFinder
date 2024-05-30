@@ -7,7 +7,7 @@ const Chart = ({ data }) => {
         if (data && data.length > 0) {
             const chart = createChart(chartContainerRef.current, { 
                 width: 600, 
-                height: 250,
+                height: 300,
                 layout: {
                     textColor: '#fff',
                     background: {
@@ -29,8 +29,8 @@ const Chart = ({ data }) => {
             });
 
             const lineSeries = chart.addLineSeries({
-                color: '#ff9900', // color de línea
-                lineWidth: 3, // ancho de línea
+                color: '#0AB39C', // color de línea
+                lineWidth: 2, // ancho de línea
                 title: 'Ventas',
             });
 

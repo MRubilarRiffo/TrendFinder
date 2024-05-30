@@ -102,7 +102,7 @@ const existingProductsFunctions = async (existingProducts) => {
         const existingCountSales = await getCountSaleFindAll(queryOptionsCountSales);
         
         const existingProductsPromises = existingProducts.map(async ({ id, stock }) => {
-            stock = parseInt(stock)
+            stock = parseInt(stock);
 
             try {
                 validator(id, true, stock);

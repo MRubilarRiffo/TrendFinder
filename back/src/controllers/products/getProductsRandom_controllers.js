@@ -6,7 +6,7 @@ const getProductsRandom_controllers = async (req, res, next) => {
         const countries = [ 'Chile', 'Colombia' ];
         // const countries = [ 'Chile' ];
 
-        const limit = 5;
+        const limit = 50;
 
         let promisesCountSales = countries.map(async country => {
             const countSales = await getProductsRandom(country, limit);

@@ -207,8 +207,6 @@
     --body-custom-width-container: 1600px;
     --color-background-layout-boxed: #f8f8f8;
     --position-horizontal-slick-arrow: 0;
-    --color-text: #ced4da;
-    --color-text2: #878a99;
     --color-global: #232323;
     --color-white: #FFFFFF;
     --color-grey: #868686;
@@ -421,6 +419,10 @@
     --space-between-elements: 1rem;
 
     --border-global: #212529;
+    --border-color-2: #32383e;
 
     --border-radius-global: 4px;
+
+    --color-text: #ced4da;
+    --color-text2: #878a99;
 }

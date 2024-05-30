@@ -1,4 +1,4 @@
-const { Sequelize, Op } = require("sequelize");
+const { Op } = require("sequelize");
 const { Product, CountSale } = require("../../config/database");
 
 const getProductsRandom = async (country, limit = 5) => {

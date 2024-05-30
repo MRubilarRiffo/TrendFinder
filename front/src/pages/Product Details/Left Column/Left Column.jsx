@@ -32,12 +32,19 @@ const LeftColumn = ({ imageArray = [] }) => {
     };
 
     const handleImageError = (index) => {
-        setImages(images.filter((_, i) => i !== index));
-        setCurrentImageIndex((prevIndex) => Math.max(prevIndex - 1, 0));
+        const newImages = images.filter((_, i) => i !== index);
+        setImages(newImages);
+
+        // Ajustar el índice actual si es necesario
+        if (currentImageIndex >= newImages.length) {
+            setCurrentImageIndex(newImages.length - 1);
+        };
     };
 
     const calculateThumbnailStartIndex = () => {
-        return Math.min(Math.max(currentImageIndex - Math.floor(thumbnailDisplayCount / 2), 0), Math.max(images.length - thumbnailDisplayCount, 0));
+        const halfDisplayCount = Math.floor(thumbnailDisplayCount / 2);
+        const maxStartIndex = Math.max(images.length - thumbnailDisplayCount, 0);
+        return Math.min(Math.max(currentImageIndex - halfDisplayCount, 0), maxStartIndex);
     };
 
     const thumbnailStartIndex = calculateThumbnailStartIndex();
@@ -45,7 +52,7 @@ const LeftColumn = ({ imageArray = [] }) => {
 
     if (images.length === 0) {
         return <h3>Cargando...</h3>;
-    }
+    };
 
     return (
         <div className={leftColumnProductDetails}>
@@ -69,12 +76,12 @@ const LeftColumn = ({ imageArray = [] }) => {
                 {visibleThumbnails.map((img, index) => (
                 <div key={thumbnailStartIndex + index}>
                     <img
-                    src={img}
-                    alt=""
-                    className={imgThumbnail}
-                    onClick={() => handleThumbnailClick(thumbnailStartIndex + index)}
-                    loading="lazy"
-                    onError={() => handleImageError(thumbnailStartIndex + index)}
+                        src={img}
+                        alt=""
+                        className={imgThumbnail}
+                        onClick={() => handleThumbnailClick(thumbnailStartIndex + index)}
+                        loading="lazy"
+                        onError={() => handleImageError(thumbnailStartIndex + index)}
                     />
                 </div>
                 ))}
