@@ -18,7 +18,7 @@ const limit = 500; // MODIFICAR A 500
 const body = {
     "privated_product": false,
     "bod": null,
-    "stockmayor": null,
+    "stockmayor": 0,
     "no_count": true,
     "order_by": "id",
     "order_type": "asc",
@@ -29,6 +29,36 @@ const body = {
     "category": null,
     "warehouse_id": null,
     "keywords": null
+};
+
+const updateStores = (warehouses) => {
+    let storesArray = [];
+    if (warehouses && warehouses.length > 0) {
+        warehouses.forEach(item => {
+            if (item.name) {
+                storesArray.push(item.name);
+            };
+        });
+    };
+
+    const stores = storesArray.join(',');
+    return stores;
+};
+
+const updateImages = (gallery, DROPI_IMG_URL) => {
+    let images = [];
+    if (gallery && gallery.length > 0) {
+        gallery.forEach(item => {
+            if (item.urlS3) {
+                images.push(`${DROPI_IMG_URLS3}${item.urlS3}`);
+            } else if (item.url) {
+                images.push(`${DROPI_IMG_URL}${item.url}`);
+            };
+        });
+    };
+
+    const image = images.join(",");
+    return image
 };
 
 const compareCategories = (cat1, cat2) => {
@@ -101,7 +131,7 @@ const existingProductsFunctions = async (existingProducts) => {
         const queryOptionsCountSales = { attributes: ['id', 'ProductId', 'repeat', 'totalSales'], where: { ProductId: existingProductIds } };
         const existingCountSales = await getCountSaleFindAll(queryOptionsCountSales);
         
-        const existingProductsPromises = existingProducts.map(async ({ id, stock }) => {
+        const existingProductsPromises = existingProducts.map(async ({ id, stock, updateProduct, obj }) => {
             stock = parseInt(stock);
 
             try {
@@ -116,6 +146,10 @@ const existingProductsFunctions = async (existingProducts) => {
             
             const stockInfo = existingStock.find(stockItem => stockItem.ProductId === id);
             const counSaleInfo = existingCountSales.find(countSaleItem => countSaleItem.ProductId === id);
+
+            if (Object.keys(updateProduct).length > 0) {
+                await obj.update(updateProduct);
+            };
             
             if (stockInfo) {
                 if (stockInfo.quantity > stock) {
@@ -143,7 +177,7 @@ const existingProductsFunctions = async (existingProducts) => {
 };
 
 const nonexistentProductsFunctions = async (nonexistentProducts, DROPI_IMG_URL, DROPI_DETAILS_PRODUCTS, country) => {
-    let nonexistentProductsCreating = nonexistentProducts.map(({ id, name, stock, gallery, categories, description, sale_price }) => {
+    let nonexistentProductsCreating = nonexistentProducts.map(({ id, name, stock, gallery, categories, description, sale_price, suggested_price, warehouses, updated_at, created_at }) => {
         stock = parseInt(stock);
 
         try {
@@ -156,21 +190,18 @@ const nonexistentProductsFunctions = async (nonexistentProducts, DROPI_IMG_URL, 
             return null;
         };
 
-        let images = [];
-        if (gallery && gallery.length > 0) {
-            gallery.forEach(item => {
-                if (item.urlS3) {
-                    images.push(`${DROPI_IMG_URLS3}${item.urlS3}`);
-                } else if (item.url) {
-                    images.push(`${DROPI_IMG_URL}${item.url}`);
-                };
-            });
-        };
-
-        const image = images.join(',');
+        const stores = updateStores(warehouses)
+        const image = updateImages(gallery, DROPI_IMG_URL);
         const url = `${DROPI_DETAILS_PRODUCTS}${id}/${convertirString(name)}`;
 
-        return { id, name, stock, image, categories, description, sale_price, url, country };
+        let productUpdateDate = '';
+        if (updated_at) {
+            productUpdateDate = updated_at;
+        } else {
+            productUpdateDate = created_at;
+        };
+
+        return { id, name, stock, image, categories, description, sale_price, suggested_price, url, country, stores, productUpdateDate };
     });
 
     nonexistentProductsCreating = nonexistentProductsCreating.filter(item => item);
@@ -229,17 +260,23 @@ const scraper = async (env, headers, pagesPerBatch = 3) => {
             const requestPromise = (async () => {
                 try {
                     const response = await post(API, body, { headers });
-                    const { objects } = response.data;
+                    let { objects } = response.data;
 
-                    if (objects.length === 0) {
+                    if (objects && objects.length === 0) {
                         logMessage(`No se encontraron más productos en la página ${page}`);
+                        hasMoreResults = false;
+                        return;
+                    } else if (!objects) {
+                        logMessage(`Hubo un error al obtener los productos de la página ${page} (${env.country})`);
                         hasMoreResults = false;
                         return;
                     };
 
+                    objects = objects.filter(({ stock }) => stock);
+
                     const idsArray = objects.map(({ id }) => id);
 
-                    const queryOptionsProducts = { attributes: ['id', 'dropiId'], where: { dropiId: idsArray, country: env.country } };
+                    const queryOptionsProducts = { attributes: ['id', 'dropiId', 'productUpdateDate'], where: { dropiId: idsArray, country: env.country } };
                     const productArray = await getProductsFindAll(queryOptionsProducts);
 
                     const productIds = productArray.map(product => product.dropiId);
@@ -249,9 +286,33 @@ const scraper = async (env, headers, pagesPerBatch = 3) => {
 
                     const existingProductsWithStock = existingProducts.map(obj => {
                         const objectWithStock = objects.find(({ id }) => id === obj.dropiId);
+
+                        let previousNow = objectWithStock.updated_at;
+                        const previousUpdate = obj.productUpdateDate;
+
+                        let updateProduct = {};
+
+                        if (!previousUpdate || (previousNow && previousNow > previousUpdate)) {
+                            const image = updateImages(objectWithStock.gallery, DROPI_IMG_URL);
+                            const stores = updateStores(objectWithStock.warehouses);
+
+                            updateProduct = {
+                                name: objectWithStock.name,
+                                description: objectWithStock.description,
+                                sale_price: objectWithStock.sale_price,
+                                suggested_price: objectWithStock.suggested_price,
+                                url: `${DROPI_DETAILS_PRODUCTS}${objectWithStock.id}/${convertirString(objectWithStock.name)}`,
+                                productUpdateDate: previousNow || objectWithStock.created_at,
+                                image,
+                                stores
+                            };
+                        };
+
                         return {
                             id: obj.id,
-                            stock: objectWithStock.stock
+                            stock: objectWithStock.stock,
+                            updateProduct,
+                            obj
                         };
                     });
 
@@ -270,8 +331,8 @@ const scraper = async (env, headers, pagesPerBatch = 3) => {
                     logMessage(`Error al scrapear productos de la página ${page}: ${error.message}`);
                     if (error.validationErrors) {
                         logMessage(JSON.stringify(error.validationErrors));
-                    }
-                }
+                    };
+                };
             })();
             
             batchRequests.push(requestPromise);

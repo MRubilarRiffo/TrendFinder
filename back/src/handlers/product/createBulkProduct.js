@@ -9,7 +9,10 @@ const createBulkProduct = async (products) => {
             description: product.description,
             sale_price: product.sale_price,
             url: product.url,
-            country: product.country
+            country: product.country,
+            stores: product.stores,
+            productUpdateDate: product.productUpdateDate,
+            suggested_price: product.suggested_price
         }));
 
         const createdProducts = await Product.bulkCreate(queryOptions);

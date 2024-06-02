@@ -6,11 +6,11 @@ const getProductsRandom_controllers = async (req, res, next) => {
         const countries = [ 'Chile', 'Colombia' ];
         // const countries = [ 'Chile' ];
 
-        const limit = 50;
+        const limit = 10;
 
         let promisesCountSales = countries.map(async country => {
             const countSales = await getProductsRandom(country, limit);
-            let products;
+            let products = [];
             if (countSales && countSales.length > 0) {
                 products = countSales.map(({ Product, totalSales }) => {
                     Product.image = splitImages(Product.image);
@@ -18,7 +18,6 @@ const getProductsRandom_controllers = async (req, res, next) => {
                     return { id: Product.id, dropiId: Product.dropiId, name: Product.name, image: Product.image, country: Product.country, unitsSold: totalSales };
                 });
             };
-
             return { country, products };
         });
 

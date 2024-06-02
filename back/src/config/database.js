@@ -28,7 +28,7 @@ fs.readdirSync(path.join(__dirname, '/../models'))
 	let capsEntries = entries.map((entry) => [entry[0][0].toUpperCase() + entry[0].slice(1), entry[1]]);
 	sequelize.models = Object.fromEntries(capsEntries);
 	
-	const { Product, Stock, Category, Sale, DailySale, WeeklySale, MonthlySale, User, Subscription, CountSale } = sequelize.models;
+	const { Product, Stock, Category, Sale, DailySale, User, Subscription, CountSale } = sequelize.models;
 
 	//Relaciones aquí
 	Product.hasOne(Stock);
@@ -45,12 +45,6 @@ fs.readdirSync(path.join(__dirname, '/../models'))
 	
 	Product.hasMany(DailySale);
 	DailySale.belongsTo(Product);
-
-	Product.hasMany(WeeklySale);
-	WeeklySale.belongsTo(Product);
-
-	Product.hasMany(MonthlySale);
-	MonthlySale.belongsTo(Product);
 
 	User.hasOne(Subscription);
 	Subscription.belongsTo(User);
