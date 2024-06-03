@@ -15,22 +15,6 @@ const DROPI_IMG_URLS3 = config.dropi_img_urls3;
 
 const limit = 500; // MODIFICAR A 500
 
-const body = {
-    "privated_product": false,
-    "bod": null,
-    "stockmayor": 0,
-    "no_count": true,
-    "order_by": "id",
-    "order_type": "asc",
-    "pageSize": limit,
-    "startData": 0,
-    "notNulldescription": false,
-    "userVerified": false,
-    "category": null,
-    "warehouse_id": null,
-    "keywords": null
-};
-
 const updateStores = (warehouses) => {
     let storesArray = [];
     if (warehouses && warehouses.length > 0) {
@@ -241,7 +225,7 @@ const nonexistentProductsFunctions = async (nonexistentProducts, DROPI_IMG_URL, 
     };
 };
 
-const scraper = async (env, headers, pagesPerBatch = 3) => {
+const scraper = async (env, headers, body, pagesPerBatch = 3) => {
     const API = env.dropi_api_products;
     const DROPI_IMG_URL = env.dropi_img_url;
     const DROPI_DETAILS_PRODUCTS = env.dropi_details_products;
@@ -272,7 +256,7 @@ const scraper = async (env, headers, pagesPerBatch = 3) => {
                         return;
                     };
 
-                    objects = objects.filter(({ stock }) => stock);
+                    objects = objects.filter(({ stock, name, sale_price, suggested_price }) => stock && stock >= 0 && name && sale_price > 0 && suggested_price > 0 );
 
                     const idsArray = objects.map(({ id }) => id);
 
@@ -349,6 +333,22 @@ const scraperConfig = async () => {
 
     const configByCountries = config.dropi_country;
 
+    let body = {
+        "privated_product": false,
+        "bod": null,
+        "stockmayor": 0,
+        "no_count": true,
+        "order_by": "id",
+        "order_type": "asc",
+        "pageSize": limit,
+        "startData": 0,
+        "notNulldescription": false,
+        "userVerified": false,
+        "category": null,
+        "warehouse_id": null,
+        "keywords": null
+    };
+
     let headers = {
         "dropi-integration-key": "token",
         "Content-Type": "application/json;charset=UTF-8"
@@ -357,7 +357,13 @@ const scraperConfig = async () => {
     const productPromises = configByCountries.map(async config => {
         const clonedHeaders = { ...headers };
         clonedHeaders["dropi-integration-key"] = config.dropi_token;
-        await scraper(config, clonedHeaders);
+
+        const clonedBody = { ...body };
+        if (config.country === 'Colombia') {
+            clonedBody["userVerified"] = true;
+        };
+
+        await scraper(config, clonedHeaders, clonedBody);
     });
 
     await Promise.all(productPromises);
