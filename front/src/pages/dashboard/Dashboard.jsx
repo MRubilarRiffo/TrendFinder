@@ -1,14 +1,28 @@
-import { DashboardContainer, leftColumnContainer, rightColumnContainer, rightColumnContent, rigthColumnPosition } from './Dashboard.module.css';
 import { Logo } from '../../components/Logo/Logo';
 import { Routes, Route, Link } from 'react-router-dom';
-import { Products } from '../Products/Products';
+import { HomeDashboard } from '../Home Dashboard/Home Dashboard';
 import { ProductDetails } from '../Product Details/Product Details';
 import { Header } from '../../components/Header/Header';
+import { Products } from '../Products/Products';
+import { DashboardContainer,
+    leftColumnContainer,
+    rightColumnContainer,
+    rightColumnContent,
+    rigthColumnPosition
+} from './Dashboard.module.css';
+import Footer from '../../components/Footer/Footer';
 
 const Dashboard = () => {
     const menu = [
-        { title: 'Productos', link: '/dashboard/products/' },
-        { title: 'Favoritos', link: '/favorites' },
+        { title: 'Home', link: '/dashboard' },
+        { title: 'Productos', link: 'products' },
+        { title: 'Favoritos', link: 'favorites' },
+    ];
+
+    const route = [
+        { path: '/', element: <HomeDashboard /> },
+        { path: '/product/:country/:name/:id', element: <ProductDetails /> },
+        { path: '/products', element: <Products /> },
     ];
 
     return (
@@ -26,9 +40,13 @@ const Dashboard = () => {
                     <Header />
                     <div className={rightColumnContent}>
                         <Routes>
-                            <Route path="products" element={<Products />} />
-                            <Route path="product/:country/:name/:id" element={<ProductDetails />} />
+                            {route.length > 0 &&
+                                route.map(({ path, element }) => (
+                                    <Route path={path} element={element} key={path} />
+                                ))
+                            }
                         </Routes>
+                        <Footer />
                     </div>
                 </div>
             </div>

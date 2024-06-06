@@ -1,49 +1,73 @@
-import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getProductsRandomByCountry } from '../../redux/actions';
+import { container, cardContainer } from './Products.module.css';
+import { useEffect, useState } from 'react';
+import { getLeakedProducts } from '../../redux/actions';
 import { Card } from '../../components/Card/Card';
-import { containerCard } from './Products.module.css';
+import useResponsiveValue from '../../hooks/useResponsiveValue';
+import { useLocation } from 'react-router-dom';
+import { Loader } from '../../components/Loader/Loader';
+import { Pagination } from '../../components/Pagination/Pagination';
+import { RESET_LEAKED_PRODUCTS } from '../../redux/actions-type';
 
 const Products = () => {
-    const dispatch = useDispatch()
+    const limit = useResponsiveValue(10, 15, 25);
 
-    useEffect(() => {
-        dispatch(getProductsRandomByCountry('Chile'));
-    }, [])
-    
-    const products = useSelector(state => state.productsByCountry);
+    const [currentPage, setCurrentPage] = useState(1);
 
-    const countryChile = products.find(item => item.country === 'Chile' ) || {};
-    const countryColombia = products.find(item => item.country === 'Colombia' ) || {};
+    const dispatch = useDispatch();
+    const location = useLocation();
 
+    const queryParams = new URLSearchParams(location.search);
+    const name = queryParams.get('name') || '';
 
-    const productsChile = countryChile.products || [];
-    const productsColombia = countryColombia.products || [];
-        
-    if (productsChile.length === 0) {
-        return <h3>Cargando...</h3>;
+    const sortOrder = 'id,asc';
+
+    const page = currentPage;
+
+    const queryOptions = {
+        name,
+        limit,
+        sortOrder,
+        page
     };
 
-    const bestSellersHome = [
-        { title: 'Lo Más Vendido En Chile', products: productsChile },
-        { title: 'Lo Más Vendido En Colombia', products: productsColombia }
-    ];
+    const data = useSelector((state) => state.leakedProducts);
 
+    const products = data.Data || [];
+    const metaData = data.Metadata || {};
+
+    const totalPages = metaData['Total Pages'];
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+        dispatch(getLeakedProducts(queryOptions));
+        return () => {
+            dispatch({ type: RESET_LEAKED_PRODUCTS });
+        };
+    }, [name, limit, sortOrder, currentPage]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [name, limit, sortOrder]);
+
+
+    if (data.length === 0) {
+        return <Loader />;
+    };
+    
     return (
-        <div>
-            {bestSellersHome.map(({ title, products }, index) => 
-                <div key={`${index}-${title}`}>
-                    <h3>{title}</h3>
-                    <div className={containerCard}>
-                        {products.map(product => 
-                            <Card
-                                key={`product-${product.id}`}
-                                product={product}
-                            />
-                        )}
-                    </div>
-                </div>
-            )}
+        <div className={container}>
+            <div>
+                <h3>Filtros</h3>
+            </div>
+            <div className={cardContainer}>
+                {products.map(product => (
+                    <Card product={product} key={product.id} />
+                ))}
+            </div>
+            <div>
+                <Pagination totalPages={totalPages} currentPage={currentPage} setCurrentPage={setCurrentPage} />
+            </div>
         </div>
     );
 };

@@ -1,0 +1,51 @@
+.slideContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.cardsContainer {
+    width: calc(100% - (var(--width-button-slice) * 2));
+    padding: 0 calc(var(--space-between-elements) / 2);
+}
+
+.cardsContainer > div {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    -ms-overflow-style: none;  /* IE y Edge */
+    scrollbar-width: none;
+    width: 100%;
+}
+
+.cardsContainer > div::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari y Opera */
+}
+
+.cardsContainer > div > div {
+    flex: 1 0 calc(100% / 5);
+    min-width: calc(100% / 5);
+    height: 100%;
+    padding: 0 calc(var(--space-between-elements) / 2);
+}
+
+.buttonContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: var(--width-button-slice);
+}
+
+@media (max-width: 1199px) {
+    .cardsContainer > div > div {
+        flex: 1 0 calc(100% / 3);
+        min-width: calc(100% / 3);
+    }
+}
+
+@media (max-width: 767px) {
+    .cardsContainer > div > div {
+        flex: 1 0 calc(100% / 2);
+        min-width: calc(100% / 2);
+    }
+}

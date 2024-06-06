@@ -5,7 +5,7 @@ const getProductsRandom = async (country, limit = 5) => {
     try {
         const queryOptions = {
             where: {
-                repeat: { [Op.gte]: 50 },
+                // repeat: { [Op.gte]: 50 },
             },
             include: [{
                 model: Product,

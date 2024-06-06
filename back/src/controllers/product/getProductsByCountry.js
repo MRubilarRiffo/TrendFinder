@@ -1,21 +1,29 @@
 const { getProductsRandom } = require("../../handlers/product/getProductsRandom");
 const { splitImages } = require("../../helpers/splitImages");
 
-const getProductsRandom_controllers = async (req, res, next) => {
+const getProductsByCountry = async (req, res, next) => {
     try {
-        const countries = [ 'Chile', 'Colombia' ];
-        // const countries = [ 'Chile' ];
+        const { countries } = req.query;
+
+        const countriesArray = countries.split(',');
 
         const limit = 10;
 
-        let promisesCountSales = countries.map(async country => {
+        let promisesCountSales = countriesArray.map(async country => {
             const countSales = await getProductsRandom(country, limit);
             let products = [];
             if (countSales && countSales.length > 0) {
                 products = countSales.map(({ Product, totalSales }) => {
                     Product.image = splitImages(Product.image);
 
-                    return { id: Product.id, dropiId: Product.dropiId, name: Product.name, image: Product.image, country: Product.country, unitsSold: totalSales };
+                    return {
+                        id: Product.id,
+                        dropiId: Product.dropiId,
+                        name: Product.name,
+                        image: Product.image,
+                        country: Product.country,
+                        unitsSold: totalSales
+                    };
                 });
             };
             return { country, products };
@@ -37,4 +45,4 @@ const getProductsRandom_controllers = async (req, res, next) => {
     };
 };
 
-module.exports = { getProductsRandom_controllers };
+module.exports = { getProductsByCountry };

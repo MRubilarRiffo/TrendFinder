@@ -1,0 +1,18 @@
+.buttonContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1/1;
+    cursor: pointer;
+    background-color: #40518933;
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    border-radius: var(--border-radius-global);
+    font-size: 25px;
+    color: #405189;
+}
+
+.right {
+    transform: rotate(180deg);
+}

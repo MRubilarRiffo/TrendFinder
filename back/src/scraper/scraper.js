@@ -225,10 +225,10 @@ const nonexistentProductsFunctions = async (nonexistentProducts, DROPI_IMG_URL, 
     };
 };
 
-const scraper = async (env, headers, body, pagesPerBatch = 3) => {
-    const API = env.dropi_api_products;
-    const DROPI_IMG_URL = env.dropi_img_url;
-    const DROPI_DETAILS_PRODUCTS = env.dropi_details_products;
+const scraper = async (config, headers, body, pagesPerBatch = 3) => {
+    const API = config.dropi_api_products;
+    const DROPI_IMG_URL = config.dropi_img_url;
+    const DROPI_DETAILS_PRODUCTS = config.dropi_details_products;
 
     let currentPage = 1;
     let hasMoreResults = true;
@@ -244,14 +244,15 @@ const scraper = async (env, headers, body, pagesPerBatch = 3) => {
             const requestPromise = (async () => {
                 try {
                     const response = await post(API, body, { headers });
-                    let { objects } = response.data;
+                    let { objects, isSuccess, error } = response.data;
 
-                    if (objects && objects.length === 0) {
-                        logMessage(`No se encontraron más productos en la página ${page}`);
+                    if (!isSuccess || !objects) {
+                        logMessage(`Error al obtener productos de la página ${page} (${config.country})`);
+                        if (error) logMessage(`Error: ${error}`);
                         hasMoreResults = false;
                         return;
-                    } else if (!objects) {
-                        logMessage(`Hubo un error al obtener los productos de la página ${page} (${env.country})`);
+                    } else if (objects.length === 0) {
+                        logMessage(`No se encontraron más productos en ${config.country}`);
                         hasMoreResults = false;
                         return;
                     };
@@ -260,7 +261,7 @@ const scraper = async (env, headers, body, pagesPerBatch = 3) => {
 
                     const idsArray = objects.map(({ id }) => id);
 
-                    const queryOptionsProducts = { attributes: ['id', 'dropiId', 'productUpdateDate'], where: { dropiId: idsArray, country: env.country } };
+                    const queryOptionsProducts = { attributes: ['id', 'dropiId', 'productUpdateDate'], where: { dropiId: idsArray, country: config.country } };
                     const productArray = await getProductsFindAll(queryOptionsProducts);
 
                     const productIds = productArray.map(product => product.dropiId);
@@ -305,12 +306,12 @@ const scraper = async (env, headers, body, pagesPerBatch = 3) => {
                         functionArray.push(existingProductsFunctions(existingProductsWithStock));
                     };
                     if (nonexistentProducts && nonexistentProducts.length > 0) {
-                        functionArray.push(nonexistentProductsFunctions(nonexistentProducts, DROPI_IMG_URL, DROPI_DETAILS_PRODUCTS, env.country));
+                        functionArray.push(nonexistentProductsFunctions(nonexistentProducts, DROPI_IMG_URL, DROPI_DETAILS_PRODUCTS, config.country));
                     };
 
                     await Promise.all(functionArray);
         
-                    logMessage(`Página ${page}: ${limit * page} productos en total analizados (${env.country})`);
+                    logMessage(`Página ${page}: ${limit * page} productos en total analizados (${config.country})`);
                 } catch (error) {
                     logMessage(`Error al scrapear productos de la página ${page}: ${error.message}`);
                     if (error.validationErrors) {

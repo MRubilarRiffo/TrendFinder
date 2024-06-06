@@ -4,10 +4,11 @@ import * as actionTypes from './actions-type';
 const API = 'http://localhost:3001';
 // const API = 'https://api.innovoza.com/api';
 
-export const getProductsRandomByCountry = (country) => {
+export const getProductsByCountry = (countriesActive) => {
     return async function (dispatch) {
         try {
-            const response = await axios.get(`${API}/products/random?country=${country}`);
+            const countriesName = countriesActive.map(country => country.name).toString();
+            const response = await axios.get(`${API}/products/countries?countries=${countriesName}`);
             return dispatch({ type: actionTypes.GET_PRODUCTS_RANDOM_BY_COUNTRY, payload: response.data });
         } catch (error) {
             console.log(error.response.data);
@@ -31,6 +32,17 @@ export const getReviewsByProduct = (productId) => {
         try {
             const response = await axios.get(`${API}/reviews/${productId}`);
             return dispatch({ type: actionTypes.GET_REVIEWS_BY_PRODUCT, payload: response.data });
+        } catch (error) {
+            console.log(error.response.data);
+        };
+    };
+};
+
+export const getLeakedProducts = ({ limit, sortOrder, name, page }) => {
+    return async function (dispatch) {
+        try {
+            const response = await axios.get(`${API}/products?limit=${limit}&sortOrder=${sortOrder}&name=${name}&page=${page}`);
+            return dispatch({ type: actionTypes.GET_LEAKED_PRODUCTS, payload: response.data });
         } catch (error) {
             console.log(error.response.data);
         };

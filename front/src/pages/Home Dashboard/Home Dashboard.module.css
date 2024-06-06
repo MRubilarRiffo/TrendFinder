@@ -1,22 +1,22 @@
-.container {
-    display: flex;
-    flex-direction: column;
-}
-
-.cardContainer {
+.containerCard {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
+    width: 100%;
     gap: var(--space-between-elements);
 }
 
+.containerCard > div {
+    margin-bottom: 1em;
+}
+
 @media (max-width: 1199px) {
-    .cardContainer {
+    .containerCard {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 767px) {
-    .cardContainer {
+    .containerCard {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }

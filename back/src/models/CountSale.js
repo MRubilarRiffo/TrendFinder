@@ -10,5 +10,9 @@ module.exports = (sequelize) => {
             type: DataTypes.INTEGER,
             allowNull: false
         },
+        maxConsecutiveDays: {
+            type: DataTypes.INTEGER,
+            allowNull: false
+        }
     });
 };

@@ -4,7 +4,8 @@ const initialState = {
     products: [],
     details: {},
     reviewProduct: [],
-    productsByCountry: []
+    productsByCountry: [],
+    leakedProducts: [],
 };
 
 const reducer = (state = initialState, action) => {
@@ -38,6 +39,16 @@ const reducer = (state = initialState, action) => {
             return {
                 ...state,
                 reviewProduct: []
+            };
+        case actionTypes.GET_LEAKED_PRODUCTS:
+            return {
+                ...state,
+                leakedProducts: action.payload
+            };
+        case actionTypes.RESET_LEAKED_PRODUCTS:
+            return {
+                ...state,
+                leakedProducts: []
             };
         default:
             return state;

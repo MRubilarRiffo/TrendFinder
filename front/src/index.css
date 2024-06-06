@@ -421,8 +421,10 @@
     --border-global: #212529;
     --border-color-2: #32383e;
 
-    --border-radius-global: 4px;
+    --border-radius-global: 8px;
 
     --color-text: #ced4da;
     --color-text2: #878a99;
+
+    --width-button-slice: 2.5rem;
 }

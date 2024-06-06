@@ -16,6 +16,8 @@ const ProductDetails = () => {
 
     const product = useSelector(state => state.details);
 
+    const totalSales = product.CountSale?.totalSales || 0;
+
     useEffect(() => {
         dispatch(getDetails(id, country));
         return () => {
@@ -30,21 +32,12 @@ const ProductDetails = () => {
     const infoProduct = [
         { title: "País", value: product.country, icon: <RiMoneyDollarCircleFill /> },
         { title: "Precio", value: formatPrice(product.sale_price, product.country), icon: <RiMoneyDollarCircleFill /> },
-        { title: "Precio Sugerido", value: 'Pendiente', icon: <RiMoneyDollarCircleFill /> },
+        { title: "Precio Sugerido", value: formatPrice(product.suggested_price, product.country), icon: <RiMoneyDollarCircleFill /> },
         { title: "% Margen Bruto", value: 'Pendiente', icon: <RiMoneyDollarCircleFill /> },
-        { title: "No. de Ventas", value: product.CountSale.totalSales, icon: <RiFileCopy2Fill /> },
+        { title: "No. de Ventas", value: product.CountSale?.totalSales || 0, icon: <RiFileCopy2Fill /> },
         { title: "Stock Disponible", value: product.Stock.quantity, icon: <RiStackFill /> },
-        { title: "Ventas Totales", value: formatPrice(product.CountSale.totalSales * product.sale_price, product.country), icon: <RiInboxArchiveFill /> }
+        { title: "Ventas Totales", value: formatPrice(totalSales * product.sale_price, product.country), icon: <RiInboxArchiveFill /> }
     ];
-
-    console.log(product.url);
-
-    const handleClick = () => {
-        navigate(product.url, {
-            target: '_blank',
-            rel: 'noopener noreferrer'
-        });
-    };
 
     return (
         <div className={productPageContainer}>

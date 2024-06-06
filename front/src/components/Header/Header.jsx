@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { FaSearch } from 'react-icons/fa';
 import { IoMdCloseCircle } from "react-icons/io";
 import { headerContainer, searchContainer, iconSearch, iconClose } from './Header.module.css';
+import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
 
     const handleSearchChange = (event) => {
@@ -12,8 +14,8 @@ const Header = () => {
 
     const handleSearchSubmit = (event) => {
         event.preventDefault();
-        // Realizar alguna acción con el término de búsqueda
-        console.log('Buscando productos para:', searchTerm);
+        navigate(`/dashboard/products?name=${searchTerm}`);
+        setSearchTerm('');
     };
 
     const handleSearchClose = () => {

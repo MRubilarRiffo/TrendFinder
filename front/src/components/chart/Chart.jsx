@@ -1,12 +1,31 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createChart } from 'lightweight-charts';
 
 const Chart = ({ data }) => {
     const chartContainerRef = useRef();
+
+    const [containerWidth, setContainerWidth] = useState(0);
+    console.log(containerWidth);
+
+    useEffect(() => {
+        const handleResize = () => {
+            if (chartContainerRef.current) {
+                const newWidth = chartContainerRef.current.getBoundingClientRect().width;
+                setContainerWidth(newWidth);
+            }
+        };
+    
+        window.addEventListener('resize', handleResize);
+    
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+
     useEffect(() => {
         if (data && data.length > 0) {
             const chart = createChart(chartContainerRef.current, { 
-                width: 600, 
+                width: containerWidth, 
                 height: 300,
                 layout: {
                     textColor: '#fff',
@@ -17,7 +36,7 @@ const Chart = ({ data }) => {
                 },
                 timeScale: {
                     timeVisible: true,
-                    secondsVisible: true,
+                    secondsVisible: false,
                     barSpacing: 15,
                     rightOffset: 2,
                     borderColor: '#232323',
@@ -25,6 +44,16 @@ const Chart = ({ data }) => {
                 },
                 priceScale: {
                     borderColor: '#2b2b2b',
+                },
+                grid: {
+                    vertLines: {
+                      color: '#32383e', // Color para las líneas verticales
+                    //   style: LightweightCharts.LineStyle.Solid, // Estilo de línea (sólida, punteada, etc.)
+                    },
+                    horzLines: {
+                      color: '#32383e', // Color para las líneas horizontales
+                    //   style: LightweightCharts.LineStyle.Solid,
+                    },
                 },
             });
 
@@ -52,13 +81,15 @@ const Chart = ({ data }) => {
 
             lineSeries.setData(dataArray, { preserveOrder: true });
 
+            // chart.resize(containerWidth, 300);
+
             // chart.timeScale().fitContent();
     
             return () => {
                 chart.remove();
             };
         };
-    }, []);
+    }, [containerWidth, data]);
 
     return <div ref={chartContainerRef} />;
 };
