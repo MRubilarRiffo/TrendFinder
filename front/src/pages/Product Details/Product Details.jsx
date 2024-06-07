@@ -8,6 +8,7 @@ import { LeftColumn } from "./Left Column/Left Column";
 import { productPageContainer, rightColumnProductDetails, dataContainer, iconContainer, tittleContainer, dropiRedirectButtonContainer } from "./Product Details.module.css";
 import { RiMoneyDollarCircleFill, RiFileCopy2Fill, RiStackFill, RiInboxArchiveFill } from "react-icons/ri";
 import formatPrice from "../../functions/formatPrice";
+import { Loader } from "../../components/Loader/Loader";
 
 const ProductDetails = () => {
     const { country, id } = useParams();
@@ -26,7 +27,7 @@ const ProductDetails = () => {
     }, [country, id]);
 
     if (Object.keys(product).length === 0) {
-        return <h3>Cargando...</h3>;
+        return <Loader />;
     };
 
     const infoProduct = [

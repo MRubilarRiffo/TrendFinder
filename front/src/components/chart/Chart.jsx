@@ -44,6 +44,7 @@ const Chart = ({ data }) => {
                 },
                 priceScale: {
                     borderColor: '#2b2b2b',
+                    type: 'volume'
                 },
                 grid: {
                     vertLines: {

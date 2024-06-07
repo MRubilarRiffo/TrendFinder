@@ -1,37 +1,20 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { container, cardContainer } from './Products.module.css';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { getLeakedProducts } from '../../redux/actions';
 import { Card } from '../../components/Card/Card';
-import useResponsiveValue from '../../hooks/useResponsiveValue';
-import { useLocation } from 'react-router-dom';
 import { Loader } from '../../components/Loader/Loader';
 import { Pagination } from '../../components/Pagination/Pagination';
-import { RESET_LEAKED_PRODUCTS } from '../../redux/actions-type';
+import { FILTERS, RESET_LEAKED_PRODUCTS } from '../../redux/actions-type';
+import { Filters } from '../../components/Filters/Filters';
 
 const Products = () => {
-    const limit = useResponsiveValue(10, 15, 25);
-
-    const [currentPage, setCurrentPage] = useState(1);
-
     const dispatch = useDispatch();
-    const location = useLocation();
-
-    const queryParams = new URLSearchParams(location.search);
-    const name = queryParams.get('name') || '';
-
-    const sortOrder = 'id,asc';
-
-    const page = currentPage;
-
-    const queryOptions = {
-        name,
-        limit,
-        sortOrder,
-        page
-    };
 
     const data = useSelector((state) => state.leakedProducts);
+    const filters = useSelector((state) => state.filters);
+
+    const { name, sortOrder, page, limit, countries } = filters;
 
     const products = data.Data || [];
     const metaData = data.Metadata || {};
@@ -40,34 +23,40 @@ const Products = () => {
 
     useEffect(() => {
         window.scrollTo(0, 0);
-        dispatch(getLeakedProducts(queryOptions));
+
+        if (limit !== 0) {
+            dispatch(getLeakedProducts(filters));
+        };
+
         return () => {
             dispatch({ type: RESET_LEAKED_PRODUCTS });
         };
-    }, [name, limit, sortOrder, currentPage]);
-
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [name, limit, sortOrder]);
-
+    }, [name, limit, sortOrder, page, countries]);
 
     if (data.length === 0) {
         return <Loader />;
     };
     
+    console.log(filters);
+
     return (
         <div className={container}>
             <div>
-                <h3>Filtros</h3>
+                <Filters />
             </div>
-            <div className={cardContainer}>
-                {products.map(product => (
-                    <Card product={product} key={product.id} />
-                ))}
-            </div>
-            <div>
-                <Pagination totalPages={totalPages} currentPage={currentPage} setCurrentPage={setCurrentPage} />
-            </div>
+            {totalPages === 0
+                ? <h3>No hay productos para mostrar</h3>
+                : <div>
+                    <div className={cardContainer}>
+                        {products.map(product => (
+                            <Card product={product} key={product.id} />
+                        ))}
+                    </div>
+                    <div>
+                        <Pagination totalPages={totalPages} />
+                    </div>
+                </div>
+            }
         </div>
     );
 };

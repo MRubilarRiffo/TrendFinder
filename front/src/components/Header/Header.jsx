@@ -3,10 +3,16 @@ import { FaSearch } from 'react-icons/fa';
 import { IoMdCloseCircle } from "react-icons/io";
 import { headerContainer, searchContainer, iconSearch, iconClose } from './Header.module.css';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { FILTERS } from '../../redux/actions-type';
 
 const Header = () => {
     const navigate = useNavigate();
-    const [searchTerm, setSearchTerm] = useState('');
+    const dispatch = useDispatch();
+
+    const { name } = useSelector((state) => state.filters);
+
+    const [searchTerm, setSearchTerm] = useState(name);
 
     const handleSearchChange = (event) => {
         setSearchTerm(event.target.value);
@@ -14,11 +20,12 @@ const Header = () => {
 
     const handleSearchSubmit = (event) => {
         event.preventDefault();
-        navigate(`/dashboard/products?name=${searchTerm}`);
-        setSearchTerm('');
+        dispatch({ type: FILTERS, payload: { name: searchTerm, page: 1 } });
+        navigate('/dashboard/products');
     };
 
     const handleSearchClose = () => {
+        dispatch({ type: FILTERS, payload: { name: '', page: 1 } });
         setSearchTerm('');
     };
 

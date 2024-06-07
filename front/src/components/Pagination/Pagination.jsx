@@ -2,9 +2,15 @@
 import { containerPaginacion, buttonContainer } from './Pagination.module.css';
 import { useState } from 'react';
 import { ButtonNext } from '../Button Next/Button Next';
+import { useDispatch, useSelector } from 'react-redux';
+import { FILTERS } from '../../redux/actions-type';
 
-const Pagination = ({ totalPages, currentPage, setCurrentPage }) => {
-	const [input, setInput] = useState(currentPage);
+const Pagination = ({ totalPages }) => {
+	const dispatch = useDispatch();
+
+	const { page } = useSelector((state) => state.filters);
+
+	const [input, setInput] = useState(page);
 
 	const onKeyDown = (event) => {
 		if (event.keyCode === 13) { // Si se presiona Enter
@@ -15,28 +21,31 @@ const Pagination = ({ totalPages, currentPage, setCurrentPage }) => {
 
     const onChange = (event) => {
         const value = parseInt(event.target.value);
+
         if (!isNaN(value)) {
             setInput(value); // Guardar el valor numérico directamente
-        }
+        };
+
 		if (value > totalPages) {
 			setInput(totalPages);
-		}
+		};
+
 		if (value < 1) {
 			setInput(1);
-		}
+		};
     };
 
 	const changePage = (increment) => {
         if (isNaN(input) || input === '') {
             setInput(1);
-            setCurrentPage(1);
-            return; // Salir si el input no es válido
+			dispatch({ type: FILTERS, payload: { page: 1 } });
+            return;
         }
 
         const newPage = parseInt(input) + increment;
         if (newPage >= 1 && newPage <= totalPages) {
             setInput(newPage);
-            setCurrentPage(newPage);
+			dispatch({ type: FILTERS, payload: { page: newPage } });
         } 
     };
 
@@ -44,24 +53,22 @@ const Pagination = ({ totalPages, currentPage, setCurrentPage }) => {
 		<div className={containerPaginacion}>
 			<div className={buttonContainer}>
 				<ButtonNext
-					disabled={currentPage < 2 || input !== currentPage}
+					disabled={page < 2 || input !== page}
 					onClick={() => changePage(-1)} // Retroceder
 				/>
 			</div>
 			<input
 				onChange={(event) => onChange(event)}
 				onKeyDown={onKeyDown}
-				name='currentPage'
+				name='page'
 				autoComplete='off'
 				value={input}
 			/>
-			<p>
-				Página {currentPage} de {totalPages}
-			</p>
+			<p>Página {page} de {totalPages}</p>
 			<div className={buttonContainer}>
 				<ButtonNext
 					condition={true}
-					disabled={currentPage > totalPages - 1 || input !== currentPage}
+					disabled={page > totalPages - 1 || input !== page}
 					onClick={() => changePage(1)} // Avanzar
 				/>
 			</div>

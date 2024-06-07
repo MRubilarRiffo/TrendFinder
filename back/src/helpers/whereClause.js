@@ -26,7 +26,8 @@ const whereClause = (filters) => {
     };
 
     if (filters.country) {
-        whereClause.country = filters.country;
+        const countries = filters.country.split(',');
+        whereClause.country = { [Op.in]: countries };
     };
 
     return whereClause;

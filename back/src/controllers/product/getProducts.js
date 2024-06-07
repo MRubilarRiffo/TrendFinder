@@ -15,7 +15,7 @@ const getProducts = async (req, res, next) => {
             name: req.query.name,
             slug: req.query.slug,
             id: req.query.productId,
-            country: req.query.country,
+            country: req.query.countries,
             limit: req.query.limit
         };
 

@@ -6,6 +6,13 @@ const initialState = {
     reviewProduct: [],
     productsByCountry: [],
     leakedProducts: [],
+    filters: {
+        name: '',
+        limit: 0,
+        sortOrder: 'id,desc',
+        page: 1,
+        countries: []
+    }
 };
 
 const reducer = (state = initialState, action) => {
@@ -49,6 +56,20 @@ const reducer = (state = initialState, action) => {
             return {
                 ...state,
                 leakedProducts: []
+            };
+        case actionTypes.FILTERS:
+            console.log(action.payload);
+            return {
+                ...state,
+                filters: {
+                    ...state.filters,
+                    ...action.payload
+                }
+            };
+        case actionTypes.RESET_FILTERS:
+            return {
+                ...state,
+                filters: { ...initialState.filters }
             };
         default:
             return state;

@@ -1,0 +1,17 @@
+.container {
+    display: flex;
+    flex-direction: column;
+}
+
+.nameCountries div {
+    padding: 3px 0;
+}
+
+.nameCountries h5:hover {
+    cursor: pointer;
+    color: var(--color-text-global);
+}
+
+.active {
+    color: var(--color-text-global);
+}

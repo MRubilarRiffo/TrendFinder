@@ -3,17 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getProductsByCountry } from '../../redux/actions';
 import { containerCard } from './Home Dashboard.module.css';
 import { SlideProducts } from '../../components/Slide Products/Slide Products';
+import config from '../../config/config';
 
 const HomeDashboard = () => {
-    const countries = [
-        { name: 'Chile', active: true },
-        { name: 'Colombia', active: true },
-        { name: 'México', active: true },
-        { name: 'Panamá', active: true },
-        { name: 'Ecuador', active: true },
-        { name: 'Perú', active: true },
-        { name: 'España', active: true }
-    ];
+    const countries = config.countries;
 
     const countriesActive = countries.filter(item => item.active);
 
