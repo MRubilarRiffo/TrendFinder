@@ -2,7 +2,6 @@
     display: flex;
     flex-direction: row;
     gap: 50px;
-    margin-top: var(--space-between-elements);
     background-color: var(--border-global);
     border-radius: 4px;
     padding: var(--space-between-elements);

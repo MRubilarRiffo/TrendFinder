@@ -36,19 +36,17 @@ const Dashboard = () => {
                 ))}
             </div>
             <div className={rightColumnContainer}>
-                <div className={rigthColumnPosition}>
-                    <Header />
-                    <div className={rightColumnContent}>
-                        <Routes>
-                            {route.length > 0 &&
-                                route.map(({ path, element }) => (
-                                    <Route path={path} element={element} key={path} />
-                                ))
-                            }
-                        </Routes>
-                        <Footer />
-                    </div>
+                <Header />
+                <div className={rightColumnContent}>
+                    <Routes>
+                        {route.length > 0 &&
+                            route.map(({ path, element }) => (
+                                <Route path={path} element={element} key={path} />
+                            ))
+                        }
+                    </Routes>
                 </div>
+                <Footer />
             </div>
         </div>
     );

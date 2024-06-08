@@ -38,10 +38,18 @@ export const getReviewsByProduct = (productId) => {
     };
 };
 
-export const getLeakedProducts = ({ limit, sortOrder, name, page, countries }) => {
+export const getLeakedProducts = (filters) => {
     return async function (dispatch) {
         try {
-            const response = await axios.get(`${API}/products?limit=${limit}&sortOrder=${sortOrder}&name=${name}&page=${page}&countries=${countries.join(',')}`);
+            const limit = `limit=${filters.limit}`;
+            const sortOrder = `sortOrder=${filters.sortOrder}`;
+            const name = `name=${filters.name}`;
+            const page = `page=${filters.page}`;
+            const countries = `countries=${filters.countries.join(',')}`;
+            if (filters.categories.length > 0) {
+                var categories = `included=category:${filters.categories.join(':')}`;
+            };
+            const response = await axios.get(`${API}/products?${limit}&${sortOrder}&${name}&${page}&${countries}&${categories}`);
             return dispatch({ type: actionTypes.GET_LEAKED_PRODUCTS, payload: response.data });
         } catch (error) {
             console.log(error.response.data);

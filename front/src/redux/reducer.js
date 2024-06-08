@@ -11,7 +11,8 @@ const initialState = {
         limit: 0,
         sortOrder: 'id,desc',
         page: 1,
-        countries: []
+        countries: [],
+        categories: [],
     }
 };
 
@@ -58,7 +59,6 @@ const reducer = (state = initialState, action) => {
                 leakedProducts: []
             };
         case actionTypes.FILTERS:
-            console.log(action.payload);
             return {
                 ...state,
                 filters: {
@@ -69,7 +69,7 @@ const reducer = (state = initialState, action) => {
         case actionTypes.RESET_FILTERS:
             return {
                 ...state,
-                filters: { ...initialState.filters }
+                filters: initialState.filters
             };
         default:
             return state;

@@ -16,7 +16,7 @@ const getProducts = async (req, res, next) => {
             slug: req.query.slug,
             id: req.query.productId,
             country: req.query.countries,
-            limit: req.query.limit
+            limit: req.query.limit,
         };
 
         let where = whereClause(filters);

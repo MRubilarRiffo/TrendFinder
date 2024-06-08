@@ -1,6 +1,8 @@
 .footerContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     width: 100%;
     height: var(--height-header);
     background-color: var(--color-background-20);
-    margin: -var(--space-between-elements) 0;
 }

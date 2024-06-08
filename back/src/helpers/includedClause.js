@@ -1,4 +1,5 @@
-const { Product, Category, DailySale, Stock, Sale } = require("../config/database");
+const { Product, Category, DailySale, Stock, Sale, CountSale  } = require("../config/database");
+const { whereClause } = require("./whereClause");
 
 const includedClause = (included) => {
     const allowedIncluded = [
@@ -7,14 +8,29 @@ const includedClause = (included) => {
         { text: 'dailysale', table: DailySale },
         { text: 'stock', table: Stock },
         { text: 'sale', table: Sale },
+        { text: 'countsales', table: CountSale },
     ];
     
     const selectedIncluded = included.split(',');
 
-    const clause = selectedIncluded.map(item => {
-        const found = allowedIncluded.find(({ text }) => text === item);
+    let clause = selectedIncluded.map(item => {
+        let info = item.split(':');
+        const modelText = info.shift();
+
+        const found = allowedIncluded.find(({ text }) => text === modelText);
         if (found) {
-            return found.table;
+            let where = {};
+            if (info.length > 0) {
+                const filters = { 
+                    [found.text]: info
+                }
+                where = whereClause(filters);
+            };
+
+            return {
+                model: found.table,
+                where
+            };
         } else {
             return null;
         };

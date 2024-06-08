@@ -30,6 +30,18 @@ const whereClause = (filters) => {
         whereClause.country = { [Op.in]: countries };
     };
 
+    if (filters.category) {
+        whereClause.id = filters.category;
+    };
+
+    if (filters.countsales) {
+        console.log(filters.countsales);
+        whereClause.totalSales = {
+            [Op.gte]: filters.countsales[0],
+        };
+    };
+
+
     return whereClause;
 };
 
