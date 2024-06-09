@@ -37,8 +37,15 @@ const whereClause = (filters) => {
     if (filters.countsales) {
         console.log(filters.countsales);
         whereClause.totalSales = {
-            [Op.gte]: filters.countsales[0],
+            [Op.gte]: filters.countsales[0]
         };
+
+        if (filters.countsales[1]) {
+            whereClause.repeat = {
+                [Op.gte]: filters.countsales[1]
+            };
+        };
+
     };
 
 

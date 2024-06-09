@@ -1,26 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createChart } from 'lightweight-charts';
+import useResizeWidth from "../../hooks/useResizeWidth";
 
 const Chart = ({ data }) => {
     const chartContainerRef = useRef();
 
-    const [containerWidth, setContainerWidth] = useState(0);
-    console.log(containerWidth);
-
-    useEffect(() => {
-        const handleResize = () => {
-            if (chartContainerRef.current) {
-                const newWidth = chartContainerRef.current.getBoundingClientRect().width;
-                setContainerWidth(newWidth);
-            }
-        };
-    
-        window.addEventListener('resize', handleResize);
-    
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        };
-    }, []);
+    const containerWidth = useResizeWidth(chartContainerRef);
 
     useEffect(() => {
         if (data && data.length > 0) {
@@ -73,10 +58,6 @@ const Chart = ({ data }) => {
             });
 
             dataArray = dataArray.sort((a, b) => a.value - b.value);
-
-            if (dataArray.length > 1) {
-                dataArray.pop();
-            };
 
             dataArray = dataArray.sort((a, b) => a.time - b.time);
 

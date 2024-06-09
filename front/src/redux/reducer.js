@@ -13,6 +13,8 @@ const initialState = {
         page: 1,
         countries: [],
         categories: [],
+        sales: 200,
+        repeat: 200
     }
 };
 

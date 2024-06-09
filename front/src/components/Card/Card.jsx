@@ -1,12 +1,17 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { salesCount, card, containerImg, cardInformation, nameProduct, countryProduct, cardContainer } from './Card.module.css';
+import { MessageNotWorking } from '../Message Not Working/Message Not Working';
 
 const Card = ({ product }) => {
     const [imageIndex, setImageIndex] = useState(0);
+    const [showImage, setShowImage] = useState(true); // New state to control image visibility
 
     const nextImage = () => {
         setImageIndex((prevIndex) => (prevIndex + 1) % product.image.length);
+        if (imageIndex === product.image.length - 1) {
+            setShowImage(false); // Hide image if at the end and triggers error again
+        }
     };
 
     const convertirString = (inputString) => {
@@ -23,12 +28,16 @@ const Card = ({ product }) => {
                     </div>
                     <div className={containerImg}>
                         <div>
-                            <img
-                                loading="lazy"
-                                src={product.image[imageIndex] }
-                                alt={product.name}
-                                onError={nextImage}
-                            />
+                            {showImage && product.image.length > 0 ? (
+                                <img
+                                    loading="lazy"
+                                    src={product.image[imageIndex]}
+                                    alt={product.name}
+                                    onError={nextImage} 
+                                />
+                                ) : (
+                                    <MessageNotWorking message={'¡Ups! Parece que no tenemos fotos para mostrar.'} />
+                                )}
                         </div>
                     </div>
                     <div className={cardInformation}>

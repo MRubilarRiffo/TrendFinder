@@ -15,7 +15,7 @@ const Products = () => {
     const data = useSelector((state) => state.leakedProducts);
     const filters = useSelector((state) => state.filters);
 
-    const { name, sortOrder, page, limit, countries, categories } = filters;
+    const { name, sortOrder, page, limit, countries, categories, sales, repeat } = filters;
 
     const products = data.Data || [];
     const metaData = data.Metadata || {};
@@ -32,7 +32,7 @@ const Products = () => {
         return () => {
             dispatch({ type: RESET_LEAKED_PRODUCTS });
         };
-    }, [name, limit, sortOrder, page, countries, categories]);
+    }, [name, limit, sortOrder, page, countries, categories, sales, repeat]);
 
     return (
         <div className={container}>

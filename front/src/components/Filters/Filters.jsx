@@ -2,6 +2,8 @@ import config from '../../config/config';
 import { nameCountries, active, container, separator } from './Filters.module.css'; // Use 'styles' for better readability
 import { useDispatch, useSelector } from 'react-redux';
 import { FILTERS } from '../../redux/actions-type';
+import { RangeSlider } from '../Range Slider/Range Slider';
+import { useState } from 'react';
 
 const Filters = () => {
     const countriesList = config.countries;
@@ -33,7 +35,13 @@ const Filters = () => {
     const handleClearFilters = () => {
         dispatch({
             type: FILTERS,
-            payload: { countries: [], categories: [], page: 1 }
+            payload: {
+                countries: [],
+                categories: [],
+                page: 1,
+                sales: 200,
+                repeat: 200
+            }
         });
     };
 
@@ -41,6 +49,15 @@ const Filters = () => {
         { title: 'Países', list: countriesList, variable: 'countries' },
         { title: 'Categorías', list: categoriesList, variable: 'categories' }
     ];
+
+    const handleChange = (event, newvalue, filterType) => {
+        console.log(newvalue);
+        console.log(filterType);
+        dispatch({
+            type: FILTERS,
+            payload: { [filterType]: newvalue }
+        });
+    };
 
     return (
         <div className={container}>
@@ -66,6 +83,18 @@ const Filters = () => {
                 </div>
             </div>
             ))}
+            <div className={separator} >
+                <div>
+                    <p>No. Ventas</p>
+                </div>
+                <RangeSlider max={1000} defaultValue={200} handleChange={(event, newValue) => handleChange(event, newValue, 'sales')} />
+            </div>
+            <div className={separator} >
+                <div>
+                    <p>No. Datos</p>
+                </div>
+                <RangeSlider max={1000} defaultValue={200} handleChange={(event, newValue) => handleChange(event, newValue, 'repeat')} />
+            </div>
         </div>
     );
 };

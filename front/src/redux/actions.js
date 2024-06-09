@@ -41,15 +41,31 @@ export const getReviewsByProduct = (productId) => {
 export const getLeakedProducts = (filters) => {
     return async function (dispatch) {
         try {
+            let query = '';
             const limit = `limit=${filters.limit}`;
             const sortOrder = `sortOrder=${filters.sortOrder}`;
             const name = `name=${filters.name}`;
             const page = `page=${filters.page}`;
-            const countries = `countries=${filters.countries.join(',')}`;
-            if (filters.categories.length > 0) {
-                var categories = `included=category:${filters.categories.join(':')}`;
+
+            query += `${limit}&${sortOrder}&${name}&${page}`;
+
+            if (filters.countries.length > 0) {
+                const countries = `countries=${filters.countries.join(',')}`;
+                query += `&${countries}`;
             };
-            const response = await axios.get(`${API}/products?${limit}&${sortOrder}&${name}&${page}&${countries}&${categories}`);
+
+            let included = 'included=';
+            const countsales = `countsales:${filters.sales}:${filters.repeat}`;
+
+            included += `${countsales}`
+
+            if (filters.categories.length > 0) {
+                const categories = `category:${filters.categories.join(':')}`;
+                included += `,${categories}`
+            };
+
+
+            const response = await axios.get(`${API}/products?${query}&${included}`);
             return dispatch({ type: actionTypes.GET_LEAKED_PRODUCTS, payload: response.data });
         } catch (error) {
             console.log(error.response.data);
