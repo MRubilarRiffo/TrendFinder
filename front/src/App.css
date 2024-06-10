@@ -73,6 +73,24 @@ input:focus {
     border: none;
 }
 
+button {
+	height: 38px;
+	background-color: var(--color-text-global);
+	border: none;
+	border-radius: var(--border-radius-global);
+	cursor: pointer;
+}
+
+button:hover {
+	background-color: #3bc2b0;
+}
+
+button:focus {
+	outline: none;
+	box-shadow: none;
+	border: none;
+}
+
 @media (prefers-color-scheme: light) {
 	:root {
 		color: #213547;

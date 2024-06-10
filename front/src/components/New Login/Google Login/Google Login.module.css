@@ -1,0 +1,27 @@
+#signInButton{
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+}
+#signInButton button {
+    border-radius: 8px !important;
+    border: 1px solid transparent !important;
+    padding: 0.6em 1.2em !important;
+    font-size: 1em !important;
+    font-weight: 500 !important;
+    font-family: inherit !important;
+    background-color: #1a1a1a;
+    cursor: pointer !important;
+    text-align: center !important;
+    justify-content: center;
+    align-items: center;
+    color: #242424 !important;
+    border: 1px solid #CA1111 !important;
+    box-shadow: none !important;
+    height: 50px;
+}
+#signInButton button:hover {
+    border: 2px solid #CA1111 !important;
+    transition: border 0.25s !important;
+}

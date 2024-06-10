@@ -1,0 +1,22 @@
+.logout_google {
+    /* all: initial !important; */
+    background-color: #000000 !important;
+    display: initial !important;
+    text-decoration: inherit !important;
+    font-weight: 500 !important;
+    color: white !important;
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+    cursor: pointer !important;
+    font-family: 'Russo One', sans-serif !important;
+    font-size: 16px !important;
+}
+
+.logout_google:hover {
+    font-size: 20px !important;
+    background-color: #CA1111 !important;
+}
+
+.logout_google div {
+    display: none !important;
+}

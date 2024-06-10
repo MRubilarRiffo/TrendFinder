@@ -1,0 +1,22 @@
+#menu_login {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    padding: 15px;
+    width: 100px;
+    position: absolute;
+    background-color: black;
+    margin-top: 60px;
+    border: 1px solid white;
+    z-index: 8999;
+    border-radius: 10px;
+}
+#menu_login a {
+    color: white;
+    margin-left: 1px;
+}
+#menu_login a:hover {
+    font-size: 20px;
+    background-color: #CA1111;
+    color: white;
+}

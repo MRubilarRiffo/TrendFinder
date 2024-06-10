@@ -1,0 +1,62 @@
+#form {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+}
+
+#form input {
+    height: 30px;
+    background: white;
+    border: 1px solid #CA1111;
+    border-radius: 8px;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    color: #242424;
+    width: 100%;
+}
+
+#form input:hover {
+    border: 2px solid #CA1111;
+    transition: border 0.25s;
+}
+
+#form button:hover {
+    background-color: #CA1111;
+    transition: background-color 0.25s;
+}
+
+#name_lastName {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 5px;
+}
+
+#container_password {
+    position: relative;
+    display: flex;
+}
+
+#input_password {
+    width: 100%;
+}
+
+#button_password {
+    all: initial;
+    position: absolute;
+    right: 10px;
+    bottom: 5px;
+    font-size: 20px;
+    color: #1a1a1a;
+}
+
+#button_password:hover {
+    background-color: initial !important;
+    cursor: pointer;
+}
+
+#mail_lastName {
+    display: flex;
+}

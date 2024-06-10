@@ -3,7 +3,7 @@ import { nameCountries, active, container, separator } from './Filters.module.cs
 import { useDispatch, useSelector } from 'react-redux';
 import { FILTERS } from '../../redux/actions-type';
 import { RangeSlider } from '../Range Slider/Range Slider';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const Filters = () => {
     const countriesList = config.countries;
@@ -12,6 +12,9 @@ const Filters = () => {
     const dispatch = useDispatch();
 
     const activeFilters = useSelector(state => state.filters);
+
+    const [valueSales, setValueSales] = useState(activeFilters.sales);
+    const [valuerepeat, setValueRepeat] = useState(activeFilters.repeat);
 
     const handleClick = (filterType, filterName) => {
         const updatedFilters = new Set(activeFilters[filterType]);
@@ -87,13 +90,13 @@ const Filters = () => {
                 <div>
                     <p>No. Ventas</p>
                 </div>
-                <RangeSlider max={1000} defaultValue={200} handleChange={(event, newValue) => handleChange(event, newValue, 'sales')} />
+                <RangeSlider max={1000} defaultValue={valueSales} handleChange={(event, newValue) => handleChange(event, newValue, 'sales')} />
             </div>
             <div className={separator} >
                 <div>
                     <p>No. Datos</p>
                 </div>
-                <RangeSlider max={1000} defaultValue={200} handleChange={(event, newValue) => handleChange(event, newValue, 'repeat')} />
+                <RangeSlider max={1000} defaultValue={valuerepeat} handleChange={(event, newValue) => handleChange(event, newValue, 'repeat')} />
             </div>
         </div>
     );

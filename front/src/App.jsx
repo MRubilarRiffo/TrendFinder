@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { FILTERS } from './redux/actions-type';
 import useResponsiveValue from './hooks/useResponsiveValue';
+import { Home } from './pages/Home/Home';
 
 function App() {
 	const dispatch = useDispatch();
@@ -18,6 +19,7 @@ function App() {
 	return (		
 		<Routes>
 			<Route path='*' element={<h3>Error</h3>} />
+			<Route path="/" element={<Home />} />
 			<Route path="/dashboard/*" element={<Dashboard />} />
 		</Routes>
 	);
