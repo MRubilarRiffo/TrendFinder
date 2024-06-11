@@ -15,7 +15,14 @@ const initialState = {
         categories: [],
         sales: 200,
         repeat: 200
-    }
+    },
+    user: {
+        status: null,
+        message: '',
+        name: '',
+        email: '',
+        token: ''
+    },
 };
 
 const reducer = (state = initialState, action) => {
@@ -72,6 +79,16 @@ const reducer = (state = initialState, action) => {
             return {
                 ...state,
                 filters: initialState.filters
+            };
+        case actionTypes.USER_SESSION:
+            const userData = {
+                ...state.user,
+                ...action.payload 
+            };
+            localStorage.setItem('user', JSON.stringify(userData)); // Guardamos en localStorage
+            return {
+                ...state,
+                user: userData
             };
         default:
             return state;

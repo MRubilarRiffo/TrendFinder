@@ -28,21 +28,13 @@
 
 .nameAndLastName {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     gap: var(--space-between-elements);
     width: 100%;
 }
 
-.nameAndLastName > input {
-    width: 50%;
-}
-
 .passwordContainer {
     position: relative;
-    width: 100%;
-}
-
-.passwordContainer > input {
     width: 100%;
 }
 
@@ -63,10 +55,6 @@
     width: 100%;
 }
 
-.mailContainer > input {
-    width: 100%;
-}
-
 .link {
     cursor: pointer;
     color: var(--color-text-link);
@@ -78,6 +66,26 @@
 
 .form button {
     width: 100%;
+}
+
+.headerForm {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.mailContainer,
+.passwordContainer,
+.nameAndLastName > div {
+    position: relative;
+}
+
+.errorMessage {
+    position: absolute;
+    top: -14px;
+    color: red;
+    font-size: 11px;
+    font-weight: 300;
 }
 
 @media (max-width: 1199px) {

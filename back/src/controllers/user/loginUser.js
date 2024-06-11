@@ -3,6 +3,8 @@ const jwt = require("jsonwebtoken");
 const { validations } = require("../../helpers/validations");
 const { getUserFindOne } = require("../../handlers/user/getUserFindOne");
 const { config } = require('../../config/config');
+const { createToken } = require("../../handlers/token/createToken");
+const { getTokenByUserId } = require("../../handlers/token/getTokenByUserId");
 
 const loginUser = async (req, res, next) => {
     try {
@@ -47,7 +49,29 @@ const loginUser = async (req, res, next) => {
             { expiresIn: '1h' }
         );
 
-        return res.status(200).json({ accessToken });
+        let existingToken = await getTokenByUserId(user.id);
+
+        if (existingToken) {
+            existingToken.update({
+                token: accessToken
+            });
+        } else {
+            existingToken = await createToken(accessToken, user.id);
+        };
+
+        if (!existingToken) {
+            const error = new Error('No se pudo crear el token.');
+            error.statusCode = 500;
+            throw error;
+        };
+
+        const response = {
+            status: 'success',
+            message: 'Inicio de sesión exitoso.',
+            token: existingToken.token
+        };
+
+        return res.status(200).json(response);
     } catch (error) {
         next(error);
     };

@@ -1,16 +1,33 @@
-import { container, form, nameAndLastName, passwordContainer, mailContainer, link } from './Home.module.css';
+import { container, form, nameAndLastName, passwordContainer, mailContainer, link, headerForm, errorMessage } from './Home.module.css';
 import { useEffect, useState } from 'react';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { Logo } from '../../components/Logo/Logo';
+import { userSession } from '../../redux/actions';
+import { useDispatch, useSelector } from 'react-redux';
+import validations from '../../functions/validations';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const { status } = useSelector((state) => state.user);
+    console.log(status);
+    useEffect(() => {
+        if (status === "success") {
+            navigate('/dashboard');
+        };
+    }, [status]);
+
+
+    const [errors, setErrors] = useState({});
     const [visiblePassword, setVisiblePassword] = useState(false);
     const [modeSingUp, setModeSingUp] = useState(false);
     const [user, setUser] = useState({
         mail: "",
         password: "",
         name: "",
-        last_name: ""
+        lastName: ""
     });
 
     useEffect(() => {
@@ -18,18 +35,41 @@ const Home = () => {
             mail: "",
             password: "",
             name: "",
-            last_name: ""
+            lastName: ""
         });
     }, [modeSingUp]);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        if(modeSingUp) {
-            await dispatch(addUser(user));
-            await dispatch(auth_mail_Login(user));
-        } else {
-            dispatch(auth_mail_Login(user));
+
+        const rules = modeSingUp ? {
+            name: { type: 'string', required: true, length: { min: 2, max: 30 } },
+            lastName: { type: 'string', required: true, length: { min: 2, max: 30 } },
+            password: { type: 'string', required: true, length: { min: 8 } },
+            mail: { type: 'mail', required: true }
+        } : {
+            password: { type: 'string', required: true, length: { min: 8 } },
+            mail: { type: 'mail', required: true }
         };
+
+        const validationErrors = validations(user, rules);
+
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        };
+        setErrors({});
+        try {
+            if (modeSingUp) {
+                // await dispatch(addUser(user));
+                // await dispatch(auth_mail_Login(user));
+            } else {
+                dispatch(userSession(user.mail, user.password));
+            };
+        } catch (error) {
+            console.error("Error al iniciar sesión/registrarse:", error);
+            setErrors({ general: "Ocurrió un error al procesar la solicitud" }); 
+        }
     };
 
     const handleChange = ({ target: { name, value } }) => {
@@ -40,6 +80,7 @@ const Home = () => {
     };
 
     const handleModeSingUp = () => {
+        setErrors({});
         setModeSingUp(!modeSingUp);
     };
 
@@ -50,37 +91,44 @@ const Home = () => {
                 <h3>Bienvenido a DropiSpy</h3>
             </div>
             <div>
-                <form className={form} onSubmit={handleSubmit}>
+                <form className={form} onSubmit={handleSubmit} >
                     {modeSingUp ? (
-                        <div>
+                        <div className={headerForm}>
                             <h3>Crea una cuenta</h3>
                             <p>¿Ya tienes cuenta? <span className={link} onClick={handleModeSingUp}>Inicia Sesión</span></p>
                         </div>
                     ) : (
-                        <div>
+                        <div className={headerForm}>
                             <h3>Inicia Sesión</h3>
                             <p>¿Aún no tienes una cuenta? <span className={link} onClick={handleModeSingUp}>Regístrate</span></p>
                         </div>
                     )}
                     {modeSingUp &&
                     <div className={nameAndLastName}>
-                        <input
-                            name="name"
-                            type="text"
-                            placeholder="Nombre"
-                            value={user.name}
-                            onChange={handleChange}
-                        />
-                        <input
-                            name="last_name"
-                            type="text"
-                            placeholder="Apellidos"
-                            value={user.last_name}
-                            onChange={handleChange}
-                        />
+                        <div>
+                            {errors.name && <p className={errorMessage}>{errors.name}</p>}
+                            <input
+                                name="name"
+                                type="text"
+                                placeholder="Nombre"
+                                value={user.name}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div>
+                            {errors.lastName && <p className={errorMessage}>{errors.lastName}</p>}
+                            <input
+                                name="lastName"
+                                type="text"
+                                placeholder="Apellidos"
+                                value={user.lastName}
+                                onChange={handleChange}
+                            />
+                        </div>
                     </div>
                     }
                     <div className={mailContainer}>
+                        {errors.mail && <p className={errorMessage}>{errors.mail}</p>}
                         <input
                             name="mail"
                             type="mail"
@@ -90,6 +138,7 @@ const Home = () => {
                         />
                     </div>
                     <div className={passwordContainer}>
+                        {errors.password && <p className={errorMessage}>{errors.password}</p>}
                         <input
                             name="password"
                             type={visiblePassword ? "text" : "password"}
@@ -104,7 +153,7 @@ const Home = () => {
                                 {visiblePassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
                         </div>
                     </div>
-                    <button type="submit">{modeSingUp ? "Regístrate" : "Iniciar Sesión"}</button>
+                    <button type="submit" >{modeSingUp ? "Regístrate" : "Iniciar Sesión"}</button>
                 </form>
             </div>
         </div>

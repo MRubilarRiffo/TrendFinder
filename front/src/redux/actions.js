@@ -27,17 +27,6 @@ export const getDetails = (id) => {
     };
 };
 
-export const getReviewsByProduct = (productId) => {
-    return async function (dispatch) {
-        try {
-            const response = await axios.get(`${API}/reviews/${productId}`);
-            return dispatch({ type: actionTypes.GET_REVIEWS_BY_PRODUCT, payload: response.data });
-        } catch (error) {
-            console.log(error.response.data);
-        };
-    };
-};
-
 export const getLeakedProducts = (filters) => {
     return async function (dispatch) {
         try {
@@ -70,5 +59,31 @@ export const getLeakedProducts = (filters) => {
         } catch (error) {
             console.log(error.response.data);
         };
+    };
+};
+
+export const userSession = (mail, password) => {
+    return async function (dispatch) {
+        try {
+            const response = await axios.post(`${API}/users/login`, { email: mail, password });
+            return dispatch({ type: actionTypes.USER_SESSION, payload: response.data });
+        } catch (error) {
+            console.log(error.response.data);
+        };
+    };
+};
+
+export const verifyToken = (token) => {
+    return async function (dispatch) {
+        try {
+            const response = await axios.post(`${API}/users/verify-token`, null, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            return;
+        } catch (error) {
+            return dispatch({ type: actionTypes.USER_SESSION, payload: {} });
+        }
     };
 };
