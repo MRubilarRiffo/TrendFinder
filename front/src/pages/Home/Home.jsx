@@ -11,32 +11,19 @@ const Home = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const { status } = useSelector((state) => state.user);
-    console.log(status);
-    useEffect(() => {
-        if (status === "success") {
-            navigate('/dashboard');
-        };
-    }, [status]);
+    const { status, token } = useSelector((state) => state.user);
 
+    useEffect(() => {
+        if (status === "success" && token) navigate('/dashboard');
+    }, [status, token]);
 
     const [errors, setErrors] = useState({});
     const [visiblePassword, setVisiblePassword] = useState(false);
     const [modeSingUp, setModeSingUp] = useState(false);
-    const [user, setUser] = useState({
-        mail: "",
-        password: "",
-        name: "",
-        lastName: ""
-    });
+    const [user, setUser] = useState({ mail: "", password: "", name: "", lastName: "" });
 
     useEffect(() => {
-        setUser({
-            mail: "",
-            password: "",
-            name: "",
-            lastName: ""
-        });
+        setUser({ mail: "", password: "", name: "", lastName: "" });
     }, [modeSingUp]);
 
     const handleSubmit = async (event) => {

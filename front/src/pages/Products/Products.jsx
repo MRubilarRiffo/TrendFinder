@@ -16,6 +16,7 @@ const Products = () => {
     const filters = useSelector((state) => state.filters);
 
     const { name, sortOrder, page, limit, countries, categories, sales, repeat } = filters;
+    const { token } = useSelector((state) => state.user);
 
     const products = data.Data || [];
     const metaData = data.Metadata || {};
@@ -25,8 +26,8 @@ const Products = () => {
     useEffect(() => {
         window.scrollTo(0, 0);
 
-        if (limit !== 0) {
-            dispatch(getLeakedProducts(filters));
+        if (limit !== 0 && token) {
+            dispatch(getLeakedProducts(filters, token));
         };
 
         return () => {

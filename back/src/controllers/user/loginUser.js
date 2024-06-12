@@ -44,7 +44,7 @@ const loginUser = async (req, res, next) => {
         const jwtSecret = config.jwt_secret;
         
         const accessToken = jwt.sign(
-            { userId: user.id, email: user.email },
+            { name: user.name, lastName: user.lastName, email: user.email },
             jwtSecret,
             { expiresIn: '1h' }
         );

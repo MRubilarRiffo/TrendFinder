@@ -16,11 +16,15 @@ const ProductDetails = () => {
     const dispatch = useDispatch();
 
     const product = useSelector(state => state.details);
+    const { token } = useSelector(state => state.user);
 
     const totalSales = product.CountSale?.totalSales || 0;
 
     useEffect(() => {
-        dispatch(getDetails(id, country));
+        if (token, id) {
+            dispatch(getDetails(token, id, country));
+        };
+
         return () => {
             dispatch({ type: RESET_DETAILS });
         };

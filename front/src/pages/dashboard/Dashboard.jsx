@@ -1,5 +1,5 @@
 import { Logo } from '../../components/Logo/Logo';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { HomeDashboard } from '../Home Dashboard/Home Dashboard';
 import { ProductDetails } from '../Product Details/Product Details';
 import { Header } from '../../components/Header/Header';
@@ -8,11 +8,21 @@ import { DashboardContainer,
     leftColumnContainer,
     rightColumnContainer,
     rightColumnContent,
-    rigthColumnPosition
 } from './Dashboard.module.css';
 import Footer from '../../components/Footer/Footer';
+import { useSelector } from 'react-redux';
+import { useEffect } from 'react';
 
 const Dashboard = () => {
+    const navigate = useNavigate();
+    const { status } = useSelector((state) => state.user);
+
+    useEffect(() => {
+        if ( !status || status !== "success") {
+            navigate('/');
+        };
+    }, [status]);
+
     const menu = [
         { title: 'Home', link: '/dashboard' },
         { title: 'Productos', link: 'products' },

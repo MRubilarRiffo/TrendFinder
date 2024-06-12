@@ -4,30 +4,69 @@ import * as actionTypes from './actions-type';
 const API = 'http://localhost:3001';
 // const API = 'https://api.innovoza.com/api';
 
-export const getProductsByCountry = (countriesActive) => {
+const errorMapping = {
+    TOKEN_EXPIRED: 'Token expirado.',
+    TOKEN_INVALID_OR_EXPIRED: 'Token inválido o sin fecha de expiración.',
+    TOKEN_INVALID: 'Token inválido.',
+    TOKEN_NO_PROVIDED_OR_INVALID: 'Token no proporcionado o formato inválido.',
+    CREDENTIALS_INVALID: 'Credenciales inválidas.',
+};
+
+export const getProductsByCountry = (countriesActive, token) => {
     return async function (dispatch) {
         try {
             const countriesName = countriesActive.map(country => country.name).toString();
-            const response = await axios.get(`${API}/products/countries?countries=${countriesName}`);
+
+            const response = await axios({
+                method: 'GET',
+                url: `${API}/products/countries?countries=${countriesName}`,
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             return dispatch({ type: actionTypes.GET_PRODUCTS_RANDOM_BY_COUNTRY, payload: response.data });
         } catch (error) {
-            console.log(error.response.data);
+            const err = error.response.data.error;
+            if (err === errorMapping.TOKEN_EXPIRED || err === errorMapping.TOKEN_INVALID_OR_EXPIRED || err === errorMapping.TOKEN_INVALID || err === errorMapping.TOKEN_NO_PROVIDED_OR_INVALID) {
+                return dispatch({
+                    type: actionTypes.USER_SESSION,
+                    payload: {
+                        status: 'failed',
+                        message: err,
+                    },
+                });
+            };
         };
     };
 };
 
-export const getDetails = (id) => {
+export const getDetails = (token, id) => {
     return async function (dispatch) {
         try {
-            const response = await axios.get(`${API}/products/${id}`);
+            const response = await axios({
+                method: 'GET',
+                url: `${API}/products/${id}`,
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             return dispatch({ type: actionTypes.GET_DETAILS, payload: response.data });
         } catch (error) {
-            console.log(error.response.data);
+            const err = error.response.data.error;
+            if (err === errorMapping.TOKEN_EXPIRED || err === errorMapping.TOKEN_INVALID_OR_EXPIRED || err === errorMapping.TOKEN_INVALID || err === errorMapping.TOKEN_NO_PROVIDED_OR_INVALID) {
+                return dispatch({
+                    type: actionTypes.USER_SESSION,
+                    payload: {
+                        status: 'failed',
+                        message: err,
+                    },
+                });
+            };
         };
     };
 };
 
-export const getLeakedProducts = (filters) => {
+export const getLeakedProducts = (filters, token) => {
     return async function (dispatch) {
         try {
             let query = '';
@@ -53,11 +92,25 @@ export const getLeakedProducts = (filters) => {
                 included += `,${categories}`
             };
 
-
-            const response = await axios.get(`${API}/products?${query}&${included}`);
+            const response = await axios({
+                method: 'GET',
+                url: `${API}/products?${query}&${included}`,
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             return dispatch({ type: actionTypes.GET_LEAKED_PRODUCTS, payload: response.data });
         } catch (error) {
-            console.log(error.response.data);
+            const err = error.response.data.error;
+            if (err === errorMapping.TOKEN_EXPIRED || err === errorMapping.TOKEN_INVALID_OR_EXPIRED || err === errorMapping.TOKEN_INVALID || err === errorMapping.TOKEN_NO_PROVIDED_OR_INVALID) {
+                return dispatch({
+                    type: actionTypes.USER_SESSION,
+                    payload: {
+                        status: 'failed',
+                        message: err,
+                    },
+                });
+            };
         };
     };
 };
@@ -83,7 +136,16 @@ export const verifyToken = (token) => {
             });
             return;
         } catch (error) {
-            return dispatch({ type: actionTypes.USER_SESSION, payload: {} });
-        }
+            const err = error.response.data.error;
+            if (err === errorMapping.TOKEN_EXPIRED || err === errorMapping.TOKEN_INVALID_OR_EXPIRED || err === errorMapping.TOKEN_INVALID || err === errorMapping.TOKEN_NO_PROVIDED_OR_INVALID) {
+                return dispatch({
+                    type: actionTypes.USER_SESSION,
+                    payload: {
+                        status: 'failed',
+                        message: err,
+                    },
+                });
+            };
+        };
     };
 };

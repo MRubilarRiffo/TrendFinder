@@ -1,9 +1,9 @@
 import config from '../../config/config';
-import { nameCountries, active, container, separator } from './Filters.module.css'; // Use 'styles' for better readability
+import { nameCountries, active, container, separator, clearButton } from './Filters.module.css'; // Use 'styles' for better readability
 import { useDispatch, useSelector } from 'react-redux';
 import { FILTERS } from '../../redux/actions-type';
 import { RangeSlider } from '../Range Slider/Range Slider';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 const Filters = () => {
     const countriesList = config.countries;
@@ -23,7 +23,7 @@ const Filters = () => {
             updatedFilters.delete(filterName);
         } else {
             updatedFilters.add(filterName);
-        }
+        };
 
         dispatch({
             type: FILTERS,
@@ -43,7 +43,8 @@ const Filters = () => {
                 categories: [],
                 page: 1,
                 sales: 200,
-                repeat: 200
+                repeat: 200,
+                name: ''
             }
         });
     };
@@ -54,8 +55,6 @@ const Filters = () => {
     ];
 
     const handleChange = (event, newvalue, filterType) => {
-        console.log(newvalue);
-        console.log(filterType);
         dispatch({
             type: FILTERS,
             payload: { [filterType]: newvalue }
@@ -66,7 +65,7 @@ const Filters = () => {
         <div className={container}>
             <div>
                 <p>Filtros</p>
-                <button onClick={handleClearFilters}>Limpiar</button> 
+                <button className={clearButton} onClick={handleClearFilters}>Limpiar</button> 
             </div>
             {viewList.map(({ title, list, variable }) => (
             <div className={separator} key={variable}>

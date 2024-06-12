@@ -8,6 +8,22 @@
     padding: var(--space-between-elements);
 }
 
+.container > div:first-child {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.clearButton {
+    height: auto;
+    background: none;
+    cursor: pointer;
+}
+
+.clearButton:hover {
+    background: none;
+}
+
 .nameCountries div {
     padding: 3px 0;
 }

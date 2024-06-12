@@ -1,20 +1,23 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProductsByCountry } from '../../redux/actions';
-import { containerCard } from './Home Dashboard.module.css';
 import { SlideProducts } from '../../components/Slide Products/Slide Products';
 import config from '../../config/config';
 
 const HomeDashboard = () => {
     const countries = config.countries;
 
+    const { token } = useSelector(state => state.user);
+
     const countriesActive = countries.filter(item => item.active);
 
-    const dispatch = useDispatch()
+    const dispatch = useDispatch();
 
     useEffect(() => {
-        dispatch(getProductsByCountry(countriesActive));
-    }, [])
+        if (token) {
+            dispatch(getProductsByCountry(countriesActive, token));
+        }
+    }, [token])
     
     const products = useSelector(state => state.productsByCountry);
         
