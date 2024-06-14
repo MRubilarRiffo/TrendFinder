@@ -23,6 +23,10 @@ const initialState = {
         email: '',
         token: ''
     },
+    codeVerification: {
+        message: '',
+        code: null
+    }
 };
 
 const reducer = (state = initialState, action) => {
@@ -89,6 +93,14 @@ const reducer = (state = initialState, action) => {
             return {
                 ...state,
                 user: userData
+            };
+        case actionTypes.SEND_CODE_VERIFICATION:
+            return {
+                ...state,
+                codeVerification: {
+                    message: action.payload.message,
+                    code: action.payload.code
+                }
             };
         default:
             return state;

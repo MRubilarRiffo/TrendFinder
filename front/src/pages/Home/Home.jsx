@@ -1,8 +1,8 @@
-import { container, form, nameAndLastName, passwordContainer, mailContainer, link, headerForm, errorMessage } from './Home.module.css';
+import { container, form, nameAndLastName, passwordContainer, mailContainer, link, headerForm, errorMessage, codeVerification, mailVerification } from './Home.module.css';
 import { useEffect, useState } from 'react';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { Logo } from '../../components/Logo/Logo';
-import { userSession } from '../../redux/actions';
+import { sendCodeVerification, userSession } from '../../redux/actions';
 import { useDispatch, useSelector } from 'react-redux';
 import validations from '../../functions/validations';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,7 @@ const Home = () => {
     const navigate = useNavigate();
 
     const { status, token } = useSelector((state) => state.user);
+    const { message, code } = useSelector((state) => state.codeVerification);
 
     useEffect(() => {
         if (status === "success" && token) navigate('/dashboard');
@@ -21,6 +22,7 @@ const Home = () => {
     const [visiblePassword, setVisiblePassword] = useState(false);
     const [modeSingUp, setModeSingUp] = useState(false);
     const [user, setUser] = useState({ mail: "", password: "", name: "", lastName: "" });
+    const [codeEmail, setCodeEmail] = useState(Array(5).fill(''));
 
     useEffect(() => {
         setUser({ mail: "", password: "", name: "", lastName: "" });
@@ -45,7 +47,14 @@ const Home = () => {
             setErrors(validationErrors);
             return;
         };
+
+        if (parseInt(codeEmail.join('')) !== code) {
+            setErrors(prev => ({ ...prev, code: "Código incorrecto" }));
+            return;
+        };
+
         setErrors({});
+
         try {
             if (modeSingUp) {
                 // await dispatch(addUser(user));
@@ -56,7 +65,7 @@ const Home = () => {
         } catch (error) {
             console.error("Error al iniciar sesión/registrarse:", error);
             setErrors({ general: "Ocurrió un error al procesar la solicitud" }); 
-        }
+        };
     };
 
     const handleChange = ({ target: { name, value } }) => {
@@ -71,6 +80,28 @@ const Home = () => {
         setModeSingUp(!modeSingUp);
     };
 
+    console.log(code);
+    console.log(codeEmail.join(''));
+
+    const handleCodeEmailChange = (index, newValue) => {
+        const newValues = [...codeEmail];
+        newValues[index] = newValue;
+        setCodeEmail(newValues);
+    };
+
+    const handleSendCode = () => {
+        const rules = { mail: { type: 'mail', required: true } };
+
+        const validationErrors = validations(user, rules);
+
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(prev => ({ ...prev, ...validationErrors }));
+            return;
+        };
+
+        dispatch(sendCodeVerification(user.mail));
+    };
+
     return (
         <div className={container}>
             <div>
@@ -78,7 +109,7 @@ const Home = () => {
                 <h3>Bienvenido a DropiSpy</h3>
             </div>
             <div>
-                <form className={form} onSubmit={handleSubmit} >
+                <form className={form} onSubmit={handleSubmit}>
                     {modeSingUp ? (
                         <div className={headerForm}>
                             <h3>Crea una cuenta</h3>
@@ -126,6 +157,7 @@ const Home = () => {
                     </div>
                     <div className={passwordContainer}>
                         {errors.password && <p className={errorMessage}>{errors.password}</p>}
+                        {errors.codeEmail && <p className={errorMessage}>{errors.codeEmail}</p>}
                         <input
                             name="password"
                             type={visiblePassword ? "text" : "password"}
@@ -139,6 +171,24 @@ const Home = () => {
                             >
                                 {visiblePassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
                         </div>
+                    </div>
+                    <div className={mailVerification}>
+                        <div className={codeVerification}>
+                            {codeEmail.map((value, index) => (
+                                <input
+                                    key={index} 
+                                    type="text"
+                                    value={value}
+                                    onChange={(e) => handleCodeEmailChange(index, e.target.value)}
+                                />
+                            ))}
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleSendCode}
+                        >
+                            Enviar código
+                        </button>
                     </div>
                     <button type="submit" >{modeSingUp ? "Regístrate" : "Iniciar Sesión"}</button>
                 </form>

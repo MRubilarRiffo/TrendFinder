@@ -149,3 +149,22 @@ export const verifyToken = (token) => {
         };
     };
 };
+
+export const sendCodeVerification = (email) => {
+    return async function (dispatch) {
+        try {
+            console.log(email);
+            const response = await axios({
+                method: 'POST',
+                data: { 
+                    to: email
+                },
+                url: `${API}/mails/send-code`,
+            });
+
+            return dispatch({ type: actionTypes.SEND_CODE_VERIFICATION, payload: response.data});
+        } catch (error) {
+            console.log(error.response.data);
+        };
+    };
+};

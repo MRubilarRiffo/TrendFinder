@@ -88,6 +88,29 @@
     font-weight: 300;
 }
 
+.mailVerification {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap: var(--space-between-elements);
+}
+
+.mailVerification button {
+    width: 30%;
+}
+
+.codeVerification {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-between-elements);
+    width: 70%;
+}
+
+.codeVerification > input {
+    padding: 0;
+    text-align: center;
+}
+
 @media (max-width: 1199px) {
     .container > div:first-child {
         display: none;
