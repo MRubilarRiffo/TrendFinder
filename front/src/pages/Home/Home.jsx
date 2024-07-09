@@ -1,18 +1,18 @@
-import { container, form, nameAndLastName, passwordContainer, mailContainer, link, headerForm, errorMessage, codeVerification, mailVerification } from './Home.module.css';
+import { container, form, nameAndLastName, passwordContainer, mailContainer, link, headerForm, errorMessage } from './Home.module.css';
 import { useEffect, useState } from 'react';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { Logo } from '../../components/Logo/Logo';
-import { sendCodeVerification, userSession } from '../../redux/actions';
+import { userSession } from '../../redux/actions';
 import { useDispatch, useSelector } from 'react-redux';
 import validations from '../../functions/validations';
 import { useNavigate } from 'react-router-dom';
+import { CodeVerification } from '../../components/Code Verification/Code Verification';
 
 const Home = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const { status, token } = useSelector((state) => state.user);
-    const { message, code } = useSelector((state) => state.codeVerification);
 
     useEffect(() => {
         if (status === "success" && token) navigate('/dashboard');
@@ -22,7 +22,6 @@ const Home = () => {
     const [visiblePassword, setVisiblePassword] = useState(false);
     const [modeSingUp, setModeSingUp] = useState(false);
     const [user, setUser] = useState({ mail: "", password: "", name: "", lastName: "" });
-    const [codeEmail, setCodeEmail] = useState(Array(5).fill(''));
 
     useEffect(() => {
         setUser({ mail: "", password: "", name: "", lastName: "" });
@@ -35,21 +34,14 @@ const Home = () => {
             name: { type: 'string', required: true, length: { min: 2, max: 30 } },
             lastName: { type: 'string', required: true, length: { min: 2, max: 30 } },
             password: { type: 'string', required: true, length: { min: 8 } },
-            mail: { type: 'mail', required: true }
         } : {
             password: { type: 'string', required: true, length: { min: 8 } },
-            mail: { type: 'mail', required: true }
         };
 
         const validationErrors = validations(user, rules);
 
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
-            return;
-        };
-
-        if (parseInt(codeEmail.join('')) !== code) {
-            setErrors(prev => ({ ...prev, code: "Código incorrecto" }));
             return;
         };
 
@@ -78,28 +70,6 @@ const Home = () => {
     const handleModeSingUp = () => {
         setErrors({});
         setModeSingUp(!modeSingUp);
-    };
-
-    console.log(code);
-    console.log(codeEmail.join(''));
-
-    const handleCodeEmailChange = (index, newValue) => {
-        const newValues = [...codeEmail];
-        newValues[index] = newValue;
-        setCodeEmail(newValues);
-    };
-
-    const handleSendCode = () => {
-        const rules = { mail: { type: 'mail', required: true } };
-
-        const validationErrors = validations(user, rules);
-
-        if (Object.keys(validationErrors).length > 0) {
-            setErrors(prev => ({ ...prev, ...validationErrors }));
-            return;
-        };
-
-        dispatch(sendCodeVerification(user.mail));
     };
 
     return (
@@ -157,7 +127,6 @@ const Home = () => {
                     </div>
                     <div className={passwordContainer}>
                         {errors.password && <p className={errorMessage}>{errors.password}</p>}
-                        {errors.codeEmail && <p className={errorMessage}>{errors.codeEmail}</p>}
                         <input
                             name="password"
                             type={visiblePassword ? "text" : "password"}
@@ -172,24 +141,7 @@ const Home = () => {
                                 {visiblePassword ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}
                         </div>
                     </div>
-                    <div className={mailVerification}>
-                        <div className={codeVerification}>
-                            {codeEmail.map((value, index) => (
-                                <input
-                                    key={index} 
-                                    type="text"
-                                    value={value}
-                                    onChange={(e) => handleCodeEmailChange(index, e.target.value)}
-                                />
-                            ))}
-                        </div>
-                        <button
-                            type="button"
-                            onClick={handleSendCode}
-                        >
-                            Enviar código
-                        </button>
-                    </div>
+                    <CodeVerification modeSingUp={modeSingUp}/>
                     <button type="submit" >{modeSingUp ? "Regístrate" : "Iniciar Sesión"}</button>
                 </form>
             </div>

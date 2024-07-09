@@ -4,7 +4,7 @@ import { IoMdCloseCircle } from "react-icons/io";
 import { headerContainer, searchContainer, iconSearch, iconClose, info, avatar, menu } from './Header.module.css';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { FILTERS, USER_SESSION } from '../../redux/actions-type';
+import { FILTERS, SEND_CODE_VERIFICATION, USER_SESSION } from '../../redux/actions-type';
 import { jwtDecode } from "jwt-decode";
 import { RiUser6Line } from "react-icons/ri";
 
@@ -60,7 +60,7 @@ const Header = () => {
                 token: ''
             }
         });
-        // navigate('/login');
+        dispatch({ type: SEND_CODE_VERIFICATION, payload: { message: '', code: null } });
     };
 
 

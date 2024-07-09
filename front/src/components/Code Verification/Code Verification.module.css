@@ -1,0 +1,29 @@
+.container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+    gap: var(--space-between-elements);
+}
+
+.container button {
+    width: 30%;
+}
+
+.codeVerification {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-between-elements);
+    width: 70%;
+}
+
+.codeVerification > input {
+    padding: 0;
+    text-align: center;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

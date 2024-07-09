@@ -1,8 +1,8 @@
 import './App.css'
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { Dashboard } from './pages/Dashboard/Dashboard';
 import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { FILTERS, USER_SESSION } from './redux/actions-type';
 import useResponsiveValue from './hooks/useResponsiveValue';
 import { Home } from './pages/Home/Home';
