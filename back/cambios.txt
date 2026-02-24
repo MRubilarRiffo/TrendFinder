@@ -1,0 +1,6 @@
+Refactorización y Resolución de Firewall WAF (Dropi 401)
+- [ALTO IMPACTO] Implementada Arquitectura Clean (Controladores -> Servicios -> Handlers) para aislar la Lógica del Scraper de las Rutas, borrando scraper.js y sus dependencias huérfanas.
+- [CRÍTICO] Migrado Axios a Fetch Nativo (Node) con inyección dura de cabeceras estáticas (User-Agent Postman, Host, Connection: Keep-Alive) para evadir exitosamente el WAF estricto de la API de Dropi.
+- [CRÍTICO] Arreglado error asincrónico profundo de Closures en el Orquestador que solapaban promesas en paralelo corrompiendo el bucle While por país.
+- [MEDIO IMPACTO] Limpiados saltos de línea y comillas simples indeseables del JSON Web Token usando Regex de sanitización en archivo config.js.
+- [BAJO IMPACTO] Removido Helmet interceptor de peticiones locales y purgado package.json bajando peso de dependencias.

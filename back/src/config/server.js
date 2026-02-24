@@ -5,8 +5,11 @@ const errorMiddleware = require('../middleware/errorMiddleware');
 const helmet = require('helmet');
 
 const router = require('../routes');
+console.log('[DEBUG SERVER] Router Layer Stack Length:', router.stack ? router.stack.length : 'UNDEFINED');
 
 const server = express();
+
+server.set('trust proxy', 1);
 
 server.use(morgan('dev'));
 server.use(express.json());
@@ -19,7 +22,7 @@ server.use(helmet({
             // ... otras directivas
         },
     },
-    crossOriginResourcePolicy: { policy: "same-origin" }, // Configurar CORS
+    crossOriginResourcePolicy: { policy: "cross-origin" }, // Configurar CORS para permitir que clientes como Postman o Axios lo consuman
     hsts: {
         maxAge: 31536000,
         includeSubDomains: true,
@@ -27,7 +30,7 @@ server.use(helmet({
     },
 }));
 
-server.use('/', router);
+server.use('/api', router);
 
 server.use(errorMiddleware);
 

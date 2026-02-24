@@ -22,36 +22,21 @@ fs.readdirSync(path.join(__dirname, '/../models'))
 		modelDefiners.push(require(path.join(__dirname, '/../models', file)));
 	});
 
-	modelDefiners.forEach(model => model(sequelize));
+modelDefiners.forEach(model => model(sequelize));
 
-	let entries = Object.entries(sequelize.models);
-	let capsEntries = entries.map((entry) => [entry[0][0].toUpperCase() + entry[0].slice(1), entry[1]]);
-	sequelize.models = Object.fromEntries(capsEntries);
-	
-	const { Product, Stock, Category, Sale, DailySale, User, Subscription, CountSale, Token } = sequelize.models;
+let entries = Object.entries(sequelize.models);
+let capsEntries = entries.map((entry) => [entry[0][0].toUpperCase() + entry[0].slice(1), entry[1]]);
+sequelize.models = Object.fromEntries(capsEntries);
 
-	//Relaciones aquí
-	Product.hasOne(Stock);
-	Stock.belongsTo(Product); // Cada registro de stock pertenece a un único producto
+const { Product, Stock, Category } = sequelize.models;
 
-	Product.hasOne(CountSale);
-	CountSale.belongsTo(Product);
+//Relaciones aquí
+Product.hasOne(Stock);
+Stock.belongsTo(Product); // Cada registro de stock pertenece a un único producto
 
-	Product.belongsToMany(Category, { through: 'ProductCategory' });
-	Category.belongsToMany(Product, { through: 'ProductCategory' });
+Product.belongsToMany(Category, { through: 'ProductCategory' });
+Category.belongsToMany(Product, { through: 'ProductCategory' });
 
-	Product.hasMany(Sale); // Un producto puede tener muchas ventas
-	Sale.belongsTo(Product); // Cada venta pertenece a un único producto
-	
-	Product.hasMany(DailySale);
-	DailySale.belongsTo(Product);
-
-	User.hasOne(Subscription);
-	Subscription.belongsTo(User);
-
-	User.hasOne(Token);
-	Token.belongsTo(User);
-	
 module.exports = {
 	...sequelize.models,
 	conn: sequelize,

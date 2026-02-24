@@ -1,7 +1,7 @@
 const scraperRoutes = require('express').Router();
 
-const { getScraper } = require('../controllers/scraper/getScraper');
+const { scraperController } = require('../controllers/scraper/scraperController');
 
-scraperRoutes.get('/', getScraper);
+scraperRoutes.post('/', scraperController);
 
 module.exports = scraperRoutes;
