@@ -13,9 +13,9 @@ const { updateImages, updateStores, convertirString } = require('../../helpers/s
 const LIMIT_PER_PAGE = 40;
 
 /**
- * Loop principal del Scraper para el país en turno.
+ * Loop principal del Scraper para el país en turno (Optimizacion V3 - Concurrente)
  */
-const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch = 3) => {
+const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch = 6) => {
     const API = countryConfig.dropi_api_products;
     const DROPI_IMG_URL = countryConfig.dropi_img_url;
     const DROPI_DETAILS_PRODUCTS = countryConfig.dropi_details_products;
@@ -25,24 +25,35 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
     let hasMoreResults = true;
 
     while (hasMoreResults) {
-        const batchRequests = [];
+        logMessage(`[ORQUESTADOR V3] Disparando ráfaga concurrente de ${pagesPerBatch} páginas para ${country} (Páginas ${currentPage} a ${currentPage + pagesPerBatch - 1})`);
 
-        for (let i = 0; i < pagesPerBatch; i++) {
+        // Array de Promesas HTTP disparadas todas al mismo tiempo
+        const pagePromises = Array.from({ length: pagesPerBatch }).map(async (_, i) => {
             const page = currentPage + i;
             const offset = (page - 1) * LIMIT_PER_PAGE;
-            // Clonamos el body para no alterar el original en el ciclo asíncrono cruzado
             const requestBody = { ...body, startData: offset };
 
-            // Delay Anti-RateLimit (Dropi WAF - 429 Too Many Attempts)
-            // Esperamos 3.5 segundos entre cada lote para respetar el límite de 20 pet/min
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Pequeño escalonamiento de milisegundos para no aturar el thread local de JS
+            await new Promise(resolve => setTimeout(resolve, i * 150));
 
-            // Proceso Batching Sincronizado
             const apiResponse = await fetchDropiProductsPage(API, headers, requestBody, country);
+            return { page, apiResponse };
+        });
+
+        // Resolvemos el Bloque HTTP completo (Tarda el tiempo de la red más lenta, no la suma de todas)
+        const batchResults = await Promise.all(pagePromises);
+
+        let processDbPromises = [];
+
+        // Ahora iteramos sobre los resultados y armamos un gran "bulto" para la base de datos
+        let dbTotalObjects = [];
+
+        for (const result of batchResults) {
+            const { page, apiResponse } = result;
 
             if (!apiResponse.success || apiResponse.data.length === 0) {
                 hasMoreResults = false;
-                break; // Rompemos el ciclo for
+                continue; // Si una pág falla o está vacía (final doc), la ignoramos
             }
 
             if (page === 1 && apiResponse.count) {
@@ -52,41 +63,42 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
 
             let objects = apiResponse.data;
 
-            // Inspect Dropi Payload fields
-            if (page === 1) {
-                logMessage(`[PAYLOAD INSPECTOR] Las llaves son: ${Object.keys(objects[0]).join(', ')}`);
+            // Inspect Dropi Payload fields solo en pág 1
+            if (page === 1 && objects[0]) {
                 logMessage(`[PAYLOAD INSPECTOR] Valores relevantes de Dropi V2: price=${objects[0].sale_price} / suggested=${objects[0].suggested_price} / stock=${objects[0].stock}`);
             }
 
-            // Filtrado base super permisivo (Solo descarta productos completamente vacíos o borrados)
+            // Filtrado base super permisivo
             const originalLength = objects.length;
             objects = objects.filter((product) =>
                 product.id !== null && product.id !== undefined && product.name
             );
 
-            if (originalLength !== objects.length) {
-                logMessage(`[ORCHESTRATOR] Filtro descartó ${originalLength - objects.length} productos con data corrupta (ej. sin nombre, sin precio).`);
+            logMessage(`Página ${page}: ${originalLength} productos recibidos por la API (${country}).`);
+
+            // Agrupamos este bloque limpiado de "Dropi" en un solo super saco
+            if (objects.length > 0) {
+                dbTotalObjects.push(...objects);
             }
+        }
 
-            if (objects.length === 0) {
-                logMessage(`[ORCHESTRATOR ALERT] Absolutamente todos los ${originalLength} productos en esta página fueron rechazados por el Filtro!`);
-            }
+        // --- MANEJO BATCH DATABASE ---
+        if (dbTotalObjects.length > 0) {
+            logMessage(`[DB INSERCIÓN ASÍNCRONA] Evaluando macro-bloque de ${dbTotalObjects.length} productos en BD para el país ${country}...`);
+            const idsArray = dbTotalObjects.map(({ id }) => id);
 
-            const idsArray = objects.map(({ id }) => id);
-
-            // Requerimos desde BD solo los Ids de Dropi mapeados para ver si existen localmente
+            // Requerimos desde BD TODOS los Ids de la ráfaga de un tiro
             const queryOptionsProducts = { attributes: ['id', 'dropiId', 'productUpdateDate'], where: { dropiId: idsArray, country: country } };
             const productArray = await getProductsFindAll(queryOptionsProducts);
-
             const productIds = productArray.map(product => product.dropiId);
 
-            // Separación Bifurcada
-            const nonexistentProducts = objects.filter(obj => !productIds.includes(obj.id));
+            // Separación Bifurcada en macro 
+            const nonexistentProducts = dbTotalObjects.filter(obj => !productIds.includes(obj.id));
             const existingProducts = productArray.filter(obj => idsArray.includes(obj.dropiId));
 
-            // Mapeo detallado de los productos Existentes que podrían requerir Update local 
+            // Mapeo super-batch
             const existingProductsWithStock = existingProducts.map(obj => {
-                const objectWithStock = objects.find(({ id }) => id === obj.dropiId);
+                const objectWithStock = dbTotalObjects.find(({ id }) => id === obj.dropiId);
 
                 let previousNow = objectWithStock.updated_at;
                 const previousUpdate = obj.productUpdateDate;
@@ -105,9 +117,9 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
                 let updateProduct = {};
                 let hasImportantChanges = false;
 
-                // Si en Dropi se editó más recientemente que mi guardado en BD, actualizo metadata pesada
+                // Si en Dropi se editó más recientemente que mi guardado en BD, actualizo
                 if (!previousUpdate || (previousNow && previousNow > previousUpdate)) {
-                    hasImportantChanges = true; // Forzamos actualización por timestamp
+                    hasImportantChanges = true;
                     const image = updateImages(objectWithStock.gallery, DROPI_IMG_URL, config.dropi_img_urls3);
                     const stores = updateStores(objectWithStock.warehouse_product);
 
@@ -123,39 +135,34 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
                     };
                 }
 
-                // Return estructurado para el Handler. Notar que updateProduct va vacío si la metadata no cambió
                 return {
-                    id: obj.id, // ID interno BD
-                    stock: updatedStock, // Enviamos el nuevo stock calculado al Handler para el Historial/Inventario
-                    updateProduct, // Data si hasImportantChanges es true
-                    obj, // Model Instance BD
+                    id: obj.id,
+                    stock: updatedStock,
+                    updateProduct,
+                    obj,
                     metadataChanged: hasImportantChanges
                 };
             }).filter(item => item !== null);
 
-            let promisesArray = [];
-
-            logMessage(`[ROUTING] Página ${page}: Separados ${nonexistentProducts?.length} como MÁS NUEVOS y ${existingProductsWithStock?.length} como EXISTENTES.`);
+            logMessage(`[MACRO-ROUTING DB] Listos: ${nonexistentProducts?.length} MÁS NUEVOS y ${existingProductsWithStock?.length} EXISTENTES a insertar/actualizar.`);
 
             if (existingProducts && existingProducts.length > 0) {
-                promisesArray.push(processExistingProductsBatch(existingProductsWithStock));
+                processDbPromises.push(processExistingProductsBatch(existingProductsWithStock));
             }
             if (nonexistentProducts && nonexistentProducts.length > 0) {
-                promisesArray.push(processNonexistentProductsBatch(nonexistentProducts, DROPI_IMG_URL, DROPI_DETAILS_PRODUCTS, country));
+                processDbPromises.push(processNonexistentProductsBatch(nonexistentProducts, DROPI_IMG_URL, DROPI_DETAILS_PRODUCTS, country));
             }
 
-            if (promisesArray.length > 0) {
-                try {
-                    await Promise.all(promisesArray);
-                } catch (bdError) {
-                    logMessage(`[CRÍTICO BD] Fallo al insertar lotes en BD para ${country}: ${bdError.message || bdError}`);
-                    console.error("Detalle Error BD:", bdError);
-                }
+            try {
+                await Promise.all(processDbPromises);
+            } catch (bdError) {
+                logMessage(`[CRÍTICO BD] Fallo al insertar macro-lote en BD para ${country}: ${bdError.message || bdError}`);
+                console.error("Detalle Error BD:", bdError);
             }
-
-            logMessage(`Página ${page}: ${originalLength} productos en total devueltos por la API (${country})`);
         }
 
+        // Si la ráfaga anterior trajo resultados vacíos, el if (!apiResponse.success)
+        // arriba cambiará hasMoreResults = false, matando este loop global y pasando de país
         currentPage += pagesPerBatch;
     }
 };
