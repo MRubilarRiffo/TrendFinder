@@ -1,6 +1,6 @@
-const { Stock } = require("../../config/database");
-const { logMessage } = require("../../helpers/logMessage");
-const { validateDropiProduct } = require("../../helpers/scraper/dropiValidator");
+const { Stock, ProductSale } = require('../../config/database');
+const { logMessage } = require('../../helpers/logMessage');
+const { validateDropiProduct } = require('../../helpers/scraper/dropiValidator');
 
 /**
  * Procesa en batch los productos que **ya existen** en base de datos.
@@ -15,10 +15,10 @@ const processExistingProductsBatch = async (existingProductsWithStock) => {
         const existingStock = await Stock.findAll(queryOptionsStock);
 
         const existingProductsPromises = existingProductsWithStock.map(async ({ id, stock, updateProduct, obj }) => {
-            stock = parseInt(stock);
+            const safeStock = stock !== null && stock !== undefined && !isNaN(parseInt(stock)) ? parseInt(stock) : 0;
 
             try {
-                validateDropiProduct(id, true, stock); // Asumimos name:true porque el update puede omitirlo y solo importar el stock
+                validateDropiProduct(id, true, safeStock); // Asumimos name:true porque el update puede omitirlo y solo importar el stock
             } catch (error) {
                 logMessage(`Error al validar productos existentes: ${error.message}`);
                 if (error.validationErrors) logMessage(JSON.stringify(error.validationErrors));
@@ -26,18 +26,38 @@ const processExistingProductsBatch = async (existingProductsWithStock) => {
             }
 
             const stockInfo = existingStock.find(stockItem => stockItem.ProductId === id);
+            let updatedSomething = false;
 
             // Actualiza info texto/imagenes si la fecha de actualizacion reporta cambios en Dropi respecto a Local
-            if (Object.keys(updateProduct).length > 0) {
+            if (Object.keys(updateProduct).length > 0 && obj.metadataChanged !== false) { // En caso de que se envíe el param
                 await obj.update(updateProduct);
+                updatedSomething = true;
             }
 
             if (stockInfo) {
-                // Nivelar inventario al real actual
-                if (stockInfo.quantity !== stock) {
-                    await stockInfo.update({ quantity: stock });
+                // Nivelar inventario al real actual (Sumatoria Dropshipping V2)
+                if (stockInfo.quantity !== safeStock) {
+                    // Si el stock nuevo es menor al que teníamos, asumimos que hubo ventas
+                    if (stockInfo.quantity > safeStock) {
+                        const soldAmount = stockInfo.quantity - safeStock;
+                        try {
+                            await ProductSale.create({
+                                quantitySold: soldAmount,
+                                ProductId: id,
+                                saleDate: new Date()
+                            });
+                        } catch (saleError) {
+                            logMessage(`Error registrando venta para producto ${id}: ${saleError.message}`);
+                        }
+                    }
+
+                    await stockInfo.update({ quantity: safeStock });
+                    updatedSomething = true;
                 }
             }
+
+            // Si quieres logear opcionalmente qué pasó (Opcional, omitido por default visual noise)
+            // if(updatedSomething) logMessage(`Producto ID ${id} sincronizado exitosamente.`);
         });
 
         await Promise.all(existingProductsPromises);
@@ -46,6 +66,4 @@ const processExistingProductsBatch = async (existingProductsWithStock) => {
     }
 };
 
-module.exports = {
-    processExistingProductsBatch
-};
+module.exports = { processExistingProductsBatch };

@@ -5,7 +5,6 @@ const errorMiddleware = require('../middleware/errorMiddleware');
 const helmet = require('helmet');
 
 const router = require('../routes');
-console.log('[DEBUG SERVER] Router Layer Stack Length:', router.stack ? router.stack.length : 'UNDEFINED');
 
 const server = express();
 

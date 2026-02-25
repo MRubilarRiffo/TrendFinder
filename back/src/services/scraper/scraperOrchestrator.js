@@ -10,7 +10,7 @@ const { processNonexistentProductsBatch } = require('../../handlers/scraper/proc
 // Utils Locals
 const { updateImages, updateStores, convertirString } = require('../../helpers/scraper/dropiUtils');
 
-const LIMIT_PER_PAGE = 100;
+const LIMIT_PER_PAGE = 40;
 
 /**
  * Loop principal del Scraper para el país en turno.
@@ -33,6 +33,10 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
             // Clonamos el body para no alterar el original en el ciclo asíncrono cruzado
             const requestBody = { ...body, startData: offset };
 
+            // Delay Anti-RateLimit (Dropi WAF - 429 Too Many Attempts)
+            // Esperamos 3.5 segundos entre cada lote para respetar el límite de 20 pet/min
+            await new Promise(resolve => setTimeout(resolve, 500));
+
             // Proceso Batching Sincronizado
             const apiResponse = await fetchDropiProductsPage(API, headers, requestBody, country);
 
@@ -41,12 +45,32 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
                 break; // Rompemos el ciclo for
             }
 
+            if (page === 1 && apiResponse.count) {
+                const totalEstimatedPages = Math.ceil(apiResponse.count / LIMIT_PER_PAGE);
+                logMessage(`[CATÁLOGO DROPI] La API declara un total de ${apiResponse.count} productos a nivel tienda. Se iterarán aproximadamente ${totalEstimatedPages} páginas en bloques de ${LIMIT_PER_PAGE}.`);
+            }
+
             let objects = apiResponse.data;
 
-            // Filtrado base de productos indeseables o rotos
-            objects = objects.filter(({ stock, name, sale_price, suggested_price }) =>
-                stock && stock >= 0 && name && sale_price > 0 && suggested_price > 0
+            // Inspect Dropi Payload fields
+            if (page === 1) {
+                logMessage(`[PAYLOAD INSPECTOR] Las llaves son: ${Object.keys(objects[0]).join(', ')}`);
+                logMessage(`[PAYLOAD INSPECTOR] Valores relevantes de Dropi V2: price=${objects[0].sale_price} / suggested=${objects[0].suggested_price} / stock=${objects[0].stock}`);
+            }
+
+            // Filtrado base super permisivo (Solo descarta productos completamente vacíos o borrados)
+            const originalLength = objects.length;
+            objects = objects.filter((product) =>
+                product.id !== null && product.id !== undefined && product.name
             );
+
+            if (originalLength !== objects.length) {
+                logMessage(`[ORCHESTRATOR] Filtro descartó ${originalLength - objects.length} productos con data corrupta (ej. sin nombre, sin precio).`);
+            }
+
+            if (objects.length === 0) {
+                logMessage(`[ORCHESTRATOR ALERT] Absolutamente todos los ${originalLength} productos en esta página fueron rechazados por el Filtro!`);
+            }
 
             const idsArray = objects.map(({ id }) => id);
 
@@ -67,18 +91,31 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
                 let previousNow = objectWithStock.updated_at;
                 const previousUpdate = obj.productUpdateDate;
 
-                let updateProduct = {};
+                // Extraemos Stock Real de Warehouses sumados
+                let updatedStock = 0;
+                if (Array.isArray(objectWithStock.warehouse_product) && objectWithStock.warehouse_product.length > 0) {
+                    updatedStock = objectWithStock.warehouse_product.reduce((acc, curr) => {
+                        const whStock = curr.stock;
+                        return acc + (whStock !== null && whStock !== undefined && !isNaN(parseInt(whStock)) ? parseInt(whStock) : 0);
+                    }, 0);
+                } else if (objectWithStock.stock !== null && objectWithStock.stock !== undefined && !isNaN(parseInt(objectWithStock.stock))) {
+                    updatedStock = parseInt(objectWithStock.stock);
+                }
 
-                // Si en Dropi se editó más recientemente que mi guardado en BD, actualizo data
+                let updateProduct = {};
+                let hasImportantChanges = false;
+
+                // Si en Dropi se editó más recientemente que mi guardado en BD, actualizo metadata pesada
                 if (!previousUpdate || (previousNow && previousNow > previousUpdate)) {
+                    hasImportantChanges = true; // Forzamos actualización por timestamp
                     const image = updateImages(objectWithStock.gallery, DROPI_IMG_URL, config.dropi_img_urls3);
-                    const stores = updateStores(objectWithStock.warehouses);
+                    const stores = updateStores(objectWithStock.warehouse_product);
 
                     updateProduct = {
                         name: objectWithStock.name,
                         description: objectWithStock.description,
-                        sale_price: objectWithStock.sale_price,
-                        suggested_price: objectWithStock.suggested_price,
+                        sale_price: objectWithStock.sale_price !== null && objectWithStock.sale_price !== undefined ? parseFloat(objectWithStock.sale_price) : 0,
+                        suggested_price: objectWithStock.suggested_price !== null && objectWithStock.suggested_price !== undefined ? parseFloat(objectWithStock.suggested_price) : 0,
                         url: `${DROPI_DETAILS_PRODUCTS}${objectWithStock.id}/${convertirString(objectWithStock.name)}`,
                         productUpdateDate: previousNow || objectWithStock.created_at,
                         image,
@@ -86,15 +123,20 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
                     };
                 }
 
+                // Return estructurado para el Handler. Notar que updateProduct va vacío si la metadata no cambió
                 return {
-                    id: obj.id, // ID interno BD (Autoincremental de Postgres)
-                    stock: objectWithStock.stock, // Stock en BD Distante
-                    updateProduct, // Data a meter
-                    obj // Model Instance para que el Handler llame `.update()`
+                    id: obj.id, // ID interno BD
+                    stock: updatedStock, // Enviamos el nuevo stock calculado al Handler para el Historial/Inventario
+                    updateProduct, // Data si hasImportantChanges es true
+                    obj, // Model Instance BD
+                    metadataChanged: hasImportantChanges
                 };
-            });
+            }).filter(item => item !== null);
 
             let promisesArray = [];
+
+            logMessage(`[ROUTING] Página ${page}: Separados ${nonexistentProducts?.length} como MÁS NUEVOS y ${existingProductsWithStock?.length} como EXISTENTES.`);
+
             if (existingProducts && existingProducts.length > 0) {
                 promisesArray.push(processExistingProductsBatch(existingProductsWithStock));
             }
@@ -103,10 +145,15 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
             }
 
             if (promisesArray.length > 0) {
-                await Promise.all(promisesArray);
+                try {
+                    await Promise.all(promisesArray);
+                } catch (bdError) {
+                    logMessage(`[CRÍTICO BD] Fallo al insertar lotes en BD para ${country}: ${bdError.message || bdError}`);
+                    console.error("Detalle Error BD:", bdError);
+                }
             }
 
-            logMessage(`Página ${page}: ${LIMIT_PER_PAGE * page} productos en total analizados (${country})`);
+            logMessage(`Página ${page}: ${originalLength} productos en total devueltos por la API (${country})`);
         }
 
         currentPage += pagesPerBatch;
@@ -125,10 +172,10 @@ const scraperConfig = async () => {
         'startData': 0,
         'pageSize': LIMIT_PER_PAGE,
         'order_type': 'DESC',
-        'order_by': 'id',
+        'order_by': 'created_at',
         'keywords': '',
         'active': true,
-        'no_count': true,
+        'no_count': false,
         'integration': true
     };
 
@@ -136,7 +183,7 @@ const scraperConfig = async () => {
         'dropi-integration-key': 'token',
         'Content-Type': 'application/json;charset=UTF-8',
         'User-Agent': 'PostmanRuntime/7.36.0',
-        'Accept': '*/*',
+        'Accept': '*/*, application/json',
         'Host': 'api.dropi.cl',
         'Accept-Encoding': 'gzip, deflate, br',
         'Connection': 'keep-alive'

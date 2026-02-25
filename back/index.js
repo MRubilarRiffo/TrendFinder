@@ -11,3 +11,10 @@ conn.sync({ force: false })
     .catch(error => {
         logMessage(`Error occurred during startup: ${error}`);
     });
+
+// Manejo de Cierre Forzoso (Ctrl + C)
+// Evita que el Scraper siga corriendo como "Zombie" en la memoria de Windows
+process.on('SIGINT', () => {
+    logMessage('\n[APAGADO] Señal de cierre (Ctrl+C) detectada. Terminando forzosamente el servidor y todos sus hilos asíncronos...');
+    process.exit(0);
+});

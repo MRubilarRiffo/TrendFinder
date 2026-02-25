@@ -28,11 +28,14 @@ let entries = Object.entries(sequelize.models);
 let capsEntries = entries.map((entry) => [entry[0][0].toUpperCase() + entry[0].slice(1), entry[1]]);
 sequelize.models = Object.fromEntries(capsEntries);
 
-const { Product, Stock, Category } = sequelize.models;
+const { Product, Stock, Category, ProductSale } = sequelize.models;
 
 //Relaciones aquí
 Product.hasOne(Stock);
 Stock.belongsTo(Product); // Cada registro de stock pertenece a un único producto
+
+Product.hasMany(ProductSale, { foreignKey: 'ProductId' });
+ProductSale.belongsTo(Product, { foreignKey: 'ProductId' });
 
 Product.belongsToMany(Category, { through: 'ProductCategory' });
 Category.belongsToMany(Product, { through: 'ProductCategory' });
