@@ -6,13 +6,12 @@ const config = {
     db_host: process.env.DB_HOST,
     db_port: process.env.DB_PORT,
     db_name: process.env.DB_NAME,
-    jwt_secret: process.env.JWT_SECRET,
     dropi_categories: process.env.DROPI_CATEGORIES.split(','),
     dropi_img_urls3: process.env.DROPI_IMG_URLS3,
     dropi_country: [
         {
             country: 'Chile',
-            dropi_token: process.env.DROPI_CL_TOKEN ? process.env.DROPI_CL_TOKEN.replace(/[\s'"]/g, '') : '',
+            dropi_token: process.env.DROPI_CL_TOKEN,
             dropi_api_products: process.env.DROPI_CL_API_PRODUCTS,
             dropi_img_url: process.env.DROPI_CL_IMG_URL,
             dropi_details_products: process.env.DROPI_CL_DETAILS_PRODUCTS,

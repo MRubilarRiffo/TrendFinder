@@ -1,5 +1,5 @@
 const { logMessage } = require('../../helpers/logMessage');
-const { getRandomProxy } = require('../../utils/rotationManager');
+const { getRandomProxy, getRandomToken } = require('../../utils/rotationManager');
 const axios = require('axios');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 
@@ -7,18 +7,22 @@ const { HttpsProxyAgent } = require('https-proxy-agent');
  * Cliente HTTP puramente enfocado en llamar a la API de Dropi con anti-bloqueo.
  * Utiliza Axios + HttpsProxyAgent para evadir errores 405 (mutación de POST en túneles).
  */
-const fetchDropiProductsPage = async (apiUrl, headers, body, apiCountry, maxRetries = 8) => {
+const fetchDropiProductsPage = async (apiUrl, headers, body, apiCountry, maxRetries = 5) => {
     let attempt = 0;
 
     while (attempt < maxRetries) {
         attempt++;
         const proxyUrl = getRandomProxy();
 
+        // Asignación Dinámica del Token V3 (Evadir 429 WAF Laravel ThrottleRequests)
+        const currentToken = getRandomToken(headers['dropi-integration-key']);
+        headers['dropi-integration-key'] = currentToken;
+
         // Limpiamos headers que pueden romper la petición axios (como content-length manual)
         delete headers['Content-Length'];
 
         try {
-            logMessage(`[DEBUG RED] Intento ${attempt}/${maxRetries} (${apiCountry}) - Proxy: ${proxyUrl ? 'SI' : 'NO'} | Token: ${headers['dropi-integration-key'].substring(0, 15)}...`);
+            logMessage(`[DEBUG RED] Intento ${attempt}/${maxRetries} (${apiCountry}) - Proxy: ${proxyUrl ? 'SI' : 'NO'} | Token: ${currentToken.substring(0, 50)}...`);
 
             const axiosConfig = {
                 url: apiUrl,

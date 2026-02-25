@@ -183,7 +183,8 @@ const scraperConfig = async () => {
         'keywords': '',
         'active': true,
         'no_count': false,
-        'integration': true
+        'integration': true,
+        'stockmayor': 1
     };
 
     let baseHeaders = {
