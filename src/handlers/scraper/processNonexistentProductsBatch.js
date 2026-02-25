@@ -11,16 +11,44 @@ const { compareCategories, convertirString, updateImages, updateStores } = requi
  * Establece su inventario inicial y sus categorías correspondientes haciendo un match con el diccionario.
  */
 const processNonexistentProductsBatch = async (nonexistentProducts, DROPI_IMG_URL, DROPI_DETAILS_PRODUCTS, country) => {
-    let nonexistentProductsCreating = nonexistentProducts.map(({ id, name, stock, gallery, categories, description, sale_price, suggested_price, warehouse_product, updated_at, created_at }) => {
-        // Extracción correcta de Stock sumando inventario de Warehouses (Dropi V2 API Bug Fix)
+    let nonexistentProductsCreating = nonexistentProducts.map(({ id, name, stock, gallery, categories, description, sale_price, suggested_price, warehouse_product, updated_at, created_at, variations }) => {
+        // Extracción correcta de Stock sumando inventario de Warehouses y Variaciones (Dropi V2 API Bug Fix)
         let totalStock = 0;
+
+        // 1. Stock Base
+        if (stock !== null && stock !== undefined && !isNaN(parseInt(stock))) {
+            totalStock += parseInt(stock);
+        }
+
+        // 2. Stock de Bodegas
         if (Array.isArray(warehouse_product) && warehouse_product.length > 0) {
             totalStock = warehouse_product.reduce((acc, curr) => {
                 const whStock = curr.stock;
                 return acc + (whStock !== null && whStock !== undefined && !isNaN(parseInt(whStock)) ? parseInt(whStock) : 0);
-            }, 0);
-        } else if (stock !== null && stock !== undefined && !isNaN(parseInt(stock))) {
-            totalStock = parseInt(stock); // Fallback al original si Array V2 de warehouses está vacío
+            }, totalStock);
+        }
+
+        // 3. Stock de Variaciones
+        if (Array.isArray(variations) && variations.length > 0) {
+            let totalVariationsStock = 0;
+            variations.forEach(variation => {
+                // Stock directo de la variación
+                if (variation.stock !== null && variation.stock !== undefined && !isNaN(parseInt(variation.stock))) {
+                    totalVariationsStock += parseInt(variation.stock);
+                } else if (Array.isArray(variation.warehouse_product_variation) && variation.warehouse_product_variation.length > 0) {
+                    // Si no hay stock directo, sumamos el de las bodegas de la variación
+                    variation.warehouse_product_variation.forEach(ware => {
+                        if (ware.stock !== null && ware.stock !== undefined && !isNaN(parseInt(ware.stock))) {
+                            totalVariationsStock += parseInt(ware.stock);
+                        }
+                    });
+                }
+            });
+
+            // Si el stock general reportado es menor al de las variaciones o cero, prevalece el de variaciones
+            if (totalStock < totalVariationsStock || totalStock === 0) {
+                totalStock = totalVariationsStock;
+            }
         }
 
         const safeSalePrice = sale_price !== null && sale_price !== undefined ? parseFloat(sale_price) : 0;

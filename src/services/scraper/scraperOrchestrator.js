@@ -103,15 +103,45 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
                 let previousNow = objectWithStock.updated_at;
                 const previousUpdate = obj.productUpdateDate;
 
-                // Extraemos Stock Real de Warehouses sumados
+                // Extraemos Stock Real de Warehouses y Variaciones (Dropi V2 API Fix)
                 let updatedStock = 0;
+
+                // 1. Stock Base (si existe)
+                if (objectWithStock.stock !== null && objectWithStock.stock !== undefined && !isNaN(parseInt(objectWithStock.stock))) {
+                    updatedStock += parseInt(objectWithStock.stock);
+                }
+
+                // 2. Stock de Bodegas (warehouse_product general)
                 if (Array.isArray(objectWithStock.warehouse_product) && objectWithStock.warehouse_product.length > 0) {
                     updatedStock = objectWithStock.warehouse_product.reduce((acc, curr) => {
                         const whStock = curr.stock;
                         return acc + (whStock !== null && whStock !== undefined && !isNaN(parseInt(whStock)) ? parseInt(whStock) : 0);
-                    }, 0);
-                } else if (objectWithStock.stock !== null && objectWithStock.stock !== undefined && !isNaN(parseInt(objectWithStock.stock))) {
-                    updatedStock = parseInt(objectWithStock.stock);
+                    }, updatedStock); // Sumamos sobre el stock base
+                }
+
+                // 3. Stock de Variaciones (Si es producto variable)
+                if (Array.isArray(objectWithStock.variations) && objectWithStock.variations.length > 0) {
+                    let totalVariationsStock = 0;
+                    objectWithStock.variations.forEach(variation => {
+                        // Stock directo de la variación
+                        if (variation.stock !== null && variation.stock !== undefined && !isNaN(parseInt(variation.stock))) {
+                            totalVariationsStock += parseInt(variation.stock);
+                        } else if (Array.isArray(variation.warehouse_product_variation) && variation.warehouse_product_variation.length > 0) {
+                            // Si no hay stock directo, sumamos el de las bodegas de la variación
+                            variation.warehouse_product_variation.forEach(ware => {
+                                if (ware.stock !== null && ware.stock !== undefined && !isNaN(parseInt(ware.stock))) {
+                                    totalVariationsStock += parseInt(ware.stock);
+                                }
+                            });
+                        }
+                    });
+
+                    // Solo sumamos el stock de variaciones si existe, para no duplicar si Dropi ya lo reporta en el stock general
+                    // En Dropi V2 a veces el stock general ya incluye las variaciones, y a veces está en cero.
+                    // Si el stock general es menor al de las variaciones o cero, prevalece el de variaciones (Lógica del Plugin de WP)
+                    if (updatedStock < totalVariationsStock || updatedStock === 0) {
+                        updatedStock = totalVariationsStock;
+                    }
                 }
 
                 let updateProduct = {};
