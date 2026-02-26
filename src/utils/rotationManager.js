@@ -5,6 +5,9 @@ const { logMessage } = require('../helpers/logMessage');
 let proxiesCache = [];
 let tokensCache = [];
 
+// Índice para el selector secuencial (Round Robin) de tokens
+let currentTokenIndex = 0;
+
 function loadProxiesAndTokens() {
     // 1. Cargar Proxies
     try {
@@ -58,11 +61,16 @@ function getRandomProxy() {
     return proxiesCache[randomIndex];
 }
 
-// Retorna el token base fallback si no hay extras en TXT
-function getRandomToken(baseToken) {
+// Mantiene el nombre "getSequentialToken" para reflejar la lógica secuencial
+function getSequentialToken(baseToken) {
     if (tokensCache.length === 0) return baseToken; // Fallback env
-    const randomIndex = Math.floor(Math.random() * tokensCache.length);
-    return tokensCache[randomIndex];
-}
 
-module.exports = { getRandomProxy, getRandomToken };
+    // Obtener el token actual
+    const token = tokensCache[currentTokenIndex];
+
+    // Avanzar el índice y reiniciar a 0 si llega al final
+    currentTokenIndex = (currentTokenIndex + 1) % tokensCache.length;
+
+    return token;
+}
+module.exports = { getRandomProxy, getSequentialToken };

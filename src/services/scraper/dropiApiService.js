@@ -1,5 +1,5 @@
 const { logMessage } = require('../../helpers/logMessage');
-const { getRandomProxy, getRandomToken } = require('../../utils/rotationManager');
+const { getRandomProxy, getSequentialToken } = require('../../utils/rotationManager');
 const axios = require('axios');
 const { HttpsProxyAgent } = require('https-proxy-agent');
 
@@ -14,15 +14,15 @@ const fetchDropiProductsPage = async (apiUrl, headers, body, apiCountry, maxRetr
         attempt++;
         const proxyUrl = getRandomProxy();
 
-        // Asignación Dinámica del Token V3 (Evadir 429 WAF Laravel ThrottleRequests)
-        const currentToken = getRandomToken(headers['dropi-integration-key']);
+        // Asignación Secuencial del Token V3 (Evadir 429 WAF Laravel ThrottleRequests)
+        const currentToken = getSequentialToken(headers['dropi-integration-key']);
         headers['dropi-integration-key'] = currentToken;
 
         // Limpiamos headers que pueden romper la petición axios (como content-length manual)
         delete headers['Content-Length'];
 
         try {
-            logMessage(`[DEBUG RED] Intento ${attempt}/${maxRetries} (${apiCountry}) - Proxy: ${proxyUrl ? 'SI' : 'NO'} | Token: ${currentToken.substring(0, 50)}...`);
+            logMessage(`[DEBUG RED] Intento ${attempt}/${maxRetries} (${apiCountry}) - Proxy: ${proxyUrl ? 'SI' : 'NO'} | Token: ...${currentToken.substring(86, 130)}...`);
 
             const axiosConfig = {
                 url: apiUrl,
@@ -62,7 +62,7 @@ const fetchDropiProductsPage = async (apiUrl, headers, body, apiCountry, maxRetr
                 return { success: false, data: [], count: 0 };
             }
 
-            await new Promise(resolve => setTimeout(resolve, 10000));
+            await new Promise(resolve => setTimeout(resolve, 30000));
         }
     }
 

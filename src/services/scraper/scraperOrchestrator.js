@@ -7,7 +7,7 @@ const { fetchDropiProductsPage } = require('./dropiApiService');
 const { processExistingProductsBatch } = require('../../handlers/scraper/processExistingProductsBatch');
 const { processNonexistentProductsBatch } = require('../../handlers/scraper/processNonexistentProductsBatch');
 
-const LIMIT_PER_PAGE = 1;
+const LIMIT_PER_PAGE = 40;
 
 /**
  * Loop principal del Scraper para el país en turno (Optimizacion V3 - Concurrente)
