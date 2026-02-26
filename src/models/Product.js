@@ -17,17 +17,11 @@ module.exports = (sequelize) => {
         image: {
             type: DataTypes.TEXT,
         },
-        description: {
-            type: DataTypes.TEXT,
-        },
         sale_price: {
             type: DataTypes.DECIMAL(10, 2),
         },
         suggested_price: {
             type: DataTypes.DECIMAL(10, 2),
-        },
-        stores: {
-            type: DataTypes.TEXT,
         },
         url: {
             type: DataTypes.STRING,
@@ -35,10 +29,6 @@ module.exports = (sequelize) => {
         country: {
             type: DataTypes.ENUM('Colombia', 'México', 'Panamá', 'Chile', 'Ecuador', 'Perú', 'España'),
             allowNull: false
-        },
-        productUpdateDate: {
-            type: DataTypes.STRING,
-        },
-
+        }
     });
 };

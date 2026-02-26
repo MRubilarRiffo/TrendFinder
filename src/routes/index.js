@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const productsRoutes = require('./productsRoute');
+
 const scraperRoutes = require('./scraperRoute');
 const salesRoutes = require('./salesRoute');
 
@@ -10,7 +10,6 @@ router.use((req, res, next) => {
     next();
 });
 
-router.use('/products', productsRoutes);
 router.use('/scraper', scraperRoutes);
 router.use('/sales', salesRoutes);
 

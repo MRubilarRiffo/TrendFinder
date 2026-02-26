@@ -1,20 +1,4 @@
 /**
- * Filtra y acopla los nombres de la bodega en una cadena simple.
- */
-const updateStores = (warehouses) => {
-    let storesArray = [];
-    if (warehouses && warehouses.length > 0) {
-        warehouses.forEach(item => {
-            if (item.name) {
-                storesArray.push(item.name);
-            }
-        });
-    }
-
-    return storesArray.join(',');
-};
-
-/**
  * Normaliza y une en una cadena separada por comas las imágenes disponibles.
  */
 const updateImages = (gallery, DROPI_IMG_URL, DROPI_IMG_URLS3) => {
@@ -83,7 +67,6 @@ const compareCategories = (cat1, cat2) => {
 };
 
 module.exports = {
-    updateStores,
     updateImages,
     convertirString,
     compareCategories

@@ -62,7 +62,7 @@ const fetchDropiProductsPage = async (apiUrl, headers, body, apiCountry, maxRetr
                 return { success: false, data: [], count: 0 };
             }
 
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            await new Promise(resolve => setTimeout(resolve, 10000));
         }
     }
 

@@ -7,15 +7,12 @@ const { fetchDropiProductsPage } = require('./dropiApiService');
 const { processExistingProductsBatch } = require('../../handlers/scraper/processExistingProductsBatch');
 const { processNonexistentProductsBatch } = require('../../handlers/scraper/processNonexistentProductsBatch');
 
-// Utils Locals
-const { updateImages, updateStores, convertirString } = require('../../helpers/scraper/dropiUtils');
-
-const LIMIT_PER_PAGE = 40;
+const LIMIT_PER_PAGE = 1;
 
 /**
  * Loop principal del Scraper para el país en turno (Optimizacion V3 - Concurrente)
  */
-const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch = 6) => {
+const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch = 3) => {
     const API = countryConfig.dropi_api_products;
     const DROPI_IMG_URL = countryConfig.dropi_img_url;
     const DROPI_DETAILS_PRODUCTS = countryConfig.dropi_details_products;
@@ -88,7 +85,7 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
             const idsArray = dbTotalObjects.map(({ id }) => id);
 
             // Requerimos desde BD TODOS los Ids de la ráfaga de un tiro
-            const queryOptionsProducts = { attributes: ['id', 'dropiId', 'productUpdateDate'], where: { dropiId: idsArray, country: country } };
+            const queryOptionsProducts = { attributes: ['id', 'dropiId'], where: { dropiId: idsArray, country: country } };
             const productArray = await getProductsFindAll(queryOptionsProducts);
             const productIds = productArray.map(product => product.dropiId);
 
@@ -99,9 +96,6 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
             // Mapeo super-batch
             const existingProductsWithStock = existingProducts.map(obj => {
                 const objectWithStock = dbTotalObjects.find(({ id }) => id === obj.dropiId);
-
-                let previousNow = objectWithStock.updated_at;
-                const previousUpdate = obj.productUpdateDate;
 
                 // Extraemos Stock Real de Warehouses y Variaciones (Dropi V2 API Fix)
                 let updatedStock = 0;
@@ -144,33 +138,10 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
                     }
                 }
 
-                let updateProduct = {};
-                let hasImportantChanges = false;
-
-                // Si en Dropi se editó más recientemente que mi guardado en BD, actualizo
-                if (!previousUpdate || (previousNow && previousNow > previousUpdate)) {
-                    hasImportantChanges = true;
-                    const image = updateImages(objectWithStock.gallery, DROPI_IMG_URL, config.dropi_img_urls3);
-                    const stores = updateStores(objectWithStock.warehouse_product);
-
-                    updateProduct = {
-                        name: objectWithStock.name,
-                        description: objectWithStock.description,
-                        sale_price: objectWithStock.sale_price !== null && objectWithStock.sale_price !== undefined ? parseFloat(objectWithStock.sale_price) : 0,
-                        suggested_price: objectWithStock.suggested_price !== null && objectWithStock.suggested_price !== undefined ? parseFloat(objectWithStock.suggested_price) : 0,
-                        url: `${DROPI_DETAILS_PRODUCTS}${objectWithStock.id}/${convertirString(objectWithStock.name)}`,
-                        productUpdateDate: previousNow || objectWithStock.created_at,
-                        image,
-                        stores
-                    };
-                }
-
                 return {
                     id: obj.id,
                     stock: updatedStock,
-                    updateProduct,
-                    obj,
-                    metadataChanged: hasImportantChanges
+                    obj
                 };
             }).filter(item => item !== null);
 
@@ -213,7 +184,7 @@ const scraperConfig = async () => {
         'keywords': '',
         'active': true,
         'no_count': false,
-        'integration': true,
+        'integration': false,
         'stockmayor': 1
     };
 

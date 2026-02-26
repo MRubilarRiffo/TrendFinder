@@ -14,7 +14,7 @@ const processExistingProductsBatch = async (existingProductsWithStock) => {
         const queryOptionsStock = { attributes: ['id', 'ProductId', 'quantity'], where: { ProductId: existingProductIds } };
         const existingStock = await Stock.findAll(queryOptionsStock);
 
-        const existingProductsPromises = existingProductsWithStock.map(async ({ id, stock, updateProduct, obj }) => {
+        const existingProductsPromises = existingProductsWithStock.map(async ({ id, stock }) => {
             const safeStock = stock !== null && stock !== undefined && !isNaN(parseInt(stock)) ? parseInt(stock) : 0;
 
             try {
@@ -26,13 +26,6 @@ const processExistingProductsBatch = async (existingProductsWithStock) => {
             }
 
             const stockInfo = existingStock.find(stockItem => stockItem.ProductId === id);
-            let updatedSomething = false;
-
-            // Actualiza info texto/imagenes si la fecha de actualizacion reporta cambios en Dropi respecto a Local
-            if (Object.keys(updateProduct).length > 0 && obj.metadataChanged !== false) { // En caso de que se envíe el param
-                await obj.update(updateProduct);
-                updatedSomething = true;
-            }
 
             if (stockInfo) {
                 // Nivelar inventario al real actual (Sumatoria Dropshipping V2)

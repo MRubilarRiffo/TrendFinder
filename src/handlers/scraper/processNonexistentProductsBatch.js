@@ -4,14 +4,14 @@ const { Stock } = require('../../config/database');
 const { logMessage } = require('../../helpers/logMessage');
 
 const { validateDropiProduct } = require('../../helpers/scraper/dropiValidator');
-const { compareCategories, convertirString, updateImages, updateStores } = require('../../helpers/scraper/dropiUtils');
+const { compareCategories, convertirString, updateImages } = require('../../helpers/scraper/dropiUtils');
 
 /**
  * Inserta masivamente los productos que el scraper identificó como **nuevos**.
  * Establece su inventario inicial y sus categorías correspondientes haciendo un match con el diccionario.
  */
 const processNonexistentProductsBatch = async (nonexistentProducts, DROPI_IMG_URL, DROPI_DETAILS_PRODUCTS, country) => {
-    let nonexistentProductsCreating = nonexistentProducts.map(({ id, name, stock, gallery, categories, description, sale_price, suggested_price, warehouse_product, updated_at, created_at, variations }) => {
+    let nonexistentProductsCreating = nonexistentProducts.map(({ id, name, stock, gallery, categories, sale_price, suggested_price, warehouse_product, variations }) => {
         // Extracción correcta de Stock sumando inventario de Warehouses y Variaciones (Dropi V2 API Bug Fix)
         let totalStock = 0;
 
@@ -61,13 +61,10 @@ const processNonexistentProductsBatch = async (nonexistentProducts, DROPI_IMG_UR
             return null;
         }
 
-        const stores = updateStores(warehouse_product);
         const image = updateImages(gallery, DROPI_IMG_URL, null);
         const url = `${DROPI_DETAILS_PRODUCTS}${id}/${convertirString(name)}`;
 
-        let productUpdateDate = updated_at ? updated_at : created_at;
-
-        return { id, name, stock: totalStock, image, categories, description, sale_price: safeSalePrice, suggested_price: safeSuggestedPrice, url, country, stores, productUpdateDate };
+        return { id, name, stock: totalStock, image, categories, sale_price: safeSalePrice, suggested_price: safeSuggestedPrice, url, country };
     });
 
     nonexistentProductsCreating = nonexistentProductsCreating.filter(item => item);
