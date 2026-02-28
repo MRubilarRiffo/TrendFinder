@@ -100,7 +100,31 @@ El motor asiste la paginación con metadatos:
       "limit": 10
   },
   "data": [
-      // Top 10 Array del LeaderBoard con promedios y `salesHistory` diario
+      {
+          "productId": 2811,
+          "name": "Lampara Led de Emergencia",
+          "country": "Chile",
+          "image": "https://url.com/img.webp",
+          "price": 21000,
+          "suggestedPrice": 36990,
+          "unitProfit": 15990,
+          "totalQuantitySold": 491,
+          "totalRevenue": 10311000,
+          "totalProfit": 7851090,
+          "trendGrowthInfo": {
+              "growthPercentage": 45,
+              "isTrendingUp": true,
+              "isDying": false
+          },
+          "salesHistory": [
+              {
+                  "date": "2026-02-01",
+                  "quantity": 30,
+                  "revenue": 630000,
+                  "profit": 479700
+              }
+          ]
+      }
   ]
 }
 ```
@@ -136,10 +160,18 @@ Analítica profunda (Deep-Dive) para un producto específico, calculando variabl
         "name": "Lampara Led",
         "stock": 1500,
         "salesInfo": {
+            "totalQuantitySold": 491,
             "totalRevenue": 250000,
+            "salesAverage": 18.18,
+            "maxDailySales": 35,
             "trendGrowthPercentage": 45
         },
-        "salesHistory": []
+        "salesHistory": [
+            {
+                "date": "2026-02-01",
+                "quantity": 30
+            }
+        ]
     }
 }
 ```
