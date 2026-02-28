@@ -2,107 +2,106 @@ const { getSalesStatsHandler } = require('../../handlers/sales/getSalesStatsHand
 
 const getSalesStats = async (req, res) => {
     try {
-        const { days, country, startDate, endDate, sortByStr } = req.query;
+        const { days, country, startDate, endDate, sortByStr, page } = req.query;
 
-        // 1. Obtener datos crudos desde la BD mediante el handler
-        const { sales, daysEvaluated, midDateLimit } = await getSalesStatsHandler(days, country, startDate, endDate);
+        const pageInt = parseInt(page) || 1;
+        const limit = 10;
+        const offset = (pageInt - 1) * limit;
 
-        // 2. Lógica de negocio: Procesar las ventas para armar las estadísticas
-        const productStats = {};
+        const sortBy = req.query.sortBy || 'profit';
 
-        sales.forEach(sale => {
-            if (!sale.Product) return;
-            const productId = sale.Product.id;
+        // 1. Obtener datos pre-agrupados HÍBRIDOS desde la BD mediante el handler
+        const { topProducts, historySales, totalCount, daysEvaluated, midDateLimit } = await getSalesStatsHandler(days, country, startDate, endDate, limit, offset, sortBy);
 
-            const salePrice = parseFloat(sale.Product.sale_price) || 0;
-            const suggestedPrice = parseFloat(sale.Product.suggested_price) || 0;
+        // 2. Lógica de negocio: Procesar el TOP N extraído
+        const finalData = topProducts.map(tp => {
+            const productId = tp.ProductId;
+            const product = tp.Product;
 
+            // Datos base pre-sumados en el query de base de datos
+            const totalQuantitySold = parseFloat(tp.totalQuantitySold) || 0;
+            const totalProfit = parseFloat(tp.totalProfit) || 0;
+
+            const salePrice = parseFloat(product.sale_price) || 0;
+            const suggestedPrice = parseFloat(product.suggested_price) || 0;
             const unitProfit = suggestedPrice > salePrice ? (suggestedPrice - salePrice) : 0;
-            const totalProfitSale = unitProfit * sale.quantitySold;
-            const revenueSale = salePrice * sale.quantitySold;
+            const totalRevenue = salePrice * totalQuantitySold;
 
-            if (!productStats[productId]) {
-                productStats[productId] = {
-                    productId: sale.Product.id,
-                    name: sale.Product.name,
-                    country: sale.Product.country,
-                    image: sale.Product.image,
-                    price: salePrice,
-                    suggestedPrice: suggestedPrice,
-                    unitProfit: unitProfit,
-                    totalQuantitySold: 0,
-                    totalRevenue: 0,
-                    totalProfit: 0,
-                    salesHistory: {},
-                    recentSalesCount: 0,
-                    oldSalesCount: 0
-                };
-            }
+            // Extraer array de historial transaccional específicamente para este ID producto
+            const pHistory = historySales.filter(h => h.ProductId === productId) || [];
 
-            const pStats = productStats[productId];
+            let recentSalesCount = 0;
+            let oldSalesCount = 0;
+            let salesHistoryMap = {};
 
-            pStats.totalQuantitySold += sale.quantitySold;
-            pStats.totalRevenue += revenueSale;
-            pStats.totalProfit += totalProfitSale;
+            pHistory.forEach(sale => {
+                const saleDateObj = sale.saleDate instanceof Date ? sale.saleDate : new Date(sale.saleDate);
 
-            if (sale.saleDate >= midDateLimit) {
-                pStats.recentSalesCount += sale.quantitySold;
-            } else {
-                pStats.oldSalesCount += sale.quantitySold;
-            }
+                if (saleDateObj >= midDateLimit) {
+                    recentSalesCount += sale.quantitySold;
+                } else {
+                    oldSalesCount += sale.quantitySold;
+                }
 
-            const dateKey = sale.saleDate.toISOString().split('T')[0];
+                const dateKey = saleDateObj.toISOString().split('T')[0];
 
-            if (!pStats.salesHistory[dateKey]) {
-                pStats.salesHistory[dateKey] = {
-                    date: dateKey,
-                    quantity: 0,
-                    revenue: 0,
-                    profit: 0
-                };
-            }
+                if (!salesHistoryMap[dateKey]) {
+                    salesHistoryMap[dateKey] = {
+                        date: dateKey,
+                        quantity: 0,
+                        revenue: 0,
+                        profit: 0
+                    };
+                }
 
-            pStats.salesHistory[dateKey].quantity += sale.quantitySold;
-            pStats.salesHistory[dateKey].revenue += revenueSale;
-            pStats.salesHistory[dateKey].profit += totalProfitSale;
-        });
+                const sRev = sale.quantitySold * salePrice;
+                const sProf = sale.quantitySold * unitProfit;
 
-        // 3. Formatear la salida final y calcular tendencias
-        const finalData = Object.values(productStats).map(p => {
+                salesHistoryMap[dateKey].quantity += sale.quantitySold;
+                salesHistoryMap[dateKey].revenue += sRev;
+                salesHistoryMap[dateKey].profit += sProf;
+            });
+
+            // Formatear tendencias
             let trendGrowth = 0;
-            if (p.oldSalesCount > 0) {
-                trendGrowth = ((p.recentSalesCount - p.oldSalesCount) / p.oldSalesCount) * 100;
-            } else if (p.recentSalesCount > 0) {
+            if (oldSalesCount > 0) {
+                trendGrowth = ((recentSalesCount - oldSalesCount) / oldSalesCount) * 100;
+            } else if (recentSalesCount > 0) {
                 trendGrowth = 100;
             }
 
             return {
-                ...p,
+                productId: productId,
+                name: product.name,
+                country: product.country,
+                image: product.image,
+                price: salePrice,
+                suggestedPrice: suggestedPrice,
+                unitProfit: unitProfit,
+                totalQuantitySold: totalQuantitySold,
+                totalRevenue: totalRevenue,
+                totalProfit: totalProfit,
                 trendGrowthInfo: {
                     growthPercentage: Math.round(trendGrowth),
                     isTrendingUp: trendGrowth > 0,
                     isDying: trendGrowth < -20
                 },
-                salesHistory: Object.values(p.salesHistory).sort((a, b) => new Date(a.date) - new Date(b.date))
+                salesHistory: Object.values(salesHistoryMap).sort((a, b) => new Date(a.date) - new Date(b.date))
             };
         });
 
-        // 4. Ordenamiento
-        const sortBy = req.query.sortBy || 'profit';
-        finalData.sort((a, b) => {
-            if (sortBy === 'sales') {
-                if (b.totalQuantitySold !== a.totalQuantitySold) return b.totalQuantitySold - a.totalQuantitySold;
-                return b.totalProfit - a.totalProfit;
-            } else {
-                if (b.totalProfit !== a.totalProfit) return b.totalProfit - a.totalProfit;
-                return b.totalQuantitySold - a.totalQuantitySold;
-            }
-        });
+        // NOTA: El sort in-memory fue DEPRECADO. Ya MySQL ordenó topProducts dictando las posiciones relativas absolutas.
 
         return res.status(200).json({
             success: true,
-            totalSalesRecords: sales.length,
+            totalSalesRecords: totalCount,
             daysIncluded: daysEvaluated,
+            pagination: {
+                totalProducts: totalCount,
+                totalPages: Math.ceil(totalCount / limit),
+                currentPage: pageInt,
+                limit
+            },
             data: finalData
         });
     } catch (error) {

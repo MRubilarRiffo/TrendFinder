@@ -1,6 +1,6 @@
 const { logMessage } = require("../helpers/logMessage");
 
-const errorMiddleware = (err, req, res) => {
+const errorMiddleware = (err, req, res, next) => {
     // Loguear el error
     logMessage(`Error: ${err.message}`);
 

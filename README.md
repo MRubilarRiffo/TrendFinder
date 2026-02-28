@@ -176,6 +176,42 @@ Analítica profunda (Deep-Dive) para un producto específico, calculando variabl
 }
 ```
 
+### 3. Últimos Productos Agregados
+
+Devuelve un listado rápido de los productos más recientes introducidos a la Base de Datos. Paginación asíncrona apoyada en la fecha de creación.
+
+**Ruta:** `GET /api/products/latest`
+
+**Parámetros Query:**
+- `limit` (opcional): Cantidad máxima de productos a devolver. Default: 10.
+- `country` (opcional): Filtro estricto por país (ej. `Chile`, `Colombia`).
+
+**Ejemplo de Petición:**
+`/api/products/latest?limit=2&country=Chile`
+
+**Estructura de Respuesta:**
+```json
+{
+    "success": true,
+    "totalReturned": 2,
+    "data": [
+        {
+            "productId": 2811,
+            "dropiId": 64888,
+            "name": "Lampara Led",
+            "country": "Chile",
+            "image": "https://url.com/img.webp",
+            "price": 21000,
+            "suggestedPrice": 36990,
+            "unitProfit": 15990,
+            "stock": 1500,
+            "url": "https://chile.dropi.co/products/64888",
+            "addedAt": "2026-02-27T20:00:05.000Z"
+        }
+    ]
+}
+```
+
 ## Arquitectura y Organización (Extracto)
 - `/src/services/scraper/` -> Servicios directos para el consumo API.
 - `/src/controllers/` -> Controladores lógicos del backend.

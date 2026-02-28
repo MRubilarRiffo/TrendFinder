@@ -8,9 +8,12 @@ const { Op } = require('sequelize');
  * @param {string|null} country - Filtra las ventas por país.
  * @param {string|null} startDate - Fecha inicio de rango.
  * @param {string|null} endDate - Fecha límite de rango.
- * @returns {Promise<Object>} Regresa las transacciones brutas { sales, daysEvaluated, midDateLimit }
+ * @param {number|string} limit - Cantidad límite por página.
+ * @param {number|string} offset - Retraso del índice para DB.
+ * @param {string} sortBy - Criterio para el DB GROUP BY (profit/sales).
+ * @returns {Promise<Object>} Regresa data pre-agrupada { topProducts, historySales, totalCount, daysEvaluated, midDateLimit }
  */
-const getSalesStatsHandler = async (days = 7, country = null, startDate = null, endDate = null) => {
+const getSalesStatsHandler = async (days = 7, country = null, startDate = null, endDate = null, limit = 10, offset = 0, sortBy = 'profit') => {
     let dateLimit = new Date();
     let daysInt = parseInt(days);
     let endLimit = new Date();
@@ -33,7 +36,29 @@ const getSalesStatsHandler = async (days = 7, country = null, startDate = null, 
 
     const whereProduct = country ? { country } : {};
 
-    const sales = await ProductSale.findAll({
+    const limitInt = parseInt(limit) || 10;
+    const offsetInt = parseInt(offset) || 0;
+
+    let orderLiteral = 'totalProfit DESC';
+    if (sortBy === 'sales') orderLiteral = 'totalQuantitySold DESC';
+
+    // 1. Obtener conteo absoluto de productos distintos con ventas en el periodo (Para Total Pages)
+    const totalCount = await ProductSale.count({
+        distinct: true,
+        col: 'ProductId',
+        where: {
+            saleDate: { [Op.between]: [dateLimit, endLimit] }
+        },
+        include: [{ model: Product, where: whereProduct }]
+    });
+
+    // 2. Extraer Top N ya sumados matemáticamente y ordenados por DB (Ahorro de Memoria)
+    const topProducts = await ProductSale.findAll({
+        attributes: [
+            'ProductId',
+            [ProductSale.sequelize.fn('sum', ProductSale.sequelize.col('quantitySold')), 'totalQuantitySold'],
+            [ProductSale.sequelize.literal('SUM(quantitySold * (Product.suggested_price - Product.sale_price))'), 'totalProfit']
+        ],
         where: {
             saleDate: {
                 [Op.between]: [dateLimit, endLimit]
@@ -44,11 +69,32 @@ const getSalesStatsHandler = async (days = 7, country = null, startDate = null, 
             attributes: ['id', 'name', 'country', 'image', 'sale_price', 'suggested_price'],
             where: whereProduct
         }],
-        order: [['saleDate', 'ASC']] // Ordenamos ASC para construir el historial cronológico
+        group: ['ProductId', 'Product.id'],
+        order: ProductSale.sequelize.literal(orderLiteral),
+        limit: limitInt,
+        offset: offsetInt,
+        raw: true,
+        nest: true
     });
 
+    // 3. Extraer transacciones transitorias únicamente de esos N productos top, para el historial
+    const topProductIds = topProducts.map(tp => tp.ProductId);
+    let historySales = [];
+    if (topProductIds.length > 0) {
+        historySales = await ProductSale.findAll({
+            where: {
+                ProductId: { [Op.in]: topProductIds },
+                saleDate: { [Op.between]: [dateLimit, endLimit] }
+            },
+            order: [['saleDate', 'ASC']],
+            raw: true
+        });
+    }
+
     return {
-        sales,
+        topProducts,
+        historySales,
+        totalCount,
         daysEvaluated: daysInt,
         midDateLimit
     };
