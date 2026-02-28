@@ -65,6 +65,85 @@ Para correr la versión final en producción:
 npm start
 ```
 
+## API Endpoints (Referencia Rápida)
+
+La aplicación expone principalmente estadísticas computadas que extraen valor de nuestra ingesta de Dropi. A continuación las rutas principales:
+
+### 1. Estadísticas Globales de Ventas
+
+Endpoint paginado de alto rendimiento que evalúa e hidrata con historiales al LeaderBoard de productos con mayor rentabilidad o ventas de la Base de Datos.
+
+**Ruta:** `GET /api/sales/`
+
+**Parámetros Query:**
+- `startDate` (opcional): Fecha inicial formato `YYYY-MM-DD`.
+- `endDate` (opcional): Fecha final formato `YYYY-MM-DD`.
+- `days` (opcional): Retroceso histórico dinámico en días si no se proveen fechas. Default: 7.
+- `sortBy` (opcional): Método de ordenamiento prioritario: `'profit'` (Rentabilidad bruta) o `'sales'` (Total unidades). Default: `'profit'`.
+- `page` (opcional): Índice de paginación. Default: 1.
+- `country` (opcional): Filtro estricto por país de métrica.
+
+**Ejemplo de Petición:**
+`/api/sales/?sortBy=sales&page=2&startDate=2026-02-01&endDate=2026-02-28`
+
+**Estructura de Respuesta:**
+El motor asiste la paginación con metadatos:
+```json
+{
+  "success": true,
+  "totalSalesRecords": 5834,
+  "daysIncluded": 28,
+  "pagination": {
+      "totalProducts": 5834,
+      "totalPages": 584,
+      "currentPage": 2,
+      "limit": 10
+  },
+  "data": [
+      // Top 10 Array del LeaderBoard con promedios y `salesHistory` diario
+  ]
+}
+```
+
+### 2. Estadísticas Individuales de Producto
+
+Analítica profunda (Deep-Dive) para un producto específico, calculando variables de Crecimiento Diarios (`trendGrowthPercentage`) y sus picos máximos.
+
+**Ruta:** `GET /api/products/stats/:id`
+
+**Parámetros de Ruta (Path):**
+- `:id` (Requerido): ID numérico primario del producto en BD.
+
+**Parámetros Query:**
+- `startDate` (opcional): Fecha inicial formato `YYYY-MM-DD`.
+- `endDate` (opcional): Fecha final formato `YYYY-MM-DD`.
+- `country` (opcional): Filtro estricto por país.
+
+**Ejemplo de Petición:**
+`/api/products/stats/2811?startDate=2026-02-01`
+
+**Estructura de Respuesta:**
+```json
+{
+    "success": true,
+    "period": {
+        "startDate": "2026-02-01",
+        "endDate": "2026-02-27",
+        "daysEvaluated": 27
+    },
+    "data": {
+        "productId": 2811,
+        "name": "Lampara Led",
+        "stock": 1500,
+        "salesInfo": {
+            "totalRevenue": 250000,
+            "trendGrowthPercentage": 45
+        },
+        "salesHistory": []
+    }
+}
+```
+
 ## Arquitectura y Organización (Extracto)
 - `/src/services/scraper/` -> Servicios directos para el consumo API.
 - `/src/controllers/` -> Controladores lógicos del backend.
