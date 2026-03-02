@@ -23,7 +23,6 @@ const getLatestProductsFromDb = async (limit = 10, country = null) => {
         limit: limitInt
     });
 
-    console.log(products);
     return products;
 };
 

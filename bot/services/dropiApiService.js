@@ -1,7 +1,7 @@
-const { logMessage } = require('../../helpers/logMessage');
-const { getRandomProxy, getSequentialToken } = require('../../utils/rotationManager');
 const axios = require('axios');
 const { HttpsProxyAgent } = require('https-proxy-agent');
+const { logMessage } = require('../helpers/logMessage');
+const { getRandomProxy, getSequentialToken } = require('../utils/rotationManager');
 
 /**
  * Cliente HTTP puramente enfocado en llamar a la API de Dropi con anti-bloqueo.

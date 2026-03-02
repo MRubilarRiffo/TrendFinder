@@ -1,18 +1,18 @@
-const { config } = require('../../config/config');
-const { getProductsFindAll } = require('../../handlers/product/getProductsFindAll');
-const { logMessage } = require('../../helpers/logMessage');
+const { config } = require('../../src/config/config');
+const { getProductsFindAll } = require('../../src/handlers/product/getProductsFindAll');
+const { logMessage } = require('../helpers/logMessage');
 
 // Services & Handlers
 const { fetchDropiProductsPage } = require('./dropiApiService');
-const { processExistingProductsBatch } = require('../../handlers/scraper/processExistingProductsBatch');
-const { processNonexistentProductsBatch } = require('../../handlers/scraper/processNonexistentProductsBatch');
+const { processExistingProductsBatch } = require('../handlers/processExistingProductsBatch');
+const { processNonexistentProductsBatch } = require('../handlers/processNonexistentProductsBatch');
 
-const LIMIT_PER_PAGE = 40;
+const LIMIT_PER_PAGE = 1;
 
 /**
  * Loop principal del Scraper para el país en turno (Optimizacion V3 - Concurrente)
  */
-const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch = 3) => {
+const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch = 1) => {
     const API = countryConfig.dropi_api_products;
     const DROPI_IMG_URL = countryConfig.dropi_img_url;
     const DROPI_DETAILS_PRODUCTS = countryConfig.dropi_details_products;
