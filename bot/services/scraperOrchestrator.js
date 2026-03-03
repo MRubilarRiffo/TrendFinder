@@ -7,12 +7,12 @@ const { fetchDropiProductsPage } = require('./dropiApiService');
 const { processExistingProductsBatch } = require('../handlers/processExistingProductsBatch');
 const { processNonexistentProductsBatch } = require('../handlers/processNonexistentProductsBatch');
 
-const LIMIT_PER_PAGE = 1;
+const LIMIT_PER_PAGE = 40;
 
 /**
  * Loop principal del Scraper para el país en turno (Optimizacion V3 - Concurrente)
  */
-const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch = 1) => {
+const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch = 3) => {
     const API = countryConfig.dropi_api_products;
     const DROPI_IMG_URL = countryConfig.dropi_img_url;
     const DROPI_DETAILS_PRODUCTS = countryConfig.dropi_details_products;
