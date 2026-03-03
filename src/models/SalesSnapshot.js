@@ -33,5 +33,11 @@ module.exports = (sequelize) => {
             allowNull: false,
             defaultValue: DataTypes.NOW
         }
+    }, {
+        indexes: [
+            { fields: ['periodDays', 'totalProfit', 'id'] },
+            { fields: ['periodDays', 'totalQuantitySold', 'id'] },
+            { fields: ['ProductId', 'periodDays'], unique: true }
+        ]
     });
 };

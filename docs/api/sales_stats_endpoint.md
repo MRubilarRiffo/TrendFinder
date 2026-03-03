@@ -13,6 +13,32 @@ End-point que retorna las estadísticas de ventas pre-calculadas desde snapshots
 | `days`    | `number` | Periodo del snapshot: `1`, `7` o `30` días.                                  | `7`        | Sí       |
 | `country` | `string` | Nombre exacto del país a filtrar. (ej: `'Chile'`, `'Colombia'`).             | `null`     | Sí       |
 | `sortBy`  | `string` | Criterio de orden: `'profit'` (por ganancia) o `'sales'` (por cantidad).     | `'profit'` | Sí       |
+| `limit`   | `number` | Cantidad de resultados por página (mín: 1, máx: 50).                         | `10`       | Sí       |
+| `cursor`  | `string` | Cursor de paginación obtenido de una respuesta anterior.                     | `null`     | Sí       |
+
+---
+
+### Paginación (Cursor Pagination)
+
+Este endpoint usa **Cursor Pagination** bidireccional. Cada respuesta incluye `prevCursor` y `nextCursor` para navegar entre páginas.
+
+**Primera página:**
+```
+GET /api/sales?days=7&limit=10
+```
+
+**Siguiente página:** usar el `nextCursor` de la respuesta anterior.
+```
+GET /api/sales?days=7&limit=10&cursor={nextCursor}
+```
+
+**Página anterior:** usar el `prevCursor` de la respuesta anterior.
+```
+GET /api/sales?days=7&limit=10&cursor={prevCursor}
+```
+
+- Si `prevCursor` es `null` → estás en la primera página.
+- Si `nextCursor` es `null` → estás en la última página.
 
 ---
 
@@ -24,7 +50,10 @@ Devuelve status `200 OK` con un JSON estructurado así:
 {
   "success": true,
   "periodDays": 7,
-
+  "pagination": {
+    "prevCursor": null,
+    "nextCursor": "eyJ2YWx1ZSI6..."
+  },
   "data": [
     {
       "productId": 341,
@@ -54,4 +83,4 @@ Los datos son pre-calculados por el script cron `cron/salesSnapshot.js` y almace
 node cron/salesSnapshot.js
 ```
 
-Se recomienda ejecutar una vez al día en horario de baja actividad.
+Se recomienda ejecutar una vez al día en horario de baja actividad (ej: 4:00 AM).

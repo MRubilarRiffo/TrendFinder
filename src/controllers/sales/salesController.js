@@ -2,9 +2,9 @@ const { getSalesStatsHandler } = require('../../handlers/sales/getSalesStatsHand
 
 const getSalesStats = async (req, res, next) => {
     try {
-        const { days, country, sortBy } = req.query;
+        const { days, country, sortBy, limit, cursor } = req.query;
 
-        const { snapshots, periodDays } = await getSalesStatsHandler(days, country, sortBy);
+        const { snapshots, periodDays, nextCursor, prevCursor } = await getSalesStatsHandler(days, country, sortBy, limit, cursor);
 
         const data = snapshots.map(snapshot => {
             const product = snapshot.Product;
@@ -31,6 +31,10 @@ const getSalesStats = async (req, res, next) => {
         return res.status(200).json({
             success: true,
             periodDays: periodDays,
+            pagination: {
+                prevCursor,
+                nextCursor
+            },
             data
         });
     } catch (error) {
