@@ -30,7 +30,7 @@ const calculateSnapshots = async () => {
                 attributes: [
                     'ProductId',
                     [ProductSale.sequelize.fn('SUM', ProductSale.sequelize.col('quantitySold')), 'totalQuantitySold'],
-                    [ProductSale.sequelize.literal('SUM(quantitySold * (Product.suggested_price - Product.sale_price))'), 'totalProfit']
+                    [ProductSale.sequelize.literal('SUM(quantitySold * GREATEST(Product.suggested_price - Product.sale_price, 0))'), 'totalProfit']
                 ],
                 where: {
                     saleDate: {
