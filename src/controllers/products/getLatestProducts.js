@@ -1,5 +1,5 @@
 const { getLatestProductsFromDb } = require('../../handlers/products/getLatestProductsFromDb');
-const formatPrice = require('../../functions/formatPrice');
+const { formatPrice } = require('../../functions/formatPrice');
 
 const getLatestProducts = async (req, res, next) => {
     try {

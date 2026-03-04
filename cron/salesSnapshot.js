@@ -21,11 +21,13 @@ const calculateSnapshots = async () => {
 
         // Truncar a medianoche: rangos en días calendario completos
         // Si corre a las 4:30 AM del 5/mar, endDate = 5/mar 00:00:00
-        const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
 
         for (const period of PERIODS) {
             const startDate = new Date(endDate);
             startDate.setDate(endDate.getDate() - period);
+
+            logMessage(`[CRON] Calculando snapshot para ${period} día(s)... ${startDate.toISOString().slice(0, 19).replace('T', ' ')} - ${endDate.toISOString().slice(0, 19).replace('T', ' ')}`);
 
             // Punto medio del periodo para calcular trendGrowth
             const midDate = new Date(endDate);

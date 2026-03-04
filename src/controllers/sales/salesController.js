@@ -1,5 +1,5 @@
 const { getSalesStatsHandler } = require('../../handlers/sales/getSalesStatsHandler');
-const formatPrice = require('../../functions/formatPrice');
+const { formatPrice } = require('../../functions/formatPrice');
 
 const getSalesStats = async (req, res, next) => {
     try {

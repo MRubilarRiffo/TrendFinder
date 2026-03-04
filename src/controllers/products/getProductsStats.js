@@ -1,4 +1,5 @@
 const { getProductsStatsFromDb } = require('../../handlers/products/getProductsStatsFromDb');
+const { formatPrice } = require('../../functions/formatPrice');
 
 const getProductsStats = async (req, res, next) => {
     try {
