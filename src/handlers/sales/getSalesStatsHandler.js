@@ -53,7 +53,7 @@ const getSalesStatsHandler = async (days = 7, country = null, sortBy = 'profit',
         where: whereSnapshot,
         include: [{
             model: Product,
-            attributes: ['id', 'name', 'country', 'image', 'sale_price', 'suggested_price'],
+            attributes: ['id', 'name', 'country', 'image', 'sale_price', 'suggested_price', 'url', 'dropiId'],
             where: whereProduct
         }],
         order: isPrev

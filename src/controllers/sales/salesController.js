@@ -11,20 +11,23 @@ const getSalesStats = async (req, res, next) => {
             const salePrice = parseFloat(product.sale_price) || 0;
             const suggestedPrice = parseFloat(product.suggested_price) || 0;
             const unitProfit = suggestedPrice > salePrice ? (suggestedPrice - salePrice) : 0;
-            const totalQuantitySold = snapshot.totalQuantitySold;
-            const totalRevenue = salePrice * totalQuantitySold;
 
             return {
                 productId: snapshot.ProductId,
+                dropiId: product.dropiId,
                 name: product.name,
                 country: product.country,
                 image: product.image,
+                url: product.url,
                 price: salePrice,
                 suggestedPrice: suggestedPrice,
                 unitProfit: unitProfit,
-                totalQuantitySold: totalQuantitySold,
-                totalRevenue: totalRevenue,
+                totalQuantitySold: snapshot.totalQuantitySold,
+                totalRevenue: parseFloat(snapshot.totalRevenue) || 0,
                 totalProfit: parseFloat(snapshot.totalProfit) || 0,
+                performanceRate: parseFloat(snapshot.performanceRate) || 0,
+                trendGrowth: parseFloat(snapshot.trendGrowth) || 0,
+                calculatedAt: snapshot.calculatedAt,
             };
         });
 

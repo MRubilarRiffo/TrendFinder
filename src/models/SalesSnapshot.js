@@ -28,6 +28,21 @@ module.exports = (sequelize) => {
             allowNull: false,
             defaultValue: 0
         },
+        totalRevenue: {
+            type: DataTypes.DECIMAL(12, 2),
+            allowNull: false,
+            defaultValue: 0
+        },
+        performanceRate: {
+            type: DataTypes.DECIMAL(5, 2),
+            allowNull: false,
+            defaultValue: 0
+        },
+        trendGrowth: {
+            type: DataTypes.DECIMAL(7, 2),
+            allowNull: false,
+            defaultValue: 0
+        },
         calculatedAt: {
             type: DataTypes.DATE,
             allowNull: false,
