@@ -19,13 +19,17 @@ const calculateSnapshots = async () => {
 
         const now = new Date();
 
+        // Truncar a medianoche: rangos en días calendario completos
+        // Si corre a las 4:30 AM del 5/mar, endDate = 5/mar 00:00:00
+        const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
         for (const period of PERIODS) {
-            const dateLimit = new Date();
-            dateLimit.setDate(now.getDate() - period);
+            const startDate = new Date(endDate);
+            startDate.setDate(endDate.getDate() - period);
 
             // Punto medio del periodo para calcular trendGrowth
-            const midDate = new Date();
-            midDate.setDate(now.getDate() - Math.floor(period / 2));
+            const midDate = new Date(endDate);
+            midDate.setDate(endDate.getDate() - Math.floor(period / 2));
             const midDateStr = midDate.toISOString().slice(0, 19).replace('T', ' ');
 
             logMessage(`[CRON] Calculando snapshot para ${period} día(s)...`);
@@ -42,7 +46,8 @@ const calculateSnapshots = async () => {
                 ],
                 where: {
                     saleDate: {
-                        [Op.between]: [dateLimit, now]
+                        [Op.gte]: startDate,
+                        [Op.lt]: endDate
                     }
                 },
                 include: [{
@@ -87,7 +92,7 @@ const calculateSnapshots = async () => {
                         totalRevenue,
                         performanceRate,
                         trendGrowth,
-                        calculatedAt: now
+                        calculatedAt: endDate
                     };
                 });
 
