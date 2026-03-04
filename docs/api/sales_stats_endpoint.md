@@ -12,7 +12,7 @@ End-point que retorna las estadísticas de ventas pre-calculadas desde snapshots
 | :-------- | :------- | :--------------------------------------------------------------------------- | :--------- | :------- |
 | `days`    | `number` | Periodo del snapshot: `1`, `7` o `30` días.                                  | `7`        | Sí       |
 | `country` | `string` | Nombre exacto del país a filtrar. (ej: `'Chile'`, `'Colombia'`).             | `null`     | Sí       |
-| `sortBy`  | `string` | Criterio de orden: `'profit'` (por ganancia) o `'sales'` (por cantidad).     | `'profit'` | Sí       |
+| `sortBy`  | `string` | Criterio de orden: `'profit'` (ganancia), `'sales'` (cantidad), `'revenue'`, `'performance'`, o `'trend'`. | `'profit'` | Sí       |
 | `limit`   | `number` | Cantidad de resultados por página (mín: 1, máx: 50).                         | `10`       | Sí       |
 | `cursor`  | `string` | Cursor de paginación obtenido de una respuesta anterior.                     | `null`     | Sí       |
 

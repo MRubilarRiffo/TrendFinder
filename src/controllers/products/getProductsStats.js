@@ -28,7 +28,7 @@ const getProductsStats = async (req, res, next) => {
 
         const price = parseFloat(product.sale_price) || 0;
         const suggestedPrice = parseFloat(product.suggested_price) || 0;
-        let totalRevenue = 0;
+        let: formatPrice(totalRevenue, product.country) = 0;
 
         if (product.ProductSales && product.ProductSales.length > 0) {
             const sales = product.ProductSales.sort((a, b) => new Date(a.saleDate) - new Date(b.saleDate));
@@ -77,11 +77,11 @@ const getProductsStats = async (req, res, next) => {
             name: product.name,
             country: product.country,
             stock: currentStock,
-            price: price,
-            suggestedPrice: suggestedPrice,
+            price: formatPrice(price, product.country),
+            suggestedPrice: formatPrice(suggestedPrice, product.country),
             salesInfo: {
                 totalQuantitySold,
-                totalRevenue,
+                totalRevenue: formatPrice(totalRevenue, product.country),
                 salesAverage,
                 maxDailySales,
                 trendGrowthPercentage: Math.round(trendGrowth)

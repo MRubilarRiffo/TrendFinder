@@ -6,7 +6,7 @@ const { Op } = require('sequelize');
  * 
  * @param {number|string} days - Periodo del snapshot (1, 7 o 30).
  * @param {string|null} country - Filtra por país del producto.
- * @param {string} sortBy - Criterio de orden (profit/sales).
+ * @param {string} sortBy - Criterio de orden (profit/sales/revenue/performance/trend).
  * @param {number} limit - Cantidad de resultados por página.
  * @param {string|null} cursor - Cursor codificado en base64 (incluye dirección internamente).
  * @returns {Promise<Object>} Regresa los snapshots paginados con cursores bidireccionales.
@@ -21,8 +21,14 @@ const getSalesStatsHandler = async (days = 7, country = null, sortBy = 'profit',
     const limitInt = Math.min(Math.max(parseInt(limit) || 10, 1), 50);
     const whereProduct = country ? { country } : {};
 
-    let orderColumn = 'totalProfit';
-    if (sortBy === 'sales') orderColumn = 'totalQuantitySold';
+    const sortOptions = {
+        profit: 'totalProfit',
+        sales: 'totalQuantitySold',
+        revenue: 'totalRevenue',
+        performance: 'performanceRate',
+        trend: 'trendGrowth'
+    };
+    const orderColumn = sortOptions[sortBy] || 'totalProfit';
 
     const whereSnapshot = { periodDays };
     let isPrev = false;

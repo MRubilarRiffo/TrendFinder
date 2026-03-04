@@ -1,4 +1,5 @@
 const { getLatestProductsFromDb } = require('../../handlers/products/getLatestProductsFromDb');
+const formatPrice = require('../../functions/formatPrice');
 
 const getLatestProducts = async (req, res, next) => {
     try {
@@ -14,15 +15,17 @@ const getLatestProducts = async (req, res, next) => {
             const suggestedPrice = parseFloat(product.suggested_price) || 0;
             const unitProfit = suggestedPrice > salePrice ? (suggestedPrice - salePrice) : 0;
 
+            const country = product.country;
+
             return {
                 productId: product.id,
                 dropiId: product.dropiId,
                 name: product.name,
                 country: product.country,
                 image: product.image,
-                price: salePrice,
-                suggestedPrice: suggestedPrice,
-                unitProfit: unitProfit,
+                price: formatPrice(salePrice, country),
+                suggestedPrice: formatPrice(suggestedPrice, country),
+                unitProfit: formatPrice(unitProfit, country),
                 stock: currentStock,
                 url: product.url,
                 addedAt: product.createdAt

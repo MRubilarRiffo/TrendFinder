@@ -52,6 +52,9 @@ module.exports = (sequelize) => {
         indexes: [
             { fields: ['periodDays', 'totalProfit', 'id'] },
             { fields: ['periodDays', 'totalQuantitySold', 'id'] },
+            { fields: ['periodDays', 'totalRevenue', 'id'] },
+            { fields: ['periodDays', 'performanceRate', 'id'] },
+            { fields: ['periodDays', 'trendGrowth', 'id'] },
             { fields: ['ProductId', 'periodDays'], unique: true }
         ]
     });

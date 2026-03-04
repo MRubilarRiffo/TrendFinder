@@ -1,4 +1,5 @@
 const { getSalesStatsHandler } = require('../../handlers/sales/getSalesStatsHandler');
+const formatPrice = require('../../functions/formatPrice');
 
 const getSalesStats = async (req, res, next) => {
     try {
@@ -12,6 +13,8 @@ const getSalesStats = async (req, res, next) => {
             const suggestedPrice = parseFloat(product.suggested_price) || 0;
             const unitProfit = suggestedPrice > salePrice ? (suggestedPrice - salePrice) : 0;
 
+            const country = product.country;
+
             return {
                 productId: snapshot.ProductId,
                 dropiId: product.dropiId,
@@ -19,12 +22,12 @@ const getSalesStats = async (req, res, next) => {
                 country: product.country,
                 image: product.image,
                 url: product.url,
-                price: salePrice,
-                suggestedPrice: suggestedPrice,
-                unitProfit: unitProfit,
+                price: formatPrice(salePrice, country),
+                suggestedPrice: formatPrice(suggestedPrice, country),
+                unitProfit: formatPrice(unitProfit, country),
                 totalQuantitySold: snapshot.totalQuantitySold,
-                totalRevenue: parseFloat(snapshot.totalRevenue) || 0,
-                totalProfit: parseFloat(snapshot.totalProfit) || 0,
+                totalRevenue: formatPrice(parseFloat(snapshot.totalRevenue) || 0, country),
+                totalProfit: formatPrice(parseFloat(snapshot.totalProfit) || 0, country),
                 performanceRate: parseFloat(snapshot.performanceRate) || 0,
                 trendGrowth: parseFloat(snapshot.trendGrowth) || 0,
                 calculatedAt: snapshot.calculatedAt,
