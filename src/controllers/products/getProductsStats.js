@@ -1,5 +1,6 @@
 const { getProductsStatsFromDb } = require('../../handlers/products/getProductsStatsFromDb');
 const { formatPrice } = require('../../functions/formatPrice');
+const { calculateSalesAverage, calculateTrendGrowth } = require('../../functions/salesCalculations');
 
 const getProductsStats = async (req, res, next) => {
     try {
@@ -29,7 +30,7 @@ const getProductsStats = async (req, res, next) => {
 
         const price = parseFloat(product.sale_price) || 0;
         const suggestedPrice = parseFloat(product.suggested_price) || 0;
-        let: formatPrice(totalRevenue, product.country) = 0;
+        let totalRevenue = 0;
 
         if (product.ProductSales && product.ProductSales.length > 0) {
             const sales = product.ProductSales.sort((a, b) => new Date(a.saleDate) - new Date(b.saleDate));
@@ -52,23 +53,34 @@ const getProductsStats = async (req, res, next) => {
             });
         }
 
-        const salesHistory = Object.entries(salesHistoryMap).map(([date, quantity]) => ({
-            date,
-            quantity
-        }));
+        // Rellenar días sin ventas (0) para tener una línea de tiempo continua en los gráficos frontends
+        const salesHistory = [];
+        let currentDate = new Date(start);
+        const endDateForLoop = new Date(end); // Iteramos hasta el end (no incluido, ya que end es el truncado del próximo día a las 00:00)
+
+        while (currentDate < endDateForLoop) {
+            const dateKey = currentDate.toISOString().split('T')[0];
+            salesHistory.push({
+                date: dateKey,
+                quantity: salesHistoryMap[dateKey] || 0
+            });
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
 
         const maxDailySales = salesHistory.length > 0
             ? Math.max(...salesHistory.map(day => day.quantity))
             : 0;
 
-        const salesAverage = parseFloat((totalQuantitySold / daysEvaluated).toFixed(2));
+        const salesAverage = calculateSalesAverage({
+            totalQuantitySold,
+            daysEvaluated,
+            productSales: product.ProductSales,
+            start,
+            end,
+            createdAt: product.createdAt
+        });
 
-        let trendGrowth = 0;
-        if (oldSalesCount > 0) {
-            trendGrowth = ((recentSalesCount - oldSalesCount) / oldSalesCount) * 100;
-        } else if (recentSalesCount > 0) {
-            trendGrowth = 100;
-        }
+        let trendGrowth = calculateTrendGrowth(recentSalesCount, oldSalesCount);
 
         const currentStock = product.Stock ? product.Stock.quantity : 0;
 

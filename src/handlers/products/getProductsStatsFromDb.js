@@ -14,18 +14,25 @@ const { Op } = require('sequelize');
 const getProductsStatsFromDb = async (productId, startDate, endDate, country = null) => {
 
     // Configurar fechas límites por defecto si no vienen, 
-    // asumimos por ejemplo los últimos 30 días si no hay filtro de fechas para tener un análisis amplio.
-    let start = new Date();
-    start.setDate(start.getDate() - 30);
-    let end = new Date();
+    // Igualamos el comportamiento al cron: tomamos fechas truncadas a medianoche (00:00:00)
+    const now = new Date();
+
+    // El "final" de nuestros reportes siempre será a las 00:00 del día en curso (o de endDate si se envía)
+    let end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+    if (endDate) {
+        end = new Date(endDate);
+        // Si el usuario da una fecha exacta con formato YYYY-MM-DD, esto ya será a las 00:00:00 UTC
+        // Aseguramos que sea el comienzo de ESE día
+        end.setHours(0, 0, 0, 0);
+    }
+
+    let start = new Date(end);
+    start.setDate(end.getDate() - 30); // 30 días antes por defecto respecto al endDate
 
     if (startDate) {
         start = new Date(startDate);
         start.setHours(0, 0, 0, 0);
-    }
-    if (endDate) {
-        end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
     }
 
     // Calcular la cantidad de días evaluados

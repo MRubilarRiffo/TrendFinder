@@ -2,6 +2,7 @@ require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') }
 const { conn, ProductSale, Product, SalesSnapshot } = require('../src/config/database');
 const { Op } = require('sequelize');
 const { logMessage } = require('./helpers/logMessage');
+const { calculateTrendGrowth } = require('../src/functions/salesCalculations');
 
 const PERIODS = [1, 7, 30];
 
@@ -79,12 +80,7 @@ const calculateSnapshots = async () => {
                         : 0;
 
                     // trendGrowth: % de crecimiento (mitad reciente vs mitad antigua)
-                    let trendGrowth = 0;
-                    if (oldSales > 0) {
-                        trendGrowth = parseFloat((((recentSales - oldSales) / oldSales) * 100).toFixed(2));
-                    } else if (recentSales > 0) {
-                        trendGrowth = 100;
-                    }
+                    let trendGrowth = calculateTrendGrowth(recentSales, oldSales);
 
                     return {
                         ProductId: row.ProductId,
