@@ -15,6 +15,7 @@ const processExistingProductsBatch = async (existingProductsWithStock) => {
         const existingStock = await Stock.findAll(queryOptionsStock);
 
         const existingProductsPromises = existingProductsWithStock.map(async ({ id, stock }) => {
+            let updatedSomething = false;
             const safeStock = stock !== null && stock !== undefined && !isNaN(parseInt(stock)) ? parseInt(stock) : 0;
 
             try {

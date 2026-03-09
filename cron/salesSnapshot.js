@@ -3,7 +3,8 @@ const { conn, ProductSale, Product, SalesSnapshot } = require('../src/config/dat
 const { Op } = require('sequelize');
 const { logMessage } = require('./helpers/logMessage');
 const { calculateTrendGrowth } = require('../src/functions/salesCalculations');
-
+const fs = require('fs');
+const path = require('path');
 const PERIODS = [1, 7, 30];
 
 /**
@@ -108,14 +109,36 @@ const calculateSnapshots = async () => {
     }
 };
 
+const LOCK_FILE = path.join(__dirname, 'cron.lock');
+
 const runCron = async () => {
+    // 1. REVISAR CANDADO: Si existe, abortamos inmediatamente.
+    if (fs.existsSync(LOCK_FILE)) {
+        logMessage('[CRON] ALERTA: Ejecución solapada detectada. El cron anterior sigue corriendo (o el lock quedó huérfano). Abortando...');
+        process.exit(0);
+    }
+
+    // 2. PONER CANDADO
     try {
+        fs.writeFileSync(LOCK_FILE, 'locked');
         logMessage('[CRON] Inicializando script de snapshots de ventas desde Cronjob/Terminal');
         await calculateSnapshots();
+
+        // 3. QUITAR CANDADO AL FINALIZAR
+        if (fs.existsSync(LOCK_FILE)) {
+            fs.unlinkSync(LOCK_FILE);
+            logMessage('[CRON] Archivo candado eliminado exitosamente.');
+        }
         logMessage('[CRON] Proceso finalizado correctamente. Saliendo... (0)');
         process.exit(0);
     } catch (error) {
         logMessage(`[CRON] CRÍTICO - El script de snapshots ha fallado: ${error.message}`);
+
+        // 3. QUITAR CANDADO EN CASO DE ERROR FATAL
+        if (fs.existsSync(LOCK_FILE)) {
+            fs.unlinkSync(LOCK_FILE);
+            logMessage('[CRON] Archivo candado eliminado tras error crítico.');
+        }
         process.exit(1);
     }
 };
