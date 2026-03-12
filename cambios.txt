@@ -1,0 +1,11 @@
+REPORTE TÉCNICO DE CAMBIOS - GESTIÓN DE CONEXIONES DB
+
+IMPACTO ALTO:
+- index.js: Implementación de Graceful Shutdown. El servidor ahora escucha señales SIGINT/SIGTERM para cerrar el servidor Express y la conexión a la base de datos de forma limpia. Se añadió un fail-safe de 10 segundos para forzar la salida en caso de bloqueo.
+
+IMPACTO MEDIO:
+- cron/salesSnapshot.js: Añadido cierre explícito de la conexión Sequelize (conn.close()) al finalizar el proceso y en caso de error crítico.
+- bot/test.js: Importación de la conexión y añadido cierre explícito de la misma en el ciclo de vida del bot (éxito/error).
+
+IMPACTO BAJO:
+- Eliminación de archivos de reporte locales temporales (bot/reporte_analisis.md, cron/reporte_analisis_cron.md).

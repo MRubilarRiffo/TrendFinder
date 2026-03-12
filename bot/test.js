@@ -1,4 +1,5 @@
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+const { conn } = require('../src/config/database');
 const { scraperConfig } = require('./services/scraperOrchestrator');
 const { logMessage } = require('./helpers/logMessage');
 const fs = require('fs');
@@ -24,6 +25,8 @@ const runBot = async () => {
             fs.unlinkSync(LOCK_FILE);
             logMessage('[TEST.JS] Archivo candado eliminado exitosamente.');
         }
+        logMessage('[TEST.JS] Cerrando conexión con la base de datos...');
+        await conn.close();
         logMessage('[TEST.JS] Proceso finalizado correctamente. Saliendo... (0)');
         process.exit(0);
     } catch (error) {
@@ -33,6 +36,12 @@ const runBot = async () => {
         if (fs.existsSync(LOCK_FILE)) {
             fs.unlinkSync(LOCK_FILE);
             logMessage('[TEST.JS] Archivo candado eliminado tras error crítico.');
+        }
+        try {
+            await conn.close();
+            logMessage('[TEST.JS] Conexión cerrada tras error.');
+        } catch (closeError) {
+            logMessage(`[TEST.JS] Error al cerrar conexión tras fallo: ${closeError.message}`);
         }
         process.exit(1);
     }

@@ -129,6 +129,8 @@ const runCron = async () => {
             fs.unlinkSync(LOCK_FILE);
             logMessage('[CRON] Archivo candado eliminado exitosamente.');
         }
+        logMessage('[CRON] Cerrando conexión con la base de datos...');
+        await conn.close();
         logMessage('[CRON] Proceso finalizado correctamente. Saliendo... (0)');
         process.exit(0);
     } catch (error) {
@@ -138,6 +140,12 @@ const runCron = async () => {
         if (fs.existsSync(LOCK_FILE)) {
             fs.unlinkSync(LOCK_FILE);
             logMessage('[CRON] Archivo candado eliminado tras error crítico.');
+        }
+        try {
+            await conn.close();
+            logMessage('[CRON] Conexión cerrada tras error.');
+        } catch (closeError) {
+            logMessage(`[CRON] Error al cerrar conexión tras fallo: ${closeError.message}`);
         }
         process.exit(1);
     }
