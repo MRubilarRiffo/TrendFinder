@@ -1,0 +1,367 @@
+.container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.hero {
+    text-align: center;
+    padding: 4rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+.hero h1 {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    margin: 0;
+    letter-spacing: -0.05em;
+}
+
+.subtitle {
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    max-width: 600px;
+}
+
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.sectionHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sectionHeader h2 {
+    font-size: 1.75rem;
+    margin: 0;
+    flex-grow: 1;
+}
+
+.icon {
+    font-size: 1.5rem;
+    color: var(--accent-primary);
+}
+
+.loader {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    background: var(--bg-glass);
+    border-radius: var(--radius-lg);
+}
+
+.emptyText {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem;
+}
+
+/* Carousel */
+.carouselContainer {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-primary) var(--bg-secondary);
+}
+
+.carouselContainer::-webkit-scrollbar {
+    height: 6px;
+}
+
+.carouselTrack {
+    display: flex;
+    gap: 1.5rem;
+    width: max-content;
+}
+
+.card {
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-glow);
+    border-color: var(--border-glow);
+}
+
+.cardImagePlaceholder {
+    height: 180px;
+    width: 100%;
+    background-color: var(--bg-secondary);
+    overflow: hidden;
+}
+
+.cardImagePlaceholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-normal);
+}
+
+.card:hover .cardImagePlaceholder img {
+    transform: scale(1.05);
+}
+
+.cardContent {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.cardTitle {
+    font-size: 1.1rem;
+    margin: 0;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.cardPrice {
+    color: var(--accent-secondary);
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+/* Table */
+.filterBtn {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all var(--transition-fast);
+}
+
+.filterBtn:hover {
+    background: var(--bg-glass-hover);
+    border-color: var(--accent-primary);
+}
+
+.tableWrapper {
+    overflow-x: auto;
+    border-radius: var(--radius-lg);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.table th, .table td {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table th {
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.table tr:last-child td {
+    border-bottom: none;
+}
+
+.table tr:hover td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.productCell {
+    min-width: 280px;
+}
+
+.productInfo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.tableThumb {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+}
+
+.productText {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.productTitle {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.productSubtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.productMeta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.metricGroup {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.9rem;
+}
+
+.metricGroup:last-child {
+    margin-bottom: 0;
+}
+
+.metricLabel {
+    color: var(--text-secondary);
+}
+
+.metricValue {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.textSuccess {
+    color: #10b981; /* Emerald green */
+}
+
+.textDanger {
+    color: #ef4444; /* Red */
+}
+
+.salesBadge {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--accent-primary);
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.priceCell, .salesCell, .trendCell {
+    min-width: 180px;
+}
+
+.actionCell {
+    width: 80px;
+    text-align: center;
+}
+
+.controlsRow {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.selectInput {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    outline: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: all var(--transition-fast);
+}
+
+.selectInput:hover, .selectInput:focus {
+    border-color: var(--accent-primary);
+}
+
+.selectInput option {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.paginationContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem 0;
+}
+
+.pageBtn {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.5rem 1.5rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.pageBtn:hover:not(:disabled) {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.pageBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.actionBtn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.actionBtn:hover:not(:disabled) {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    transform: translateX(3px);
+}
+
+.actionBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

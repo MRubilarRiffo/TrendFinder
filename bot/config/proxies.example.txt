@@ -1,0 +1,5 @@
+# [IP]:[PORT]:[USER]:[PASSWORD] // separalo por saltos de linea
+
+#Ejemplo:
+
+#p.webshare.io:80:lfgealpq-1:vzn5qf0ot109

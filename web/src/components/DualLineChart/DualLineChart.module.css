@@ -1,0 +1,36 @@
+.chartContainer {
+    position: relative;
+    font-family: var(--font-sans, sans-serif);
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+}
+
+.svg {
+    overflow: visible;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+.labelsContainer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding: 0 4px;
+}
+
+.label {
+    font-size: 11px;
+    color: var(--text-muted, #666);
+    font-weight: 500;
+}
+
+.noData {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted, #666);
+    font-size: 0.85rem;
+    background: var(--bg-glass, rgba(0,0,0,0.05));
+    border-radius: var(--radius-md, 8px);
+    border: 1px dashed var(--border-color, #ccc);
+}
