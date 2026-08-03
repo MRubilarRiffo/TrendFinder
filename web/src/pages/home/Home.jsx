@@ -8,11 +8,11 @@ import styles from './Home.module.css';
 const Home = () => {
     const [latestProducts, setLatestProducts] = useState([]);
     const [trendingProducts, setTrendingProducts] = useState([]);
-    
+
     // UI states
     const [loadingLatest, setLoadingLatest] = useState(true);
     const [loadingTrending, setLoadingTrending] = useState(true);
-    
+
     // Filter & Pagination states
     const [days, setDays] = useState(7);
     const [sortBy, setSortBy] = useState('profit');
@@ -87,22 +87,28 @@ const Home = () => {
                     <FiClock className={styles.icon} />
                     <h2>Últimos Productos</h2>
                 </div>
-                
+
                 {loadingLatest ? (
                     <div className={styles.loader}>Cargando últimos productos...</div>
                 ) : (
                     <div className={styles.carouselContainer}>
                         <div className={styles.carouselTrack}>
                             {latestProducts.map((product, idx) => (
-                                <div key={product.id || idx} className={`${styles.card} glass-panel`}>
+                                <Link to={`/product/${product.productId}`} key={product.productId || idx} className={`${styles.card} glass-panel`} style={{ textDecoration: 'none' }}>
                                     <div className={styles.cardImagePlaceholder}>
-                                        <img src={product.image || `https://via.placeholder.com/150/1e293b/FFFFFF?text=Product+${idx}`} alt={product.title || 'Product'} />
+                                        <img src={product.image || `https://via.placeholder.com/200/1e293b/FFFFFF?text=Product+${idx}`} alt={product.name || 'Product'} />
                                     </div>
                                     <div className={styles.cardContent}>
-                                        <h3 className={styles.cardTitle}>{product.title || 'Producto Sin Nombre'}</h3>
-                                        <p className={styles.cardPrice}>${product.price || '0.00'}</p>
+                                        <div className={styles.cardHeader}>
+                                            <h3 className={styles.cardTitle}>{product.name || 'Producto Sin Nombre'}</h3>
+                                            {product.country && <span className={styles.cardCountry}>{product.country}</span>}
+                                        </div>
+                                        <div className={styles.cardFooter}>
+                                            <p className={styles.cardPrice}>{product.price?.toLocaleString() || '0.00'}</p>
+                                            {product.stock > 0 && <span className={styles.cardStock}>Stock: {product.stock}</span>}
+                                        </div>
                                     </div>
-                                </div>
+                                </Link>
                             ))}
                             {latestProducts.length === 0 && <p className={styles.emptyText}>No hay productos recientes.</p>}
                         </div>
@@ -130,7 +136,7 @@ const Home = () => {
                         </select>
                     </div>
                 </div>
-                
+
                 {loadingTrending ? (
                     <div className={styles.loader}>Cargando tendencias...</div>
                 ) : (
@@ -162,15 +168,15 @@ const Home = () => {
                                             <td className={styles.priceCell}>
                                                 <div className={styles.metricGroup}>
                                                     <span className={styles.metricLabel}>Precio Venta:</span>
-                                                    <span className={styles.metricValue}>${product.price?.toLocaleString() || 0}</span>
+                                                    <span className={styles.metricValue}>{product.price?.toLocaleString() || 0}</span>
                                                 </div>
                                                 <div className={styles.metricGroup}>
                                                     <span className={styles.metricLabel}>Sugerido:</span>
-                                                    <span className={styles.metricValue}>${product.suggestedPrice?.toLocaleString() || 0}</span>
+                                                    <span className={styles.metricValue}>{product.suggestedPrice?.toLocaleString() || 0}</span>
                                                 </div>
                                                 <div className={styles.metricGroup}>
                                                     <span className={styles.metricLabel}>Ganancia:</span>
-                                                    <span className={`${styles.metricValue} ${styles.textSuccess}`}>${product.unitProfit?.toLocaleString() || 0}</span>
+                                                    <span className={`${styles.metricValue} ${styles.textSuccess}`}>{product.unitProfit?.toLocaleString() || 0}</span>
                                                 </div>
                                             </td>
                                             <td className={styles.salesCell}>
@@ -180,11 +186,11 @@ const Home = () => {
                                                 </div>
                                                 <div className={styles.metricGroup}>
                                                     <span className={styles.metricLabel}>Ingresos:</span>
-                                                    <span className={styles.metricValue}>${product.totalRevenue?.toLocaleString() || 0}</span>
+                                                    <span className={styles.metricValue}>{product.totalRevenue?.toLocaleString() || 0}</span>
                                                 </div>
                                                 <div className={styles.metricGroup}>
                                                     <span className={styles.metricLabel}>Ganancia Total:</span>
-                                                    <span className={`${styles.metricValue} ${styles.textSuccess}`}>${product.totalProfit?.toLocaleString() || 0}</span>
+                                                    <span className={`${styles.metricValue} ${styles.textSuccess}`}>{product.totalProfit?.toLocaleString() || 0}</span>
                                                 </div>
                                             </td>
                                             <td className={styles.trendCell}>
@@ -199,10 +205,10 @@ const Home = () => {
                                                     <span className={styles.metricValue}>{(product.performanceRate || 0).toFixed(2)}%</span>
                                                 </div>
                                                 <div style={{ marginTop: '0.5rem' }}>
-                                                    <SimpleLineChart 
-                                                        data={[(product.totalQuantitySold || 10) * 0.5, (product.totalQuantitySold || 10) * 0.8, product.totalQuantitySold || 10]} 
-                                                        color={(product.trendGrowth || 0) >= 0 ? "var(--accent-primary)" : "#ef4444"} 
-                                                        height={40} 
+                                                    <SimpleLineChart
+                                                        data={[(product.totalQuantitySold || 10) * 0.5, (product.totalQuantitySold || 10) * 0.8, product.totalQuantitySold || 10]}
+                                                        color={(product.trendGrowth || 0) >= 0 ? "var(--accent-primary)" : "#ef4444"}
+                                                        height={40}
                                                     />
                                                 </div>
                                             </td>
@@ -227,19 +233,19 @@ const Home = () => {
                                 </tbody>
                             </table>
                         </div>
-                        
+
                         {/* Pagination Controls */}
                         <div className={styles.paginationContainer}>
-                            <button 
-                                className={styles.pageBtn} 
-                                onClick={handlePrevPage} 
+                            <button
+                                className={styles.pageBtn}
+                                onClick={handlePrevPage}
                                 disabled={!pagination.prevCursor && cursor === null}
                             >
                                 Anterior
                             </button>
-                            <button 
-                                className={styles.pageBtn} 
-                                onClick={handleNextPage} 
+                            <button
+                                className={styles.pageBtn}
+                                onClick={handleNextPage}
                                 disabled={!pagination.nextCursor}
                             >
                                 Siguiente

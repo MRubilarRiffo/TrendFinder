@@ -89,6 +89,7 @@ const getProductsStats = async (req, res, next) => {
             dropiId: product.dropiId,
             name: product.name,
             country: product.country,
+            image: product.image,
             stock: currentStock,
             price: formatPrice(price, product.country),
             suggestedPrice: formatPrice(suggestedPrice, product.country),

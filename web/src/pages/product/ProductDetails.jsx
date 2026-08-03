@@ -98,7 +98,7 @@ const ProductDetails = () => {
             <section className={`${styles.profileSection} glass-panel`}>
                 <div className={styles.productIdentity}>
                     <div className={styles.imageWrapper}>
-                        <img src={`https://via.placeholder.com/200/1e293b/FFFFFF?text=Product`} alt={productData.name} />
+                        <img src={productData.image || `https://via.placeholder.com/200/1e293b/FFFFFF?text=Product`} alt={productData.name} />
                     </div>
                     <div className={styles.productDetails}>
                         <div className={styles.badges}>
@@ -109,16 +109,30 @@ const ProductDetails = () => {
                         <div className={styles.priceRow}>
                             <div className={styles.priceItem}>
                                 <span className={styles.priceLabel}>Precio de Venta</span>
-                                <span className={styles.priceValue}>${productData.price?.toLocaleString()}</span>
+                                <span className={styles.priceValue}>{productData.price}</span>
                             </div>
                             <div className={styles.priceItem}>
                                 <span className={styles.priceLabel}>Precio Sugerido</span>
-                                <span className={styles.priceValue}>${productData.suggestedPrice?.toLocaleString()}</span>
+                                <span className={styles.priceValue}>{productData.suggestedPrice}</span>
                             </div>
                             <div className={styles.priceItem}>
                                 <span className={styles.priceLabel}>Ganancia Est.</span>
                                 <span className={`${styles.priceValue} ${styles.textSuccess}`}>
-                                    ${((productData.suggestedPrice || 0) - (productData.price || 0)).toLocaleString()}
+                                    {(() => {
+                                        // The API returns pre-formatted string (e.g. "$9.000")
+                                        // We parse it back to a number to calculate the profit difference
+                                        const parsePrice = (p) => {
+                                            if (!p) return 0;
+                                            if (typeof p === 'number') return p;
+                                            const num = Number(p.replace(/[^0-9,-]+/g, '').replace(',', '.'));
+                                            return isNaN(num) ? 0 : num;
+                                        };
+                                        const pPrice = parsePrice(productData.price);
+                                        const pSugg = parsePrice(productData.suggestedPrice);
+                                        const profit = pSugg - pPrice;
+                                        // Simple formatting to add a + and avoid NaN
+                                        return profit > 0 ? `+${profit.toLocaleString()}` : profit.toLocaleString();
+                                    })()}
                                 </span>
                             </div>
                         </div>
@@ -141,7 +155,7 @@ const ProductDetails = () => {
                         <FiDollarSign className={styles.kpiIcon} />
                         <h3>Ingresos Totales</h3>
                     </div>
-                    <div className={styles.kpiValue}>${salesInfo?.totalRevenue?.toLocaleString() || 0}</div>
+                    <div className={styles.kpiValue}>{salesInfo?.totalRevenue || '$0'}</div>
                 </div>
 
                 <div className={`${styles.kpiCard} glass-panel`}>
