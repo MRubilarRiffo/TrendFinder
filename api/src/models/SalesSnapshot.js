@@ -34,14 +34,24 @@ module.exports = (sequelize) => {
             defaultValue: 0
         },
         performanceRate: {
-            type: DataTypes.DECIMAL(5, 2),
+            type: DataTypes.DECIMAL(8, 2),
             allowNull: false,
             defaultValue: 0
         },
         trendGrowth: {
-            type: DataTypes.DECIMAL(7, 2),
+            type: DataTypes.DECIMAL(10, 2),
             allowNull: false,
             defaultValue: 0
+        },
+        breakoutScore: {
+            type: DataTypes.DECIMAL(10, 2),
+            allowNull: false,
+            defaultValue: 0
+        },
+        isBreakout: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
         },
         calculatedAt: {
             type: DataTypes.DATE,
@@ -55,6 +65,7 @@ module.exports = (sequelize) => {
             { fields: ['periodDays', 'totalRevenue', 'id'] },
             { fields: ['periodDays', 'performanceRate', 'id'] },
             { fields: ['periodDays', 'trendGrowth', 'id'] },
+            { fields: ['periodDays', 'breakoutScore', 'id'] },
             { fields: ['ProductId', 'periodDays'], unique: true }
         ]
     });

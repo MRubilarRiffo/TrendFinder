@@ -1,8 +1,8 @@
-require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
-const { conn, ProductSale, Product, SalesSnapshot } = require('../src/config/database');
+require('dotenv').config({ path: require('path').resolve(__dirname, '../api/.env') });
+const { conn, ProductSale, Product, SalesSnapshot } = require('../api/src/config/database');
 const { Op } = require('sequelize');
 const { logMessage } = require('./helpers/logMessage');
-const { calculateTrendGrowth } = require('../src/functions/salesCalculations');
+const { calculateTrendGrowth, calculateBreakoutMetrics } = require('../api/src/functions/salesCalculations');
 const fs = require('fs');
 const path = require('path');
 const PERIODS = [1, 7, 30];
@@ -83,6 +83,9 @@ const calculateSnapshots = async () => {
                     // trendGrowth: % de crecimiento (mitad reciente vs mitad antigua)
                     let trendGrowth = calculateTrendGrowth(recentSales, oldSales);
 
+                    // breakout: detección de despegue desde 0 ventas
+                    const { isBreakout, breakoutScore } = calculateBreakoutMetrics(recentSales, oldSales, Math.floor(period / 2));
+
                     return {
                         ProductId: row.ProductId,
                         periodDays: period,
@@ -91,6 +94,8 @@ const calculateSnapshots = async () => {
                         totalRevenue,
                         performanceRate,
                         trendGrowth,
+                        breakoutScore,
+                        isBreakout,
                         calculatedAt: endDate
                     };
                 });

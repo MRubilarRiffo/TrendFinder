@@ -17,13 +17,20 @@ const ProductDetails = () => {
         const fetchProduct = async () => {
             setLoading(true);
             try {
-                // Calculate date range for the request based on days
+                // Formatear fechas locales YYYY-MM-DD
                 const end = new Date();
                 const start = new Date();
                 start.setDate(end.getDate() - days);
                 
-                const startStr = start.toISOString().split('T')[0];
-                const endStr = end.toISOString().split('T')[0];
+                const formatDate = (d) => {
+                    const year = d.getFullYear();
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                };
+
+                const startStr = formatDate(start);
+                const endStr = formatDate(end);
                 
                 const res = await getProductStats(id, startStr, endStr, null);
                 
@@ -104,6 +111,9 @@ const ProductDetails = () => {
                         <div className={styles.badges}>
                             <span className={styles.badgeCountry}>{productData.country || 'Global'}</span>
                             <span className={styles.badgeId}>Dropi ID: {productData.dropiId}</span>
+                            {salesInfo?.isBreakout && (
+                                <span className={styles.breakoutBadge || ''} style={{ background: 'rgba(249, 115, 22, 0.2)', color: '#f97316', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>🔥 Despegue</span>
+                            )}
                         </div>
                         <h1 className={styles.productName}>{productData.name}</h1>
                         <div className={styles.priceRow}>
@@ -118,21 +128,7 @@ const ProductDetails = () => {
                             <div className={styles.priceItem}>
                                 <span className={styles.priceLabel}>Ganancia Est.</span>
                                 <span className={`${styles.priceValue} ${styles.textSuccess}`}>
-                                    {(() => {
-                                        // The API returns pre-formatted string (e.g. "$9.000")
-                                        // We parse it back to a number to calculate the profit difference
-                                        const parsePrice = (p) => {
-                                            if (!p) return 0;
-                                            if (typeof p === 'number') return p;
-                                            const num = Number(p.replace(/[^0-9,-]+/g, '').replace(',', '.'));
-                                            return isNaN(num) ? 0 : num;
-                                        };
-                                        const pPrice = parsePrice(productData.price);
-                                        const pSugg = parsePrice(productData.suggestedPrice);
-                                        const profit = pSugg - pPrice;
-                                        // Simple formatting to add a + and avoid NaN
-                                        return profit > 0 ? `+${profit.toLocaleString()}` : profit.toLocaleString();
-                                    })()}
+                                    {productData.unitProfit || '$0'}
                                 </span>
                             </div>
                         </div>

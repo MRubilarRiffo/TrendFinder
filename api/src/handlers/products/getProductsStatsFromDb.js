@@ -17,22 +17,32 @@ const getProductsStatsFromDb = async (productId, startDate, endDate, country = n
     // Igualamos el comportamiento al cron: tomamos fechas truncadas a medianoche (00:00:00)
     const now = new Date();
 
-    // El "final" de nuestros reportes siempre será a las 00:00 del día en curso (o de endDate si se envía)
-    let end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    // El "final" de nuestros reportes debe incluir todo el día en curso (hasta las 23:59:59.999)
+    let end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
 
     if (endDate) {
-        end = new Date(endDate);
-        // Si el usuario da una fecha exacta con formato YYYY-MM-DD, esto ya será a las 00:00:00 UTC
-        // Aseguramos que sea el comienzo de ESE día
-        end.setHours(0, 0, 0, 0);
+        // Parsear fecha YYYY-MM-DD y colocar a las 23:59:59.999 del día
+        const parts = endDate.split('-');
+        if (parts.length === 3) {
+            end = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 23, 59, 59, 999);
+        } else {
+            end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+        }
     }
 
     let start = new Date(end);
     start.setDate(end.getDate() - 30); // 30 días antes por defecto respecto al endDate
+    start.setHours(0, 0, 0, 0);
 
     if (startDate) {
-        start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
+        const parts = startDate.split('-');
+        if (parts.length === 3) {
+            start = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 0, 0, 0, 0);
+        } else {
+            start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+        }
     }
 
     // Calcular la cantidad de días evaluados
@@ -57,7 +67,8 @@ const getProductsStatsFromDb = async (productId, startDate, endDate, country = n
             required: false,
             where: {
                 saleDate: {
-                    [Op.between]: [start, end]
+                    [Op.gte]: start,
+                    [Op.lte]: end
                 }
             },
             order: [['saleDate', 'ASC']]

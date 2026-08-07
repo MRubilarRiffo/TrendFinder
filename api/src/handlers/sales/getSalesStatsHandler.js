@@ -26,7 +26,8 @@ const getSalesStatsHandler = async (days = 7, country = null, sortBy = 'profit',
         sales: 'totalQuantitySold',
         revenue: 'totalRevenue',
         performance: 'performanceRate',
-        trend: 'trendGrowth'
+        trend: 'trendGrowth',
+        breakout: 'breakoutScore'
     };
     const orderColumn = sortOptions[sortBy] || 'totalProfit';
 

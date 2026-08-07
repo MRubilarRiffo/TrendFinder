@@ -1,6 +1,6 @@
 const { getProductsStatsFromDb } = require('../../handlers/products/getProductsStatsFromDb');
 const { formatPrice } = require('../../functions/formatPrice');
-const { calculateSalesAverage, calculateTrendGrowth } = require('../../functions/salesCalculations');
+const { calculateSalesAverage, calculateTrendGrowth, calculateBreakoutMetrics } = require('../../functions/salesCalculations');
 
 const getProductsStats = async (req, res, next) => {
     try {
@@ -81,6 +81,10 @@ const getProductsStats = async (req, res, next) => {
         });
 
         let trendGrowth = calculateTrendGrowth(recentSalesCount, oldSalesCount);
+        const { isBreakout, breakoutScore } = calculateBreakoutMetrics(recentSalesCount, oldSalesCount, Math.floor(daysEvaluated / 2));
+
+        const unitProfit = Math.max(suggestedPrice - price, 0);
+        const totalProfit = totalQuantitySold * unitProfit;
 
         const currentStock = product.Stock ? product.Stock.quantity : 0;
 
@@ -93,12 +97,16 @@ const getProductsStats = async (req, res, next) => {
             stock: currentStock,
             price: formatPrice(price, product.country),
             suggestedPrice: formatPrice(suggestedPrice, product.country),
+            unitProfit: formatPrice(unitProfit, product.country),
             salesInfo: {
                 totalQuantitySold,
                 totalRevenue: formatPrice(totalRevenue, product.country),
+                totalProfit: formatPrice(totalProfit, product.country),
                 salesAverage,
                 maxDailySales,
-                trendGrowthPercentage: Math.round(trendGrowth)
+                trendGrowthPercentage: Math.round(trendGrowth),
+                isBreakout,
+                breakoutScore
             },
             salesHistory
         };

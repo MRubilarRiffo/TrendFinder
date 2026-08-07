@@ -30,6 +30,8 @@ const getSalesStats = async (req, res, next) => {
                 totalProfit: formatPrice(parseFloat(snapshot.totalProfit) || 0, country),
                 performanceRate: parseFloat(snapshot.performanceRate) || 0,
                 trendGrowth: parseFloat(snapshot.trendGrowth) || 0,
+                breakoutScore: parseFloat(snapshot.breakoutScore) || 0,
+                isBreakout: Boolean(snapshot.isBreakout),
                 calculatedAt: snapshot.calculatedAt,
             };
         });

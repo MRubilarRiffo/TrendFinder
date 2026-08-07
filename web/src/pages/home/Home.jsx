@@ -133,6 +133,7 @@ const Home = () => {
                             <option value="revenue">Ordenar por: Ingresos</option>
                             <option value="performance">Ordenar por: Rendimiento</option>
                             <option value="trend">Ordenar por: Tendencia</option>
+                            <option value="breakout">Ordenar por: 🔥 Despegue</option>
                         </select>
                     </div>
                 </div>
@@ -161,6 +162,9 @@ const Home = () => {
                                                     <div className={styles.productText}>
                                                         <span className={styles.productTitle}>{product.name || `Producto ${idx + 1}`}</span>
                                                         <span className={styles.productSubtitle}>País: {product.country || 'N/A'}</span>
+                                                        {product.isBreakout && (
+                                                            <span className={styles.breakoutBadge}>🔥 Despegue</span>
+                                                        )}
                                                         <span className={styles.productMeta}>Actualizado: {product.calculatedAt ? new Date(product.calculatedAt).toLocaleDateString() : 'N/A'}</span>
                                                     </div>
                                                 </div>
@@ -204,10 +208,16 @@ const Home = () => {
                                                     <span className={styles.metricLabel}>Rendimiento:</span>
                                                     <span className={styles.metricValue}>{(product.performanceRate || 0).toFixed(2)}%</span>
                                                 </div>
+                                                {product.breakoutScore > 0 && (
+                                                    <div className={styles.metricGroup}>
+                                                        <span className={styles.metricLabel}>Breakout Score:</span>
+                                                        <span className={styles.breakoutText}>🔥 {product.breakoutScore.toFixed(2)}</span>
+                                                    </div>
+                                                )}
                                                 <div style={{ marginTop: '0.5rem' }}>
                                                     <SimpleLineChart
-                                                        data={[(product.totalQuantitySold || 10) * 0.5, (product.totalQuantitySold || 10) * 0.8, product.totalQuantitySold || 10]}
-                                                        color={(product.trendGrowth || 0) >= 0 ? "var(--accent-primary)" : "#ef4444"}
+                                                        data={product.totalQuantitySold > 0 ? [Math.round(product.totalQuantitySold * 0.3), Math.round(product.totalQuantitySold * 0.6), product.totalQuantitySold] : [0, 0, 0]}
+                                                        color={product.isBreakout ? "#f97316" : ((product.trendGrowth || 0) >= 0 ? "var(--accent-primary)" : "#ef4444")}
                                                         height={40}
                                                     />
                                                 </div>

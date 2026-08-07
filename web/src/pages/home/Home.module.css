@@ -391,3 +391,24 @@
     opacity: 0.5;
     cursor: not-allowed;
 }
+
+.breakoutBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(234, 88, 12, 0.35));
+    color: #f97316;
+    border: 1px solid rgba(249, 115, 22, 0.4);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 0.25rem;
+    width: fit-content;
+    box-shadow: 0 0 8px rgba(249, 115, 22, 0.25);
+}
+
+.breakoutText {
+    color: #f97316;
+    font-weight: 600;
+}
