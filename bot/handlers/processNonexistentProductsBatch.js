@@ -10,7 +10,7 @@ const { compareCategories, convertirString, updateImages } = require('../helpers
  * Inserta masivamente los productos que el scraper identificó como **nuevos**.
  * Establece su inventario inicial y sus categorías correspondientes haciendo un match con el diccionario.
  */
-const processNonexistentProductsBatch = async (nonexistentProducts, DROPI_IMG_URL, DROPI_DETAILS_PRODUCTS, country) => {
+const processNonexistentProductsBatch = async (nonexistentProducts, DROPI_DETAILS_PRODUCTS, country) => {
     let nonexistentProductsCreating = nonexistentProducts.map(({ id, name, stock, gallery, categories, sale_price, suggested_price, warehouse_product, variations }) => {
         // Extracción correcta de Stock sumando inventario de Warehouses y Variaciones (Dropi V2 API Bug Fix)
         let totalStock = 0;
@@ -61,7 +61,7 @@ const processNonexistentProductsBatch = async (nonexistentProducts, DROPI_IMG_UR
             return null;
         }
 
-        const image = updateImages(gallery, DROPI_IMG_URL, null);
+        const image = updateImages(gallery);
         const url = `${DROPI_DETAILS_PRODUCTS}${id}/${convertirString(name)}`;
 
         return { id, name, stock: totalStock, image, categories, sale_price: safeSalePrice, suggested_price: safeSuggestedPrice, url, country };

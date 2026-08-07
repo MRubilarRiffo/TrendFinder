@@ -1,20 +1,15 @@
 /**
  * Normaliza y une en una cadena separada por comas las imágenes disponibles.
  */
-const updateImages = (gallery, DROPI_IMG_URL, DROPI_IMG_URLS3) => {
-    let images = [];
-    if (gallery && gallery.length > 0) {
-        gallery.forEach(item => {
-            // Prioridad a S3, y como alternativa la URL base local
-            if (item.urlS3) {
-                images.push(`${DROPI_IMG_URLS3}${item.urlS3}`);
-            } else if (item.url) {
-                images.push(`${DROPI_IMG_URL}${item.url}`);
-            }
-        });
-    }
+const DROPI_IMG_URLS3 = "https://d39ru7awumhhs2.cloudfront.net/"
 
-    return images.join(',');
+const updateImages = (gallery) => {
+    if (!Array.isArray(gallery)) return '';
+
+    return gallery.reduce((acc, item) => {
+        if (item.urlS3) acc.push(`${DROPI_IMG_URLS3}${item.urlS3}`);
+        return acc;
+    }, []).join(',');
 };
 
 /**

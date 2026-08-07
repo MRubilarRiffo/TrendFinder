@@ -14,7 +14,6 @@ const LIMIT_PER_PAGE = 40;
  */
 const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch = 3) => {
     const API = countryConfig.dropi_api_products;
-    const DROPI_IMG_URL = countryConfig.dropi_img_url;
     const DROPI_DETAILS_PRODUCTS = countryConfig.dropi_details_products;
     const country = countryConfig.country;
 
@@ -151,7 +150,7 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
                 processDbPromises.push(processExistingProductsBatch(existingProductsWithStock));
             }
             if (nonexistentProducts && nonexistentProducts.length > 0) {
-                processDbPromises.push(processNonexistentProductsBatch(nonexistentProducts, DROPI_IMG_URL, DROPI_DETAILS_PRODUCTS, country));
+                processDbPromises.push(processNonexistentProductsBatch(nonexistentProducts, DROPI_DETAILS_PRODUCTS, country));
             }
 
             try {
