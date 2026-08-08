@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import styles from './ProductDetails.module.css';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getProductStats } from '../../services/trendFinder';
-import { FiArrowLeft, FiTrendingUp, FiBox, FiDollarSign, FiActivity, FiShoppingCart } from 'react-icons/fi';
+import { FiArrowLeft, FiTrendingUp, FiDollarSign, FiActivity, FiShoppingCart, FiTruck, FiCreditCard } from 'react-icons/fi';
 import SimpleLineChart from '../../components/SimpleLineChart/SimpleLineChart';
-import DualLineChart from '../../components/DualLineChart/DualLineChart';
-import styles from './ProductDetails.module.css';
+import FinancialInputsPanel from '../../components/FinancialInputsPanel/FinancialInputsPanel';
 
 const ProductDetails = () => {
     const { id } = useParams();
@@ -12,6 +12,7 @@ const ProductDetails = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [days, setDays] = useState(30); // Default to 30 days history
+    const [financialParams, setFinancialParams] = useState(null);
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -21,7 +22,7 @@ const ProductDetails = () => {
                 const end = new Date();
                 const start = new Date();
                 start.setDate(end.getDate() - days);
-                
+
                 const formatDate = (d) => {
                     const year = d.getFullYear();
                     const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -31,9 +32,9 @@ const ProductDetails = () => {
 
                 const startStr = formatDate(start);
                 const endStr = formatDate(end);
-                
-                const res = await getProductStats(id, startStr, endStr, null);
-                
+
+                const res = await getProductStats(id, startStr, endStr, null, financialParams);
+
                 if (res && res.success && res.data) {
                     setProductData(res.data);
                 } else {
@@ -48,16 +49,20 @@ const ProductDetails = () => {
         };
 
         if (id) fetchProduct();
-    }, [id, days]);
+    }, [id, days, financialParams]);
+
+    const handleApplyFinancialParams = (newParams) => {
+        setFinancialParams(newParams);
+    };
 
     // Prepare chart data using useMemo to avoid recalculating on every render
     const chartData = useMemo(() => {
         if (!productData || !productData.salesHistory) return { values: [], labels: [] };
-        
+
         const history = productData.salesHistory;
         const values = history.map(item => item.quantity);
         const labels = history.map(item => item.date);
-        
+
         return { values, labels };
     }, [productData]);
 
@@ -101,6 +106,9 @@ const ProductDetails = () => {
                 </div>
             </header>
 
+            {/* Componente de Inputs Financieros Variables */}
+            <FinancialInputsPanel onApplyParams={handleApplyFinancialParams} />
+
             {/* Product Profile */}
             <section className={`${styles.profileSection} glass-panel`}>
                 <div className={styles.productIdentity}>
@@ -116,20 +124,40 @@ const ProductDetails = () => {
                             )}
                         </div>
                         <h1 className={styles.productName}>{productData.name}</h1>
-                        <div className={styles.priceRow}>
+
+                        <div className={styles.priceRow} style={{ flexWrap: 'wrap', gap: '1.5rem' }}>
                             <div className={styles.priceItem}>
-                                <span className={styles.priceLabel}>Precio de Venta</span>
+                                <span className={styles.priceLabel}>Costo Producto Base</span>
                                 <span className={styles.priceValue}>{productData.price}</span>
                             </div>
-                            <div className={styles.priceItem}>
-                                <span className={styles.priceLabel}>Precio Sugerido</span>
-                                <span className={styles.priceValue}>{productData.suggestedPrice}</span>
-                            </div>
-                            <div className={styles.priceItem}>
-                                <span className={styles.priceLabel}>Ganancia Est.</span>
-                                <span className={`${styles.priceValue} ${styles.textSuccess}`}>
-                                    {productData.unitProfit || '$0'}
+
+                            {/* Bloque Contra Entrega */}
+                            <div className={styles.priceItem} style={{ borderLeft: '2px solid rgba(99, 102, 241, 0.4)', paddingLeft: '1rem' }}>
+                                <span className={styles.priceLabel} style={{ color: '#818cf8', fontWeight: '600' }}>
+                                    <FiTruck style={{ verticalAlign: 'middle', marginRight: '4px' }} /> Sugerido Contra Entrega
                                 </span>
+                                <span className={styles.priceValue} style={{ fontSize: '1.4rem' }}>{productData.suggestedPriceCod}</span>
+
+                                <div style={{ marginTop: '0.3rem' }}>
+                                    <span className={styles.priceLabel}>Ganancia Real Limpia COD:</span>
+                                    <span className={`${styles.priceValue} ${styles.textSuccess}`} style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
+                                        {productData.unitProfitCod}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Bloque Pago Anticipado */}
+                            <div className={styles.priceItem} style={{ borderLeft: '2px solid rgba(56, 189, 248, 0.4)', paddingLeft: '1rem' }}>
+                                <span className={styles.priceLabel} style={{ color: '#38bdf8', fontWeight: '600' }}>
+                                    <FiCreditCard style={{ verticalAlign: 'middle', marginRight: '4px' }} /> Sugerido Pago Anticipado
+                                </span>
+                                <span className={styles.priceValue} style={{ fontSize: '1.4rem' }}>{productData.suggestedPricePrepaid}</span>
+                                <div style={{ marginTop: '0.3rem' }}>
+                                    <span className={styles.priceLabel}>Ganancia Neta Pago Anticipado:</span>
+                                    <span className={`${styles.priceValue} ${styles.textSuccess}`} style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
+                                        {productData.unitProfitPrepaid}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -145,7 +173,7 @@ const ProductDetails = () => {
                     </div>
                     <div className={styles.kpiValue}>{salesInfo?.totalQuantitySold?.toLocaleString() || 0} <small>uds</small></div>
                 </div>
-                
+
                 <div className={`${styles.kpiCard} glass-panel`}>
                     <div className={styles.kpiHeader}>
                         <FiDollarSign className={styles.kpiIcon} />
@@ -181,15 +209,15 @@ const ProductDetails = () => {
                         Día Récord: {salesInfo?.maxDailySales || 0} uds.
                     </span>
                 </div>
-                
+
                 {chartData.values.length > 0 ? (
                     <div className={styles.chartWrapper}>
                         {/* We use DualLineChart purely for its design here, only passing 1 dataset, 
                             or we can use SimpleLineChart. We will use SimpleLineChart for consistency with the area fill. */}
-                        <SimpleLineChart 
-                            data={chartData.values} 
+                        <SimpleLineChart
+                            data={chartData.values}
                             labels={chartData.labels}
-                            color="var(--accent-primary)" 
+                            color="var(--accent-primary)"
                             height={300}
                         />
                     </div>

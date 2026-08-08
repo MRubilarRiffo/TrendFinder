@@ -34,14 +34,43 @@ const processExistingProductsBatch = async (existingProductsWithStock) => {
                     // Si el stock nuevo es menor al que teníamos, asumimos que hubo ventas
                     if (stockInfo.quantity > safeStock) {
                         const soldAmount = stockInfo.quantity - safeStock;
-                        try {
-                            await ProductSale.create({
-                                quantitySold: soldAmount,
-                                ProductId: id,
-                                saleDate: new Date()
-                            });
-                        } catch (saleError) {
-                            logMessage(`Error registrando venta para producto ${id}: ${saleError.message}`);
+                        const now = new Date();
+                        const lastCheck = stockInfo.updatedAt ? new Date(stockInfo.updatedAt) : now;
+                        const hoursOffline = (now.getTime() - lastCheck.getTime()) / (1000 * 3600);
+
+                        // Si el bot estuvo inactivo/offline por más de 1 día (umbrál > 25 horas)
+                        if (hoursOffline > 25) {
+                            const daysOffline = Math.max(1, Math.floor(hoursOffline / 24));
+                            const dailyQty = Math.floor(soldAmount / daysOffline);
+                            const remainder = soldAmount % daysOffline;
+
+                            for (let i = 0; i < daysOffline; i++) {
+                                const retroactiveDate = new Date(lastCheck.getTime() + (i + 1) * (24 * 3600 * 1000));
+                                const qtyForDay = dailyQty + (i === daysOffline - 1 ? remainder : 0);
+
+                                if (qtyForDay > 0) {
+                                    try {
+                                        await ProductSale.create({
+                                            quantitySold: qtyForDay,
+                                            ProductId: id,
+                                            saleDate: retroactiveDate
+                                        });
+                                    } catch (saleError) {
+                                        logMessage(`Error registrando venta retroactiva para producto ${id}: ${saleError.message}`);
+                                    }
+                                }
+                            }
+                            logMessage(`[BOT] Ventas de producto ${id} (${soldAmount} uds) redistribuidas en ${daysOffline} días por inactividad de ${hoursOffline.toFixed(1)}h.`);
+                        } else {
+                            try {
+                                await ProductSale.create({
+                                    quantitySold: soldAmount,
+                                    ProductId: id,
+                                    saleDate: now
+                                });
+                            } catch (saleError) {
+                                logMessage(`Error registrando venta para producto ${id}: ${saleError.message}`);
+                            }
                         }
                     }
 

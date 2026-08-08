@@ -1,6 +1,7 @@
 const { getProductsStatsFromDb } = require('../../handlers/products/getProductsStatsFromDb');
 const { formatPrice } = require('../../functions/formatPrice');
 const { calculateSalesAverage, calculateTrendGrowth, calculateBreakoutMetrics } = require('../../functions/salesCalculations');
+const { calculateSuggestedPrices } = require('../../functions/financialCalculations');
 
 const getProductsStats = async (req, res, next) => {
     try {
@@ -29,7 +30,7 @@ const getProductsStats = async (req, res, next) => {
         let salesHistoryMap = {};
 
         const price = parseFloat(product.sale_price) || 0;
-        const suggestedPrice = parseFloat(product.suggested_price) || 0;
+        const financial = calculateSuggestedPrices(price, req.query);
         let totalRevenue = 0;
 
         if (product.ProductSales && product.ProductSales.length > 0) {
@@ -56,7 +57,7 @@ const getProductsStats = async (req, res, next) => {
         // Rellenar días sin ventas (0) para tener una línea de tiempo continua en los gráficos frontends
         const salesHistory = [];
         let currentDate = new Date(start);
-        const endDateForLoop = new Date(end); // Iteramos hasta el end (no incluido, ya que end es el truncado del próximo día a las 00:00)
+        const endDateForLoop = new Date(end); // Iteramos hasta el end
 
         while (currentDate < endDateForLoop) {
             const dateKey = currentDate.toISOString().split('T')[0];
@@ -83,8 +84,8 @@ const getProductsStats = async (req, res, next) => {
         let trendGrowth = calculateTrendGrowth(recentSalesCount, oldSalesCount);
         const { isBreakout, breakoutScore } = calculateBreakoutMetrics(recentSalesCount, oldSalesCount, Math.floor(daysEvaluated / 2));
 
-        const unitProfit = Math.max(suggestedPrice - price, 0);
-        const totalProfit = totalQuantitySold * unitProfit;
+        const unitProfitCod = financial.cod.weightedProfit;
+        const totalProfitCod = totalQuantitySold * unitProfitCod;
 
         const currentStock = product.Stock ? product.Stock.quantity : 0;
 
@@ -96,12 +97,29 @@ const getProductsStats = async (req, res, next) => {
             image: product.image,
             stock: currentStock,
             price: formatPrice(price, product.country),
-            suggestedPrice: formatPrice(suggestedPrice, product.country),
-            unitProfit: formatPrice(unitProfit, product.country),
+            rawPrice: price,
+
+            // Precios Sugeridos y Ganancias Limpias
+            suggestedPriceCod: formatPrice(financial.cod.suggestedPrice, product.country),
+            unitProfitCod: formatPrice(financial.cod.weightedProfit, product.country),          // Ganancia Limpia COD ($8.000)
+            rawSuggestedPriceCod: financial.cod.suggestedPrice,
+            rawUnitProfitCod: financial.cod.weightedProfit,
+
+            suggestedPricePrepaid: formatPrice(financial.prepaid.suggestedPrice, product.country),
+            unitProfitPrepaid: formatPrice(financial.prepaid.netProfit, product.country),          // Ganancia Limpia Anticipado ($7.000)
+            rawSuggestedPricePrepaid: financial.prepaid.suggestedPrice,
+            rawUnitProfitPrepaid: financial.prepaid.netProfit,
+
+            // Retrocompatibilidad
+            suggestedPrice: formatPrice(financial.cod.suggestedPrice, product.country),
+            unitProfit: formatPrice(financial.cod.weightedProfit, product.country),
+
+            financialBreakdown: financial,
+
             salesInfo: {
                 totalQuantitySold,
                 totalRevenue: formatPrice(totalRevenue, product.country),
-                totalProfit: formatPrice(totalProfit, product.country),
+                totalProfit: formatPrice(totalProfitCod, product.country),
                 salesAverage,
                 maxDailySales,
                 trendGrowthPercentage: Math.round(trendGrowth),

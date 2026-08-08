@@ -1,5 +1,6 @@
 const { getLatestProductsFromDb } = require('../../handlers/products/getLatestProductsFromDb');
 const { formatPrice } = require('../../functions/formatPrice');
+const { calculateSuggestedPrices } = require('../../functions/financialCalculations');
 
 const getLatestProducts = async (req, res, next) => {
     try {
@@ -12,8 +13,7 @@ const getLatestProducts = async (req, res, next) => {
         const formattedProducts = products.map(product => {
             const currentStock = product.Stock ? product.Stock.quantity : 0;
             const salePrice = parseFloat(product.sale_price) || 0;
-            const suggestedPrice = parseFloat(product.suggested_price) || 0;
-            const unitProfit = suggestedPrice > salePrice ? (suggestedPrice - salePrice) : 0;
+            const financial = calculateSuggestedPrices(salePrice, req.query);
 
             const country = product.country;
 
@@ -24,8 +24,13 @@ const getLatestProducts = async (req, res, next) => {
                 country: product.country,
                 image: product.image,
                 price: formatPrice(salePrice, country),
-                suggestedPrice: formatPrice(suggestedPrice, country),
-                unitProfit: formatPrice(unitProfit, country),
+                rawPrice: salePrice,
+                suggestedPriceCod: formatPrice(financial.cod.suggestedPrice, country),
+                unitProfitCod: formatPrice(financial.cod.weightedProfit, country),
+                suggestedPricePrepaid: formatPrice(financial.prepaid.suggestedPrice, country),
+                unitProfitPrepaid: formatPrice(financial.prepaid.netProfit, country),
+                suggestedPrice: formatPrice(financial.cod.suggestedPrice, country),
+                unitProfit: formatPrice(financial.cod.weightedProfit, country),
                 stock: currentStock,
                 url: product.url,
                 addedAt: product.createdAt

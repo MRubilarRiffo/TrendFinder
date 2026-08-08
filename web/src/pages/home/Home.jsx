@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import { getLatestProducts, getTrendingProducts } from '../../services/trendFinder';
 import { FiTrendingUp, FiClock, FiArrowRight, FiEye } from 'react-icons/fi';
 import SimpleLineChart from '../../components/SimpleLineChart/SimpleLineChart';
+import FinancialInputsPanel from '../../components/FinancialInputsPanel/FinancialInputsPanel';
 import styles from './Home.module.css';
 
 const Home = () => {
     const [latestProducts, setLatestProducts] = useState([]);
     const [trendingProducts, setTrendingProducts] = useState([]);
+    const [financialParams, setFinancialParams] = useState(null);
 
     // UI states
     const [loadingLatest, setLoadingLatest] = useState(true);
@@ -41,7 +43,7 @@ const Home = () => {
         const fetchTrending = async () => {
             setLoadingTrending(true);
             try {
-                const trendingData = await getTrendingProducts(days, null, sortBy, cursor);
+                const trendingData = await getTrendingProducts(days, null, sortBy, cursor, financialParams);
                 if (trendingData) {
                     setTrendingProducts(trendingData.data || []);
                     setPagination(trendingData.pagination || { prevCursor: null, nextCursor: null });
@@ -53,7 +55,12 @@ const Home = () => {
             }
         };
         fetchTrending();
-    }, [days, sortBy, cursor]);
+    }, [days, sortBy, cursor, financialParams]);
+
+    const handleApplyFinancialParams = (newParams) => {
+        setFinancialParams(newParams);
+        setCursor(null);
+    };
 
     const handleSortChange = (e) => {
         setSortBy(e.target.value);
@@ -71,7 +78,6 @@ const Home = () => {
 
     const handlePrevPage = () => {
         if (pagination.prevCursor) setCursor(pagination.prevCursor);
-        // If we want to go back to page 1 and the API logic requires dropping the cursor, we handle it if prevCursor is valid
     };
 
     return (
@@ -138,6 +144,9 @@ const Home = () => {
                     </div>
                 </div>
 
+                {/* Panel de Inputs para Recalcular Precios Sugeridos */}
+                <FinancialInputsPanel onApplyParams={handleApplyFinancialParams} />
+
                 {loadingTrending ? (
                     <div className={styles.loader}>Cargando tendencias...</div>
                 ) : (
@@ -147,7 +156,7 @@ const Home = () => {
                                 <thead>
                                     <tr>
                                         <th>Producto</th>
-                                        <th>Precio & Margen</th>
+                                        <th>Costo & Sugeridos</th>
                                         <th>Métricas de Venta</th>
                                         <th>Tendencia</th>
                                         <th>Acción</th>
@@ -171,16 +180,24 @@ const Home = () => {
                                             </td>
                                             <td className={styles.priceCell}>
                                                 <div className={styles.metricGroup}>
-                                                    <span className={styles.metricLabel}>Precio Venta:</span>
-                                                    <span className={styles.metricValue}>{product.price?.toLocaleString() || 0}</span>
+                                                    <span className={styles.metricLabel}>Costo Producto:</span>
+                                                    <span className={styles.metricValue}>{product.price}</span>
+                                                </div>
+                                                <div className={styles.metricGroup} style={{ marginTop: '0.35rem' }}>
+                                                    <span className={styles.metricLabel} style={{ color: '#818cf8', fontWeight: '600' }}>🚚 Sugerido COD:</span>
+                                                    <span className={styles.metricValue} style={{ fontWeight: '700' }}>{product.suggestedPriceCod}</span>
                                                 </div>
                                                 <div className={styles.metricGroup}>
-                                                    <span className={styles.metricLabel}>Sugerido:</span>
-                                                    <span className={styles.metricValue}>{product.suggestedPrice?.toLocaleString() || 0}</span>
+                                                    <span className={styles.metricLabel}>Ganancia COD:</span>
+                                                    <span className={`${styles.metricValue} ${styles.textSuccess}`} style={{ fontWeight: '700' }}>{product.unitProfitCod}</span>
+                                                </div>
+                                                <div className={styles.metricGroup} style={{ marginTop: '0.35rem' }}>
+                                                    <span className={styles.metricLabel} style={{ color: '#38bdf8', fontWeight: '600' }}>💳 Sug. Anticipado:</span>
+                                                    <span className={styles.metricValue} style={{ fontWeight: '700' }}>{product.suggestedPricePrepaid}</span>
                                                 </div>
                                                 <div className={styles.metricGroup}>
-                                                    <span className={styles.metricLabel}>Ganancia:</span>
-                                                    <span className={`${styles.metricValue} ${styles.textSuccess}`}>{product.unitProfit?.toLocaleString() || 0}</span>
+                                                    <span className={styles.metricLabel}>Ganancia Anticipado:</span>
+                                                    <span className={`${styles.metricValue} ${styles.textSuccess}`} style={{ fontWeight: '700' }}>{product.unitProfitPrepaid}</span>
                                                 </div>
                                             </td>
                                             <td className={styles.salesCell}>
