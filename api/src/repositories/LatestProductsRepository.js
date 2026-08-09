@@ -1,4 +1,4 @@
-const { Product, Stock } = require('../../config/database');
+const { Product, Stock } = require('../config/database');
 
 /**
  * Obtiene los últimos productos agregados a la base de datos.
@@ -6,7 +6,7 @@ const { Product, Stock } = require('../../config/database');
  * @param {string|null} country - Filtro opcional por país.
  * @returns {Promise<Array>} Regresa arreglo de productos con su stock.
  */
-const getLatestProductsFromDb = async (limit = 10, country = null) => {
+const getLatestProducts = async (limit = 10, country = null) => {
     const limitInt = parseInt(limit, 10) || 10;
 
     let whereClause = {};
@@ -26,4 +26,4 @@ const getLatestProductsFromDb = async (limit = 10, country = null) => {
     return products;
 };
 
-module.exports = { getLatestProductsFromDb };
+module.exports = { getLatestProducts };

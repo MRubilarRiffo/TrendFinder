@@ -1,5 +1,5 @@
-const { Product } = require('../../config/database');
-const { logMessage } = require('../../helpers/logMessage');
+const { Product } = require('../config/database');
+const { logMessage } = require('../helpers/logMessage');
 
 const createBulkProduct = async (products) => {
     try {
@@ -14,7 +14,6 @@ const createBulkProduct = async (products) => {
         }));
         logMessage(`[DB HANDLER] Recrutando Array para BulkCreate: ${queryOptions.length} items recibidos.`);
 
-        // Evita estallar si en la segunda página hay duplicados cruzados de dropi
         const createdProducts = await Product.bulkCreate(queryOptions, {
             updateOnDuplicate: ['name', 'sale_price', 'suggested_price'],
             ignoreDuplicates: true
@@ -25,7 +24,25 @@ const createBulkProduct = async (products) => {
     } catch (error) {
         logMessage(`[DB HANDLER CRÍTICO] Error en bulkCreate: ${error.message}`);
         throw error;
-    };
+    }
 };
 
-module.exports = { createBulkProduct };
+const getProductsFindAll = async (queryOptions) => {
+    try {
+        if (!queryOptions) {
+            const error = new Error('Faltan opciones de consulta para realizar la busqueda.');
+            throw error;
+        }
+
+        const products = await Product.findAll(queryOptions);
+    
+        return products;
+    } catch (error) {
+        throw error;
+    }
+};
+
+module.exports = { 
+    createBulkProduct,
+    getProductsFindAll 
+};

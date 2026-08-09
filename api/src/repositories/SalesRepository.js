@@ -1,4 +1,4 @@
-const { SalesSnapshot, Product, Stock } = require('../../config/database');
+const { SalesSnapshot, Product, Stock } = require('../config/database');
 const { Op } = require('sequelize');
 
 /**
@@ -11,7 +11,7 @@ const { Op } = require('sequelize');
  * @param {string|null} cursor - Cursor codificado en base64 (incluye dirección internamente).
  * @returns {Promise<Object>} Regresa los snapshots paginados con cursores bidireccionales.
  */
-const getSalesStatsHandler = async (days = 7, country = null, sortBy = 'profit', limit = 10, cursor = null) => {
+const getSalesPerformanceData = async (days = 7, country = null, sortBy = 'profit', limit = 10, cursor = null) => {
     const periodDays = parseInt(days);
     const validPeriods = [1, 7, 30];
     if (!validPeriods.includes(periodDays)) {
@@ -109,4 +109,4 @@ const getSalesStatsHandler = async (days = 7, country = null, sortBy = 'profit',
     return { snapshots: results, periodDays, nextCursor, prevCursor };
 };
 
-module.exports = { getSalesStatsHandler };
+module.exports = { getSalesPerformanceData };

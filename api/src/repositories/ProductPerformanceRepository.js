@@ -1,4 +1,4 @@
-const { Product, Stock, ProductSale } = require('../../config/database');
+const { Product, Stock, ProductSale } = require('../config/database');
 const { Op } = require('sequelize');
 
 /**
@@ -11,7 +11,7 @@ const { Op } = require('sequelize');
  * @param {string|null} country - Filtro opcional por país.
  * @returns {Promise<Object>} Regresa la información cruda { products, daysEvaluated, start, end, midDateLimit }
  */
-const getProductsStatsFromDb = async (productId, startDate, endDate, country = null) => {
+const getProductPerformanceData = async (productId, startDate, endDate, country = null) => {
 
     // Configurar fechas límites por defecto si no vienen, 
     // Igualamos el comportamiento al cron: tomamos fechas truncadas a medianoche (00:00:00)
@@ -84,4 +84,4 @@ const getProductsStatsFromDb = async (productId, startDate, endDate, country = n
     };
 };
 
-module.exports = { getProductsStatsFromDb };
+module.exports = { getProductPerformanceData };
