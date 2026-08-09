@@ -159,6 +159,7 @@ const Home = () => {
                                         <th>Costo & Sugeridos</th>
                                         <th>Métricas de Venta</th>
                                         <th>Tendencia</th>
+                                        <th>Viabilidad</th>
                                         <th>Acción</th>
                                     </tr>
                                 </thead>
@@ -239,6 +240,20 @@ const Home = () => {
                                                     />
                                                 </div>
                                             </td>
+                                            <td className={styles.scoreCell}>
+                                                <div className={styles.scoreWrapper}>
+                                                    <div className={`${styles.scoreBadge} ${
+                                                        (product.dropScore || 0) >= 80 ? styles.scoreHigh :
+                                                        (product.dropScore || 0) >= 50 ? styles.scoreMedium :
+                                                        styles.scoreLow
+                                                    }`}>
+                                                        {product.dropScore || 0}
+                                                    </div>
+                                                    {(product.dropScore || 0) >= 85 && (
+                                                        <span className={styles.winnerBadge}>🔥 GANADOR</span>
+                                                    )}
+                                                </div>
+                                            </td>
                                             <td className={styles.actionCell}>
                                                 {product.productId ? (
                                                     <Link to={`/product/${product.productId}`} className={styles.actionBtn} title="Ver Detalles">
@@ -254,7 +269,7 @@ const Home = () => {
                                     ))}
                                     {trendingProducts.length === 0 && (
                                         <tr>
-                                            <td colSpan="5" className={styles.emptyText}>No hay productos en tendencia actualmente.</td>
+                                            <td colSpan="6" className={styles.emptyText}>No hay productos en tendencia actualmente.</td>
                                         </tr>
                                     )}
                                 </tbody>

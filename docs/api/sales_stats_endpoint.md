@@ -70,7 +70,9 @@ Devuelve status `200 OK` con un JSON estructurado así:
       "totalProfit": 300000,
       "performanceRate": 22.22,
       "trendGrowth": 15.50,
-      "calculatedAt": "2026-03-04T04:00:00.000Z"
+      "calculatedAt": "2026-03-04T04:00:00.000Z",
+      "dailySales": [2, 5, 1, 10, 15, 30, 45],
+      "dropScore": 86
     }
   ]
 }
@@ -95,6 +97,8 @@ Devuelve status `200 OK` con un JSON estructurado así:
 | `performanceRate`  | `number`   | Rendimiento (%): `(totalProfit / totalRevenue) × 100`. Indica el % de ganancia por venta.     |
 | `trendGrowth`      | `number`   | Crecimiento de tendencia (%): compara ventas de la mitad reciente vs la mitad antigua del periodo. Puede ser negativo. |
 | `calculatedAt`     | `string`   | Fecha ISO de la última ejecución del cron que generó el snapshot.                             |
+| `dailySales`       | `array`    | Historial de ventas diarias del periodo evaluado (utilizado para graficar la tendencia real). |
+| `dropScore`        | `number`   | Puntuación global de viabilidad del producto (1 a 100) en base a margen, tendencia y volumen. |
 
 ---
 
