@@ -57,6 +57,10 @@ module.exports = (sequelize) => {
             type: DataTypes.DATE,
             allowNull: false,
             defaultValue: DataTypes.NOW
+        },
+        dailySales: {
+            type: DataTypes.JSON,
+            allowNull: true
         }
     }, {
         indexes: [

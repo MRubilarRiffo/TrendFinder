@@ -233,7 +233,7 @@ const Home = () => {
                                                 )}
                                                 <div style={{ marginTop: '0.5rem' }}>
                                                     <SimpleLineChart
-                                                        data={product.totalQuantitySold > 0 ? [Math.round(product.totalQuantitySold * 0.3), Math.round(product.totalQuantitySold * 0.6), product.totalQuantitySold] : [0, 0, 0]}
+                                                        data={product.dailySales && product.dailySales.length > 0 ? product.dailySales : [0, 0, 0]}
                                                         color={product.isBreakout ? "#f97316" : ((product.trendGrowth || 0) >= 0 ? "var(--accent-primary)" : "#ef4444")}
                                                         height={40}
                                                     />

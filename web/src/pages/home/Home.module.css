@@ -196,7 +196,8 @@
     text-align: left;
 }
 
-.table th, .table td {
+.table th,
+.table td {
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border-color);
 }
@@ -219,7 +220,7 @@
 }
 
 .productCell {
-    min-width: 280px;
+    min-width: 250px;
 }
 
 .productInfo {
@@ -285,11 +286,13 @@
 }
 
 .textSuccess {
-    color: #10b981; /* Emerald green */
+    color: #10b981;
+    /* Emerald green */
 }
 
 .textDanger {
-    color: #ef4444; /* Red */
+    color: #ef4444;
+    /* Red */
 }
 
 .salesBadge {
@@ -301,8 +304,10 @@
     font-weight: 600;
 }
 
-.priceCell, .salesCell, .trendCell {
-    min-width: 180px;
+.priceCell,
+.salesCell,
+.trendCell {
+    min-width: 250px;
 }
 
 .actionCell {
@@ -329,7 +334,8 @@
     transition: all var(--transition-fast);
 }
 
-.selectInput:hover, .selectInput:focus {
+.selectInput:hover,
+.selectInput:focus {
     border-color: var(--accent-primary);
 }
 

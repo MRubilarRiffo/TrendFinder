@@ -63,6 +63,29 @@ const calculateSnapshots = async () => {
                 nest: true
             });
 
+            // Ventas por día para el sparkline
+            const dailyData = await ProductSale.findAll({
+                attributes: [
+                    'ProductId',
+                    [ProductSale.sequelize.fn('DATE', ProductSale.sequelize.col('saleDate')), 'saleDay'],
+                    [ProductSale.sequelize.fn('SUM', ProductSale.sequelize.col('quantitySold')), 'dailyQty']
+                ],
+                where: {
+                    saleDate: {
+                        [Op.gte]: startDate,
+                        [Op.lt]: endDate
+                    }
+                },
+                group: ['ProductId', ProductSale.sequelize.fn('DATE', ProductSale.sequelize.col('saleDate'))],
+                raw: true
+            });
+
+            const sparklineMap = {};
+            dailyData.forEach(row => {
+                if (!sparklineMap[row.ProductId]) sparklineMap[row.ProductId] = {};
+                sparklineMap[row.ProductId][row.saleDay] = parseInt(row.dailyQty) || 0;
+            });
+
             // Eliminar snapshots anteriores de este periodo
             const deleted = await SalesSnapshot.destroy({ where: { periodDays: period } });
             logMessage(`[CRON] ${deleted} snapshots anteriores eliminados para periodo de ${period} día(s).`);
@@ -86,6 +109,15 @@ const calculateSnapshots = async () => {
                     // breakout: detección de despegue desde 0 ventas
                     const { isBreakout, breakoutScore } = calculateBreakoutMetrics(recentSales, oldSales, Math.floor(period / 2));
 
+                    const dailySales = [];
+                    for (let i = 0; i < period; i++) {
+                        const d = new Date(startDate);
+                        d.setDate(d.getDate() + i);
+                        const dateStr = d.toISOString().slice(0, 10);
+                        const salesThatDay = sparklineMap[row.ProductId]?.[dateStr] || 0;
+                        dailySales.push(salesThatDay);
+                    }
+
                     return {
                         ProductId: row.ProductId,
                         periodDays: period,
@@ -96,7 +128,8 @@ const calculateSnapshots = async () => {
                         trendGrowth,
                         breakoutScore,
                         isBreakout,
-                        calculatedAt: endDate
+                        calculatedAt: endDate,
+                        dailySales
                     };
                 });
 

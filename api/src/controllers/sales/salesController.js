@@ -48,6 +48,7 @@ const getSalesStats = async (req, res, next) => {
                 breakoutScore: parseFloat(snapshot.breakoutScore) || 0,
                 isBreakout: Boolean(snapshot.isBreakout),
                 calculatedAt: snapshot.calculatedAt,
+                dailySales: snapshot.dailySales || [],
             };
         });
 
