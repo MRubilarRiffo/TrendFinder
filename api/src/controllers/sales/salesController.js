@@ -37,6 +37,13 @@ const getSalesStats = async (req, res, next) => {
                 }
                 const dropScore = Math.min(100, Math.max(0, Math.round(computedScore)));
 
+                // Banderas para Etiquetas Inteligentes (Smart Badges)
+                const isDeclining = trendGrowthVal <= -50;
+                // High Ticket ahora es si el costo del producto en Dropi es >= 15.000 (ajustable)
+                const isHighTicket = salePrice >= 15000;
+                const stockQty = product.Stock ? product.Stock.quantity : 0;
+                const hasLowStock = stockQty > 0 && stockQty <= 50;
+
                 return {
                     productId: snapshot.ProductId,
                     dropiId: product.dropiId,
@@ -46,6 +53,13 @@ const getSalesStats = async (req, res, next) => {
                     url: product.url,
                     price: formatPrice(salePrice, country),
                     rawPrice: salePrice,
+                    stock: stockQty,
+
+                    // Banderas de Etiquetado
+                    isDeclining,
+                    isHighTicket,
+                    hasLowStock,
+                    isBreakout: Boolean(snapshot.isBreakout),
 
                     // Precios Sugeridos y Ganancias Limpias
                     suggestedPriceCod: formatPrice(financial.cod.suggestedPrice, country),

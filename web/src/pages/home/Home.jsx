@@ -172,9 +172,12 @@ const Home = () => {
                                                     <div className={styles.productText}>
                                                         <span className={styles.productTitle}>{product.name || `Producto ${idx + 1}`}</span>
                                                         <span className={styles.productSubtitle}>País: {product.country || 'N/A'}</span>
-                                                        {product.isBreakout && (
-                                                            <span className={styles.breakoutBadge}>🔥 Despegue</span>
-                                                        )}
+                                                        <div className={styles.badgesWrapper}>
+                                                            {product.isBreakout && <span className={styles.breakoutBadge}>🔥 Despegue</span>}
+                                                            {product.isHighTicket && <span className={styles.highTicketBadge}>💎 High Ticket</span>}
+                                                            {product.isDeclining && <span className={styles.decliningBadge}>🧊 En Declive</span>}
+                                                            {product.hasLowStock && <span className={styles.lowStockBadge}>⚠️ Poco Stock</span>}
+                                                        </div>
                                                         <span className={styles.productMeta}>Actualizado: {product.calculatedAt ? new Date(product.calculatedAt).toLocaleDateString() : 'N/A'}</span>
                                                     </div>
                                                 </div>

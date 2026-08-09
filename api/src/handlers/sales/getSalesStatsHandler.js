@@ -1,4 +1,4 @@
-const { SalesSnapshot, Product } = require('../../config/database');
+const { SalesSnapshot, Product, Stock } = require('../../config/database');
 const { Op } = require('sequelize');
 
 /**
@@ -61,7 +61,8 @@ const getSalesStatsHandler = async (days = 7, country = null, sortBy = 'profit',
         include: [{
             model: Product,
             attributes: ['id', 'name', 'country', 'image', 'sale_price', 'suggested_price', 'url', 'dropiId'],
-            where: whereProduct
+            where: whereProduct,
+            include: [{ model: Stock, attributes: ['quantity'] }]
         }],
         order: isPrev
             ? [[orderColumn, 'ASC'], ['id', 'DESC']]

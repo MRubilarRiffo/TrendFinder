@@ -398,6 +398,14 @@
     cursor: not-allowed;
 }
 
+.badgesWrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
 .breakoutBadge {
     display: inline-flex;
     align-items: center;
@@ -409,9 +417,50 @@
     border-radius: var(--radius-sm);
     font-size: 0.75rem;
     font-weight: 700;
-    margin-top: 0.25rem;
     width: fit-content;
     box-shadow: 0 0 8px rgba(249, 115, 22, 0.25);
+}
+
+.highTicketBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(109, 40, 217, 0.35));
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    width: fit-content;
+}
+
+.decliningBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(2, 132, 199, 0.35));
+    color: #38bdf8;
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    width: fit-content;
+}
+
+.lowStockBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(185, 28, 28, 0.35));
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    width: fit-content;
 }
 
 .breakoutText {
