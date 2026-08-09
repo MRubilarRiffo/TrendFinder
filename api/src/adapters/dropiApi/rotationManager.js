@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { logMessage } = require('../helpers/logMessage');
+const { logMessage } = require('../../helpers/logMessage');
 
 let proxiesCache = [];
 let tokensCache = [];
@@ -11,7 +11,7 @@ let currentTokenIndex = 0;
 function loadProxiesAndTokens() {
     // 1. Cargar Proxies
     try {
-        const proxiesPath = path.join(__dirname, '../config/proxies.txt');
+        const proxiesPath = path.join(__dirname, './config/proxies.txt');
         if (!fs.existsSync(proxiesPath)) {
             logMessage(`[ROTATION MANAGER] Archivo de proxies no encontrado en ${proxiesPath}. Se realizarán peticiones sin proxy.`);
         } else {
@@ -38,7 +38,7 @@ function loadProxiesAndTokens() {
 
     // 2. Cargar Tokens Adicionales (Bypass 429 WAF Laravel)
     try {
-        const tokensPath = path.join(__dirname, '../config/tokens.txt');
+        const tokensPath = path.join(__dirname, './config/tokens.txt');
         if (!fs.existsSync(tokensPath)) {
             logMessage(`[ROTATION MANAGER] Archivo de tokens.txt no encontrado. Se usará el token base del entorno.`);
         } else {

@@ -1,10 +1,10 @@
-const { getCategoryFindAll } = require('../../src/handlers/category/getCategoryFindAll');
-const { createBulkProduct } = require('../../src/handlers/product/createBulkProduct');
-const { Stock } = require('../../src/config/database');
-const { logMessage } = require('../helpers/logMessage');
+const { getCategoryFindAll } = require('../../../repositories/CategoryRepository');
+const { createBulkProduct } = require('../../../repositories/ProductAdminRepository');
+const { Stock } = require('../../../config/database');
+const { logMessage } = require('../../../helpers/logMessage');
 
-const { validateDropiProduct } = require('../helpers/dropiValidator');
-const { compareCategories, convertirString, updateImages } = require('../helpers/dropiUtils');
+const { validateDropiProduct } = require('./dropiValidator');
+const { compareCategories, convertirString, updateImages } = require('./dropiUtils');
 
 /**
  * Inserta masivamente los productos que el scraper identificó como **nuevos**.

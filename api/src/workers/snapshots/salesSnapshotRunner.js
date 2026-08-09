@@ -1,15 +1,15 @@
-require('dotenv').config({ path: require('path').resolve(__dirname, '../api/.env') });
-const { conn, ProductSale, Product, SalesSnapshot } = require('../api/src/config/database');
+require('dotenv').config({ path: require('path').resolve(__dirname, '../../../.env') });
+const { conn, ProductSale, Product, SalesSnapshot } = require('../../config/database');
 const { Op } = require('sequelize');
-const { logMessage } = require('./helpers/logMessage');
-const { calculateTrendGrowth, calculateBreakoutMetrics } = require('../api/src/functions/salesCalculations');
+const { logMessage } = require('../../helpers/logMessage');
+const { calculateTrendGrowth, calculateBreakoutMetrics } = require('../../functions/salesCalculations');
 const fs = require('fs');
 const path = require('path');
 const PERIODS = [1, 7, 30];
 
 /**
  * Calcula y almacena snapshots de ventas para los periodos definidos.
- * Diseñado para ejecutarse vía cron de forma independiente a la API.
+ * Diseñado para ejecutarse vía cron de forma independiente a la API HTTP.
  */
 const calculateSnapshots = async () => {
     try {
@@ -159,7 +159,7 @@ const runCron = async () => {
     // 2. PONER CANDADO
     try {
         fs.writeFileSync(LOCK_FILE, 'locked');
-        logMessage('[CRON] Inicializando script de snapshots de ventas desde Cronjob/Terminal');
+        logMessage('[CRON] Inicializando script de snapshots de ventas desde Workers (Cron)');
         await calculateSnapshots();
 
         // 3. QUITAR CANDADO AL FINALIZAR

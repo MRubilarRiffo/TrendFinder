@@ -2,9 +2,9 @@ const fs = require('fs');
 const path = require('path');
 
 function logMessage(message) {
-    const logsDirectory = 'logs';
+    const logsDirectory = path.join(__dirname, '../../logs');
     if (!fs.existsSync(logsDirectory)) {
-        fs.mkdirSync(logsDirectory);
+        fs.mkdirSync(logsDirectory, { recursive: true });
     }
 
     const timestamp = new Date();

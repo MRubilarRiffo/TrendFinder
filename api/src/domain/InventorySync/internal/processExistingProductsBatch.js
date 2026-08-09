@@ -1,6 +1,6 @@
-const { Stock, ProductSale } = require('../../src/config/database');
-const { logMessage } = require('../helpers/logMessage');
-const { validateDropiProduct } = require('../helpers/dropiValidator');
+const { Stock, ProductSale } = require('../../../config/database');
+const { logMessage } = require('../../../helpers/logMessage');
+const { validateDropiProduct } = require('./dropiValidator');
 
 /**
  * Procesa en batch los productos que **ya existen** en base de datos.

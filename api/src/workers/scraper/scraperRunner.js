@@ -1,13 +1,15 @@
-const { config } = require('../../src/config/config');
-const { getProductsFindAll } = require('../../src/handlers/product/getProductsFindAll');
-const { logMessage } = require('../helpers/logMessage');
-
-// Services & Handlers
-const { fetchDropiProductsPage } = require('./dropiApiService');
-const { processExistingProductsBatch } = require('../handlers/processExistingProductsBatch');
-const { processNonexistentProductsBatch } = require('../handlers/processNonexistentProductsBatch');
+require('dotenv').config({ path: require('path').resolve(__dirname, '../../../.env') });
+const fs = require('fs');
+const path = require('path');
+const { conn } = require('../../config/database');
+const { config } = require('../../config/config');
+const { getProductsFindAll } = require('../../repositories/ProductAdminRepository');
+const { logMessage } = require('../../helpers/logMessage');
+const { fetchDropiProductsPage } = require('../../adapters/dropiApi/dropiApiService');
+const { processExistingProductsBatch, processNonexistentProductsBatch } = require('../../domain/InventorySync');
 
 const LIMIT_PER_PAGE = 40;
+const LOCK_FILE = path.join(__dirname, 'bot.lock');
 
 /**
  * Loop principal del Scraper para el país en turno (Optimizacion V3 - Concurrente)
@@ -155,6 +157,12 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
 
             try {
                 await Promise.all(processDbPromises);
+                logMessage('[TEST] Inserción exitosa. Deteniendo Bot por petición del usuario...');
+                
+                // Limpiar lock y salir (simulando detención manual)
+                const lockFile = require('path').join(__dirname, 'bot.lock');
+                if (require('fs').existsSync(lockFile)) require('fs').unlinkSync(lockFile);
+                process.exit(0);
             } catch (bdError) {
                 logMessage(`[CRÍTICO BD] Fallo al insertar macro-lote en BD para ${country}: ${bdError.message || bdError}`);
                 console.error("Detalle Error BD:", bdError);
@@ -168,7 +176,7 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
 };
 
 /**
- * Función Principal de Configuración disparada desde el Controller.
+ * Función Principal de Configuración
  */
 const scraperConfig = async () => {
     logMessage('------ Scraper V2 Iniciado (Arquitectura Orquestador) ------');
@@ -201,7 +209,7 @@ const scraperConfig = async () => {
         const clonedHeaders = { ...baseHeaders, 'dropi-integration-key': countryConfig.dropi_token };
         const clonedBody = { ...baseBody };
 
-        // Excepción documentada: Colombia exige 'userVerified' (Se sacaba de scraper.js V1)
+        // Excepción documentada: Colombia exige 'userVerified'
         if (countryConfig.country === 'Colombia') {
             clonedBody['userVerified'] = true;
         }
@@ -213,4 +221,44 @@ const scraperConfig = async () => {
     logMessage('------ Scraper V2 Terminado con Éxito ------');
 };
 
-module.exports = { scraperConfig };
+const runBot = async () => {
+    // 1. REVISAR CANDADO
+    if (fs.existsSync(LOCK_FILE)) {
+        logMessage('[BOT] ALERTA: Ejecución solapada detectada. El bot anterior sigue corriendo (o el lock quedó huérfano). Abortando...');
+        process.exit(0);
+    }
+
+    // 2. PONER CANDADO
+    try {
+        fs.writeFileSync(LOCK_FILE, 'locked');
+        logMessage('[BOT] Inicializando Bot de Scraper desde API Workers');
+        await scraperConfig();
+
+        // 3. QUITAR CANDADO AL FINALIZAR
+        if (fs.existsSync(LOCK_FILE)) {
+            fs.unlinkSync(LOCK_FILE);
+            logMessage('[BOT] Archivo candado eliminado exitosamente.');
+        }
+        logMessage('[BOT] Cerrando conexión con la base de datos...');
+        await conn.close();
+        logMessage('[BOT] Proceso finalizado correctamente. Saliendo... (0)');
+        process.exit(0);
+    } catch (error) {
+        logMessage(`[BOT] CRÍTICO - El Bot de scraper ha fallado: ${error.message}`);
+
+        // 3. QUITAR CANDADO EN CASO DE ERROR FATAL
+        if (fs.existsSync(LOCK_FILE)) {
+            fs.unlinkSync(LOCK_FILE);
+            logMessage('[BOT] Archivo candado eliminado tras error crítico.');
+        }
+        try {
+            await conn.close();
+            logMessage('[BOT] Conexión cerrada tras error.');
+        } catch (closeError) {
+            logMessage(`[BOT] Error al cerrar conexión tras fallo: ${closeError.message}`);
+        }
+        process.exit(1);
+    }
+};
+
+runBot();

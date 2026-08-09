@@ -1,4 +1,4 @@
-const { validations } = require('../../src/helpers/validations');
+const { validations } = require('../../../helpers/validations');
 
 /**
  * Valida de forma estricta los atributos primarios recibidos de Dropi.
