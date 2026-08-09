@@ -108,10 +108,52 @@
     color: var(--accent-primary);
 }
 
+.titleRow {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+}
+
 .productName {
     font-size: 2.5rem;
     margin: 0;
     line-height: 1.2;
+}
+
+.scoreCircle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 2px solid #eab308;
+    color: #facc15;
+    font-weight: bold;
+    font-size: 1.25rem;
+    box-shadow: 0 0 10px rgba(234, 179, 8, 0.2);
+}
+
+.providerBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    text-decoration: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    transition: background var(--transition-fast);
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.providerBtn:hover {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .priceRow {

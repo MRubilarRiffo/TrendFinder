@@ -5,6 +5,7 @@ import { getProductStats } from '../../services/trendFinder';
 import { FiArrowLeft, FiTrendingUp, FiDollarSign, FiActivity, FiShoppingCart, FiTruck, FiCreditCard } from 'react-icons/fi';
 import SimpleLineChart from '../../components/SimpleLineChart/SimpleLineChart';
 import FinancialInputsPanel from '../../components/FinancialInputsPanel/FinancialInputsPanel';
+import SmartBadges from '../../components/SmartBadges/SmartBadges';
 
 const ProductDetails = () => {
     const { id } = useParams();
@@ -119,16 +120,35 @@ const ProductDetails = () => {
                         <div className={styles.badges}>
                             <span className={styles.badgeCountry}>{productData.country || 'Global'}</span>
                             <span className={styles.badgeId}>Dropi ID: {productData.dropiId}</span>
-                            {salesInfo?.isBreakout && (
-                                <span className={styles.breakoutBadge || ''} style={{ background: 'rgba(249, 115, 22, 0.2)', color: '#f97316', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' }}>🔥 Despegue</span>
+                        </div>
+                        <div className={styles.titleRow}>
+                            <h1 className={styles.productName}>{productData.name}</h1>
+                            {productData.dropScore !== undefined && (
+                                <div className={styles.scoreCircle}>
+                                    {productData.dropScore}
+                                </div>
                             )}
                         </div>
-                        <h1 className={styles.productName}>{productData.name}</h1>
+                        {productData.url && (
+                            <a href={productData.url} target="_blank" rel="noopener noreferrer" className={styles.providerBtn}>
+                                🔗 Ver en Proveedor
+                            </a>
+                        )}
+                        <SmartBadges 
+                            isBreakout={salesInfo?.isBreakout}
+                            isHighTicket={productData.isHighTicket}
+                            isDeclining={productData.isDeclining}
+                            hasLowStock={productData.hasLowStock}
+                        />
 
-                        <div className={styles.priceRow} style={{ flexWrap: 'wrap', gap: '1.5rem' }}>
+                        <div className={styles.priceRow} style={{ flexWrap: 'wrap', gap: '1.5rem', marginTop: '1rem' }}>
                             <div className={styles.priceItem}>
                                 <span className={styles.priceLabel}>Costo Producto Base</span>
                                 <span className={styles.priceValue}>{productData.price}</span>
+                                <div style={{ marginTop: '0.3rem' }}>
+                                    <span className={styles.priceLabel}>Stock Bodega:</span>
+                                    <span className={styles.priceValue} style={{ fontSize: '1rem', color: '#10b981' }}>{productData.stock || 0} uds.</span>
+                                </div>
                             </div>
 
                             {/* Bloque Contra Entrega */}
@@ -181,19 +201,19 @@ const ProductDetails = () => {
                     </div>
                     <div className={styles.kpiValue}>{salesInfo?.totalRevenue || '$0'}</div>
                 </div>
-
+                
                 <div className={`${styles.kpiCard} glass-panel`}>
                     <div className={styles.kpiHeader}>
                         <FiActivity className={styles.kpiIcon} />
-                        <h3>Promedio Diario</h3>
+                        <h3>Stock Actual</h3>
                     </div>
-                    <div className={styles.kpiValue}>{salesInfo?.salesAverage?.toFixed(1) || 0} <small>uds/día</small></div>
+                    <div className={styles.kpiValue} style={{ color: '#10b981' }}>{productData.stock || 0} <small>uds</small></div>
                 </div>
 
                 <div className={`${styles.kpiCard} glass-panel`}>
                     <div className={styles.kpiHeader}>
                         <FiTrendingUp className={styles.kpiIcon} style={{ color: isTrendingPositive ? '#10b981' : '#ef4444' }} />
-                        <h3>Crecimiento Tendencia</h3>
+                        <h3>Crecimiento</h3>
                     </div>
                     <div className={`${styles.kpiValue} ${isTrendingPositive ? styles.textSuccess : styles.textDanger}`}>
                         {isTrendingPositive ? '+' : ''}{salesInfo?.trendGrowthPercentage || 0}%

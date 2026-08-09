@@ -1,6 +1,7 @@
 const { getSalesStatsHandler } = require('../../handlers/sales/getSalesStatsHandler');
 const { formatPrice } = require('../../functions/formatPrice');
 const { calculateSuggestedPrices } = require('../../functions/financialCalculations');
+const { calculateDropScore } = require('../../functions/salesCalculations');
 
 const getSalesStats = async (req, res, next) => {
     try {
@@ -15,29 +16,18 @@ const getSalesStats = async (req, res, next) => {
             const financial = calculateSuggestedPrices(salePrice, req.query);
             const country = product.country;
 
-                // Cálculo del DropScore de Viabilidad (1 a 100)
-                // PPerf: Margen de precio sugerido sobre costo (35% peso)
-                // PGrowth: Crecimiento de la tendencia (30% peso)
-                // PVol: Promedio diario de ventas (35% peso)
-                // Bono Breakout: +15 puntos extra si es un breakout
                 const suggestedPriceCod = financial.cod.suggestedPrice;
-                const marginCod = suggestedPriceCod > 0 ? (suggestedPriceCod - salePrice) / suggestedPriceCod : 0;
-                const pPerf = Math.min(100, Math.max(0, (marginCod - 0.2) / 0.6 * 100));
-
-                const trendGrowthVal = parseFloat(snapshot.trendGrowth) || 0;
-                const pGrowth = trendGrowthVal <= 0 ? 0 : Math.min(100, (trendGrowthVal / 150) * 100);
-
-                const period = parseInt(periodDays) || 7;
-                const dailyAverageSales = (parseInt(snapshot.totalQuantitySold) || 0) / period;
-                const pVol = Math.min(100, (dailyAverageSales / 15) * 100);
-
-                let computedScore = (pPerf * 0.35) + (pVol * 0.35) + (pGrowth * 0.30);
-                if (Boolean(snapshot.isBreakout)) {
-                    computedScore += 15;
-                }
-                const dropScore = Math.min(100, Math.max(0, Math.round(computedScore)));
+                const dropScore = calculateDropScore({
+                    salePrice,
+                    suggestedPriceCod,
+                    trendGrowth: snapshot.trendGrowth,
+                    totalQuantitySold: snapshot.totalQuantitySold,
+                    periodDays,
+                    isBreakout: snapshot.isBreakout
+                });
 
                 // Banderas para Etiquetas Inteligentes (Smart Badges)
+                const trendGrowthVal = parseFloat(snapshot.trendGrowth) || 0;
                 const isDeclining = trendGrowthVal <= -50;
                 // High Ticket ahora es si el costo del producto en Dropi es >= 15.000 (ajustable)
                 const isHighTicket = salePrice >= 15000;

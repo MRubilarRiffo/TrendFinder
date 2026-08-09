@@ -89,8 +89,41 @@ const calculateBreakoutMetrics = (recentSales, oldSales, daysInactive = 0) => {
     return { isBreakout, breakoutScore };
 };
 
+/**
+ * Calcula el DropScore Global (0 a 100)
+ * 
+ * @param {Object} params - Parámetros de ventas
+ * @param {number} params.salePrice - Costo del producto
+ * @param {number} params.suggestedPriceCod - Precio sugerido COD
+ * @param {number} params.trendGrowth - Crecimiento de tendencia
+ * @param {number} params.totalQuantitySold - Cantidad total vendida
+ * @param {number} params.periodDays - Días del periodo evaluado
+ * @param {boolean} params.isBreakout - Si está en despegue
+ * @returns {number} Score de 0 a 100
+ */
+const calculateDropScore = ({ salePrice, suggestedPriceCod, trendGrowth, totalQuantitySold, periodDays, isBreakout }) => {
+    const marginCod = suggestedPriceCod > 0 ? (suggestedPriceCod - salePrice) / suggestedPriceCod : 0;
+    const pPerf = Math.min(100, Math.max(0, (marginCod - 0.2) / 0.6 * 100));
+    
+    const trendGrowthVal = parseFloat(trendGrowth) || 0;
+    const pGrowth = trendGrowthVal <= 0 ? 0 : Math.min(100, (trendGrowthVal / 150) * 100);
+    
+    const period = parseInt(periodDays) || 7;
+    const dailyAverageSales = (parseInt(totalQuantitySold) || 0) / period;
+    const pVol = Math.min(100, (dailyAverageSales / 15) * 100);
+    
+    let computedScore = (pPerf * 0.35) + (pVol * 0.35) + (pGrowth * 0.30);
+    
+    if (Boolean(isBreakout)) {
+        computedScore += 15;
+    }
+    
+    return Math.min(100, Math.max(0, Math.round(computedScore)));
+};
+
 module.exports = {
     calculateSalesAverage,
     calculateTrendGrowth,
-    calculateBreakoutMetrics
+    calculateBreakoutMetrics,
+    calculateDropScore
 };

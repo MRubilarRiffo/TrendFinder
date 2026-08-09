@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getLatestProducts, getTrendingProducts } from '../../services/trendFinder';
 import { FiTrendingUp, FiClock, FiArrowRight, FiEye } from 'react-icons/fi';
 import SimpleLineChart from '../../components/SimpleLineChart/SimpleLineChart';
+import SmartBadges from '../../components/SmartBadges/SmartBadges';
 import FinancialInputsPanel from '../../components/FinancialInputsPanel/FinancialInputsPanel';
 import styles from './Home.module.css';
 
@@ -172,12 +173,12 @@ const Home = () => {
                                                     <div className={styles.productText}>
                                                         <span className={styles.productTitle}>{product.name || `Producto ${idx + 1}`}</span>
                                                         <span className={styles.productSubtitle}>País: {product.country || 'N/A'}</span>
-                                                        <div className={styles.badgesWrapper}>
-                                                            {product.isBreakout && <span className={styles.breakoutBadge}>🔥 Despegue</span>}
-                                                            {product.isHighTicket && <span className={styles.highTicketBadge}>💎 High Ticket</span>}
-                                                            {product.isDeclining && <span className={styles.decliningBadge}>🧊 En Declive</span>}
-                                                            {product.hasLowStock && <span className={styles.lowStockBadge}>⚠️ Poco Stock</span>}
-                                                        </div>
+                                                        <SmartBadges 
+                                                            isBreakout={product.isBreakout}
+                                                            isHighTicket={product.isHighTicket}
+                                                            isDeclining={product.isDeclining}
+                                                            hasLowStock={product.hasLowStock}
+                                                        />
                                                         <span className={styles.productMeta}>Actualizado: {product.calculatedAt ? new Date(product.calculatedAt).toLocaleDateString() : 'N/A'}</span>
                                                     </div>
                                                 </div>

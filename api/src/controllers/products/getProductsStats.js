@@ -1,6 +1,6 @@
 const { getProductsStatsFromDb } = require('../../handlers/products/getProductsStatsFromDb');
 const { formatPrice } = require('../../functions/formatPrice');
-const { calculateSalesAverage, calculateTrendGrowth, calculateBreakoutMetrics } = require('../../functions/salesCalculations');
+const { calculateSalesAverage, calculateTrendGrowth, calculateBreakoutMetrics, calculateDropScore } = require('../../functions/salesCalculations');
 const { calculateSuggestedPrices } = require('../../functions/financialCalculations');
 
 const getProductsStats = async (req, res, next) => {
@@ -88,6 +88,21 @@ const getProductsStats = async (req, res, next) => {
         const totalProfitCod = totalQuantitySold * unitProfitCod;
 
         const currentStock = product.Stock ? product.Stock.quantity : 0;
+        
+        // Calcular banderas y DropScore
+        const suggestedPriceCod = financial.cod.suggestedPrice;
+        const dropScore = calculateDropScore({
+            salePrice: price,
+            suggestedPriceCod,
+            trendGrowth,
+            totalQuantitySold,
+            periodDays: daysEvaluated,
+            isBreakout
+        });
+        
+        const isDeclining = trendGrowth <= -50;
+        const isHighTicket = price >= 15000;
+        const hasLowStock = currentStock > 0 && currentStock <= 50;
 
         const productStats = {
             productId: product.id,
@@ -95,9 +110,15 @@ const getProductsStats = async (req, res, next) => {
             name: product.name,
             country: product.country,
             image: product.image,
+            url: product.url,
             stock: currentStock,
             price: formatPrice(price, product.country),
             rawPrice: price,
+            
+            dropScore,
+            isDeclining,
+            isHighTicket,
+            hasLowStock,
 
             // Precios Sugeridos y Ganancias Limpias
             suggestedPriceCod: formatPrice(financial.cod.suggestedPrice, product.country),
