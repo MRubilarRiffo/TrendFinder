@@ -157,12 +157,6 @@ const runScraperByCountry = async (countryConfig, headers, body, pagesPerBatch =
 
             try {
                 await Promise.all(processDbPromises);
-                logMessage('[TEST] Inserción exitosa. Deteniendo Bot por petición del usuario...');
-                
-                // Limpiar lock y salir (simulando detención manual)
-                const lockFile = require('path').join(__dirname, 'bot.lock');
-                if (require('fs').existsSync(lockFile)) require('fs').unlinkSync(lockFile);
-                process.exit(0);
             } catch (bdError) {
                 logMessage(`[CRÍTICO BD] Fallo al insertar macro-lote en BD para ${country}: ${bdError.message || bdError}`);
                 console.error("Detalle Error BD:", bdError);
