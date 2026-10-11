@@ -121,9 +121,49 @@ const calculateDropScore = ({ salePrice, suggestedPriceCod, trendGrowth, totalQu
     return Math.min(100, Math.max(0, Math.round(computedScore)));
 };
 
+/**
+ * Aplica Winsorization / Recorte Robusto a un array de ventas diarias.
+ * Detecta picos aislados extremos (outliers estadísticos) que superan el límite
+ * intercuartil respecto al comportamiento habitual del producto y los acota,
+ * protegiendo a los algoritmos y métricas de distorsiones por ajustes de stock.
+ * Los productos ganadores con ventas consistentes altas no se ven afectados.
+ *
+ * @param {Array<number>} dailySales - Array con las ventas diarias del periodo
+ * @param {Object} [options] - Opciones de configuración
+ * @param {number} [options.minOutlierThreshold=30] - Umbral mínimo para considerar un valor como posible anomalía
+ * @param {number} [options.iqrMultiplier=3] - Multiplicador del rango intercuartil para la valla superior
+ * @returns {Array<number>} Array de ventas diarias winsorizado
+ */
+const winsorizeDailySales = (dailySales = [], options = {}) => {
+    if (!Array.isArray(dailySales) || dailySales.length < 4) {
+        return Array.isArray(dailySales) ? [...dailySales] : [];
+    }
+
+    const { minOutlierThreshold = 30, iqrMultiplier = 3 } = options;
+
+    const values = dailySales.map(v => Math.max(0, parseInt(v, 10) || 0));
+    const sorted = [...values].sort((a, b) => a - b);
+
+    const q1Index = Math.floor(sorted.length * 0.25);
+    const q3Index = Math.floor(sorted.length * 0.75);
+    const q1 = sorted[q1Index];
+    const q3 = sorted[q3Index];
+    const iqr = q3 - q1;
+
+    const upperFence = Math.max(15, q3 + (iqrMultiplier * Math.max(1, iqr)));
+
+    return values.map(val => {
+        if (val > minOutlierThreshold && val > upperFence) {
+            return upperFence;
+        }
+        return val;
+    });
+};
+
 module.exports = {
     calculateSalesAverage,
     calculateTrendGrowth,
     calculateBreakoutMetrics,
-    calculateDropScore
+    calculateDropScore,
+    winsorizeDailySales
 };

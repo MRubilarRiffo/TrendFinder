@@ -19,7 +19,7 @@ Esta regla define los estándares de calidad de código, cobertura de pruebas y 
   - En `package.json`, el script `"test"` está configurado como `jest --runInBand`.
   - Esta configuración es **estrictamente necesaria** porque las pruebas de integración comparten la instancia de SQLite en memoria. La ejecución en hilos paralelos generaría condiciones de carrera y colisiones de estado entre suites.
 - **Tolerancia Cero a Fallos**:
-  - Toda la suite (actualmente con 84 tests distribuidos en 14 suites: unit, integration y e2e) debe mantenerse al **100% de aprobación**.
+  - Toda la suite (actualmente con **98 tests** distribuidos en **15 suites**: unit, integration y e2e) debe mantenerse al **100% de aprobación**.
   - Si una modificación rompe una prueba existente, se debe solucionar antes de proceder con nuevos desarrollos.
 
 ---

@@ -17,7 +17,7 @@ Este repositorio aplica una arquitectura limpia desacoplada para garantizar que 
   - **PROHIBIDO** manipular o recibir objetos `req`, `res` de Express.
   - Deben ser completamente independientes y testeables mediante pruebas unitarias rápidas y sincrónicas.
 - **Responsabilidad**:
-  - `salesCalculations.js`: Fórmulas de DropScore, cálculo de promedios ponderados por días reales activos, aceleración logarítmica de tendencias y detección de productos en despegue (`isBreakout`).
+  - `salesCalculations.js`: Fórmulas de DropScore, cálculo de promedios ponderados por días reales activos, aceleración logarítmica de tendencias, detección de despegues (`isBreakout`) y winsorización de picos atípicos (`winsorizeDailySales`).
   - `financialCalculations.js`: Modelos de rentabilidad COD (Cash on Delivery) y prepago, factoring de comisiones, fletes, devoluciones y CPA.
   - `formatPrice.js`: Formateo de monedas según estándar internacional (`COP`, `CLP`, `MXN`, `USD`).
 

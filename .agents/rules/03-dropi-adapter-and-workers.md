@@ -53,4 +53,25 @@ En entornos cPanel, los procesos cron pueden ser terminados abruptamente por el 
 - Los snapshots precalculan métricas para periodos de **1**, **7** y **30** días para alimentar el endpoint `/api/sales` con latencia submilisegundo.
 - **Cierre a medianoche**: Las fechas deben truncarse a `00:00:00.000` de días calendario completos para que las comparaciones temporales no varíen minuto a minuto durante el día.
 - **Idempotencia**: Cada ejecución debe reemplazar limpiamente los snapshots anteriores para el periodo en turno, evitando registros duplicados.
-- **Generación de Sparklines**: Construir un array temporal estructurado con las ventas por día del producto dentro del periodo evaluado para permitir visualizaciones gráficas rápidas en el frontend.
+- **Generación de Sparklines**: Construir un array temporal estructurado con las ventas por día del producto dentro del periodo evaluado para permitir visualizaciones gráficas rápidas en el frontend (aplicando winsorización de picos mediante `winsorizeDailySales`).
+
+---
+
+## 5. Guardrails de Ingesta y Rastreo de Estado del Scraper (`processExistingProductsBatch` & `botState`)
+
+Para evitar inferir falsas ventas derivadas de manipulaciones de stock por parte de proveedores (retiro masivo de stock, cambios de almacén, pausas de catálogo) o de paradas del scraper:
+
+1. **Detección de Vaciado/Agotamiento Masivo (Stock Zeroing)**:
+   - Si el stock anterior del producto era significativo ($\text{stockAnterior} \ge 30$) y el nuevo stock cae drásticamente a casi cero ($\text{stockNuevo} \le 2$) en una sola verificación, se clasifica como vaciado manual o pausa del proveedor.
+   - El stock en base de datos se actualiza a 0, pero **NO se generan registros de venta** (`quantitySold = 0`).
+2. **Límite de Velocidad Máxima por Verificación (Single-Check Velocity Cap)**:
+   - En una verificación individual de rutina (intervalo de ~1 hora), ningún producto en la plataforma vende físicamente cientos de unidades.
+   - Si la caída de stock excede la velocidad creíble:
+     $$\text{maxCredibleUnits} = \max(75, \text{hoursOffline} \times 30)$$
+     se clasifica como un ajuste de lote del proveedor. El stock se actualiza al nuevo valor real sin emitir transacciones fraudulentas de venta.
+3. **Tope de Redistribución Retroactiva**:
+   - Cuando el scraper estuvo apagado varias horas o días, las ventas legítimas calculadas entre la diferencia de stock se reparten proporcionalmente entre los días de inactividad, con un límite seguro de máximo 250 unidades/día.
+4. **Desacoplamiento del Tiempo Offline (`botState.js`)**:
+   - `Stock.updatedAt` no refleja el momento del último barrido del scraper si el stock no cambió durante semanas.
+   - Por tanto, el scraper persiste `lastRunFinishedAt` en `bot_state.json` al concluir cada ciclo.
+   - El cálculo de horas offline evalúa prioritariamente la inactividad real del bot global (`getBotOfflineHours()`), previniendo repartos retroactivos erróneos sobre productos con timestamps locales obsoletos.

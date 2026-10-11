@@ -2,7 +2,8 @@ const {
     calculateSalesAverage,
     calculateTrendGrowth,
     calculateBreakoutMetrics,
-    calculateDropScore
+    calculateDropScore,
+    winsorizeDailySales
 } = require('../../src/functions/salesCalculations');
 
 describe('Sales Calculations - Unit Tests (Strict)', () => {
@@ -154,6 +155,35 @@ describe('Sales Calculations - Unit Tests (Strict)', () => {
             const breakout = calculateDropScore({ ...baseParams, isBreakout: true });
 
             expect(breakout).toBe(Math.min(100, regular + 15));
+        });
+    });
+
+    describe('winsorizeDailySales', () => {
+        it('returns empty array or identical array if input has fewer than 4 elements or is empty', () => {
+            expect(winsorizeDailySales([])).toEqual([]);
+            expect(winsorizeDailySales([5])).toEqual([5]);
+            expect(winsorizeDailySales([5, 10, 15])).toEqual([5, 10, 15]);
+        });
+
+        it('does NOT cap organic winner products with consistently high volume', () => {
+            const organicWinner = [300, 350, 320, 290, 310, 340, 330];
+            const winsorized = winsorizeDailySales(organicWinner);
+            expect(winsorized).toEqual(organicWinner);
+        });
+
+        it('caps an extreme isolated spike (e.g. 897 among 0-2 sales) to protect downstream metrics', () => {
+            const spikeSeries = [0, 0, 2, 1, 897, 0, 0];
+            const winsorized = winsorizeDailySales(spikeSeries);
+
+            // 897 must be capped to a realistic statistical ceiling (e.g. <= 15)
+            expect(winsorized[4]).toBeLessThanOrEqual(15);
+            expect(winsorized[0]).toBe(0);
+            expect(winsorized[2]).toBe(2);
+        });
+
+        it('handles all-zeros or near-zero series gracefully', () => {
+            const zeros = [0, 0, 0, 0, 0, 0, 0];
+            expect(winsorizeDailySales(zeros)).toEqual(zeros);
         });
     });
 });

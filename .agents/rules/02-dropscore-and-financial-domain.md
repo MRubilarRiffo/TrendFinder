@@ -80,3 +80,20 @@ $$\text{suggestedPrice}_{\text{prepaid}} = \frac{\text{costPrice} + \text{desire
 - **México (`México` / `MXN`)**: 2 decimales (`$ 450.00`).
 - **Panamá (`Panamá` / `PAB` / `USD`)**: 2 decimales (`$ 25.50`).
 - Si el valor no es numérico o falta el país, manejarlo de forma segura sin arrojar excepciones no controladas.
+
+---
+
+## 5. Tratamiento Estadístico de Picos y Winsorización (`winsorizeDailySales`)
+
+Para evitar que picos aislados de ventas (por ejemplo, 1.000 unidades en un solo día frente a una media de 10) o anomalías históricas distorsionen las sparklines, gráficos de evolución temporal y métricas de escala visual en el frontend:
+
+- **Algoritmo de Winsorización (Valla Superior de Tukey)**:
+  - Sobre la serie temporal de ventas diarias, se ordenan los valores y se calculan el percentil 25 ($Q1$) y el percentil 75 ($Q3$).
+  - Se obtiene el rango intercuartílico ($IQR = Q3 - Q1$).
+  - La cota superior de corte (valla de Tukey para valores extremos severos) se define como:
+    $$\text{upperFence} = Q3 + (3 \times IQR)$$
+  - Con un umbral mínimo de seguridad ($\ge 10$) para no truncar variaciones naturales en productos de baja rotación.
+- **Topado Determinista**:
+  - Todo valor diario que exceda $\text{upperFence}$ es acotado al valor del límite superior: `Math.min(val, upperFence)`.
+  - Es una función 100% pura en `api/src/functions/salesCalculations.js` que no altera la suma total acumulada si no se requiere, pero suaviza la serie gráfica entregada al cliente HTTP.
+- **Aplicación**: Integrada tanto en `salesSnapshotRunner.js` (generación de sparklines de 7 y 30 días) como en `ProductPerformanceService.js` (historial diario para gráficos de detalle y `maxDailySales`).

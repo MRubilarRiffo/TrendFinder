@@ -17,14 +17,14 @@ Antes de ejecutar cualquier comando `git commit` o `git push`:
    ```bash
    cd api && npm test
    ```
-   Las 50+ pruebas de Jest deben pasar al 100%. No se admiten commits con tests rotos.
+   Las 98 pruebas de Jest distribuidas en 15 suites deben pasar al 100%. No se admiten commits con tests rotos.
 2. **Validar Frontend**:
    ```bash
    cd web && npm run lint
    ```
    No deben existir errores de sintaxis o variables no utilizadas.
 3. **Auditoría de Archivos en Staging (`git status`)**:
-   - Verificar rigurosamente que archivos sensibles (`.env`, `tokens.txt`, `proxies.txt`, `*.lock`, `logs/`, `package-lock.json`) no hayan sido añadidos al índice (`git add`).
+   - Verificar rigurosamente que archivos sensibles o volátiles (`.env`, `tokens.txt`, `proxies.txt`, `*.lock`, `bot_state.json`, `logs/`, `package-lock.json`) no hayan sido añadidos al índice (`git add`).
 
 ---
 

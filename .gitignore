@@ -41,3 +41,4 @@ wc-dropi-integration.4.7.2
 .env
 .env.development
 .env.production
+bot_state.json

@@ -8,6 +8,7 @@ const { logMessage } = require('../../helpers/logMessage');
 const { fetchDropiProductsPage } = require('../../adapters/dropiApi/dropiApiService');
 const { processExistingProductsBatch, processNonexistentProductsBatch } = require('../../domain/InventorySync');
 const { acquireLock, releaseLock } = require('../../helpers/lockManager');
+const { recordBotRunFinished } = require('../../helpers/botState');
 
 const LIMIT_PER_PAGE = 40;
 const LOCK_FILE = path.join(__dirname, 'bot.lock');
@@ -227,7 +228,8 @@ const runBot = async () => {
         logMessage('[BOT] Inicializando Bot de Scraper desde API Workers');
         await scraperConfig();
 
-        // 3. QUITAR CANDADO AL FINALIZAR
+        // 3. REGISTRAR ESTADO Y QUITAR CANDADO AL FINALIZAR
+        recordBotRunFinished();
         releaseLock(LOCK_FILE);
         logMessage('[BOT] Cerrando conexión con la base de datos...');
         await conn.close();

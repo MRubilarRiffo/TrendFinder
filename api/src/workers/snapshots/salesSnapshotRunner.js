@@ -3,7 +3,7 @@ const { conn, ProductSale, Product, SalesSnapshot } = require('../../config/data
 const { Op } = require('sequelize');
 const { logMessage } = require('../../helpers/logMessage');
 const { acquireLock, releaseLock } = require('../../helpers/lockManager');
-const { calculateTrendGrowth, calculateBreakoutMetrics } = require('../../functions/salesCalculations');
+const { calculateTrendGrowth, calculateBreakoutMetrics, winsorizeDailySales } = require('../../functions/salesCalculations');
 const path = require('path');
 const PERIODS = [1, 7, 30];
 
@@ -112,6 +112,8 @@ const calculateSnapshots = async () => {
                         dailySales.push(salesThatDay);
                     }
 
+                    const cleanDailySales = winsorizeDailySales(dailySales);
+
                     return {
                         ProductId: row.ProductId,
                         periodDays: period,
@@ -123,7 +125,7 @@ const calculateSnapshots = async () => {
                         breakoutScore,
                         isBreakout,
                         calculatedAt: endDate,
-                        dailySales
+                        dailySales: cleanDailySales
                     };
                 });
 

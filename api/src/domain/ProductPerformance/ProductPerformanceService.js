@@ -1,5 +1,5 @@
 const { getProductPerformanceData } = require('../../repositories/ProductPerformanceRepository');
-const { calculateSalesAverage, calculateTrendGrowth, calculateBreakoutMetrics, calculateDropScore } = require('../../functions/salesCalculations');
+const { calculateSalesAverage, calculateTrendGrowth, calculateBreakoutMetrics, calculateDropScore, winsorizeDailySales } = require('../../functions/salesCalculations');
 const { calculateSuggestedPrices, getHighTicketThreshold } = require('../../functions/financialCalculations');
 
 /**
@@ -101,8 +101,14 @@ const getProductPerformance = async (productId, startDate, endDate, country) => 
         currentDate.setUTCDate(currentDate.getUTCDate() + 1);
     }
 
-    const maxDailySales = salesHistory.length > 0
-        ? Math.max(...salesHistory.map(day => day.quantity))
+    const rawDailyQuantities = salesHistory.map(day => day.quantity);
+    const cleanQuantities = winsorizeDailySales(rawDailyQuantities);
+    salesHistory.forEach((day, idx) => {
+        day.quantity = cleanQuantities[idx];
+    });
+
+    const maxDailySales = cleanQuantities.length > 0
+        ? Math.max(...cleanQuantities)
         : 0;
 
     const salesAverage = calculateSalesAverage({

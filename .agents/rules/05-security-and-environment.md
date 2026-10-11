@@ -17,8 +17,8 @@ Los siguientes archivos y carpetas **NUNCA** deben incluirse en commits ni subir
 - **Credenciales y Configuración de Scraping**:
   - `proxies.txt` / `api/src/adapters/dropiApi/config/proxies.txt`
   - `tokens.txt` / `api/src/adapters/dropiApi/config/tokens.txt`
-- **Archivos de Bloqueo de Procesos (Locks)**:
-  - `*.lock`, `app.lock`, `bot.lock`, `sales_snapshot.lock`.
+- **Archivos de Bloqueo y Estado de Procesos (Locks & State)**:
+  - `*.lock`, `app.lock`, `bot.lock`, `sales_snapshot.lock`, `bot_state.json`.
 - **Registros y Logs**:
   - Carpetas `logs/`, archivos `*.log`, `npm-debug.log*`.
 - **Bloqueos de Dependencias**:

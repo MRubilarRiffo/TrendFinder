@@ -196,6 +196,68 @@ describe('InventorySync - Integration Tests (Strict)', () => {
             const daysWithSales = history.filter(day => day.quantity > 0);
             expect(daysWithSales.length).toBeGreaterThanOrEqual(3);
         });
+
+        it('detects supplier zeroing / depletion (drops from >= 30 to <= 2) and updates stock without generating fake sales', async () => {
+            const p = await Product.create({
+                dropiId: 1007,
+                name: 'Cepillo Secador Out-of-Stock',
+                country: 'Chile',
+                sale_price: 19990
+            });
+            await Stock.create({ ProductId: p.id, quantity: 500 });
+
+            // Supplier emptied stock completely: from 500 to 0
+            await processExistingProductsBatch([{ id: p.id, stock: 0 }]);
+
+            // Stock must reflect reality (0)
+            const updatedStock = await Stock.findOne({ where: { ProductId: p.id } });
+            expect(updatedStock.quantity).toBe(0);
+
+            // Crucial assertion: ZERO sales must be created for a sudden supplier zeroing event
+            const sales = await ProductSale.findAll({ where: { ProductId: p.id } });
+            expect(sales.length).toBe(0);
+        });
+
+        it('detects impossible single-check velocity (supplier manual stock drop, e.g. 897 units in 1h) and updates stock without generating fake sales', async () => {
+            const p = await Product.create({
+                dropiId: 1008,
+                name: 'Inalámbrico Cortacésped Lote Retirado',
+                country: 'Chile',
+                sale_price: 25000
+            });
+            await Stock.create({ ProductId: p.id, quantity: 1000 });
+
+            // Supplier removed 897 units in one scan (from 1000 to 103) with bot online
+            await processExistingProductsBatch([{ id: p.id, stock: 103 }]);
+
+            const updatedStock = await Stock.findOne({ where: { ProductId: p.id } });
+            expect(updatedStock.quantity).toBe(103);
+
+            // Must NOT create an 897 units fake sale
+            const sales = await ProductSale.findAll({ where: { ProductId: p.id } });
+            expect(sales.length).toBe(0);
+        });
+
+        it('preserves legitimate high-volume organic sales for winner products without censorship (e.g. 35 units in 1h)', async () => {
+            const p = await Product.create({
+                dropiId: 1009,
+                name: 'Lentes Multifocal Ganador Real',
+                country: 'Chile',
+                sale_price: 12000
+            });
+            await Stock.create({ ProductId: p.id, quantity: 800 });
+
+            // Realistic high-volume organic drop (800 -> 765, 35 units sold in 1h check)
+            await processExistingProductsBatch([{ id: p.id, stock: 765 }]);
+
+            const updatedStock = await Stock.findOne({ where: { ProductId: p.id } });
+            expect(updatedStock.quantity).toBe(765);
+
+            // Legitimate sales MUST be created
+            const sales = await ProductSale.findAll({ where: { ProductId: p.id } });
+            expect(sales.length).toBe(1);
+            expect(sales[0].quantitySold).toBe(35);
+        });
     });
 
     describe('processNonexistentProductsBatch', () => {

@@ -50,9 +50,10 @@ TrendFinder/
 │   │   │   └── SalesPerformance/              # Ventas agregadas y paginación por cursor
 │   │   ├── functions/                         # Fórmulas puras y utilidades de cálculo
 │   │   │   ├── financialCalculations.js       # Precios sugeridos (COD y prepago) y márgenes
-│   │   │   ├── salesCalculations.js           # DropScore, aceleración de tendencia y promedios
+│   │   │   ├── salesCalculations.js           # DropScore, aceleración de tendencia, promedios y winsorizeDailySales
 │   │   │   └── formatPrice.js                 # Formato de moneda por país (soporta DECIMAL)
-│   │   ├── helpers/                           # LockManager (cPanel), cursorPagination, logging y validaciones
+│   │   ├── helpers/                           # LockManager (cPanel), cursorPagination, botState, logging y validaciones
+│   │   │   ├── botState.js                    # Rastreo de timestamps y estado de corrida del scraper
 │   │   │   ├── cursorPagination.js            # Serialización y deserialización Base64 de cursores HTTP
 │   │   │   ├── lockManager.js                 # Control de concurrencia y candados huérfanos
 │   │   │   ├── logMessage.js                  # Logging persistente y formateado
@@ -61,6 +62,8 @@ TrendFinder/
 │   │   ├── models/                            # Modelos Sequelize (Product, Stock, Category, etc.)
 │   │   ├── repositories/                      # Acceso a base de datos y transacciones (SQL puro)
 │   │   ├── routes/                            # Definición de rutas Express (/api/products, /api/sales)
+│   │   ├── scripts/                           # Scripts de mantenimiento y saneamiento
+│   │   │   └── sanitizeHistoricalSales.js     # Depuración transaccional de ventas anómalas
 │   │   └── workers/                           # Workers independientes / cron tasks
 │   │       ├── scraper/scraperRunner.js       # Ingesta concurrente de catálogo Dropi
 │   │       └── snapshots/salesSnapshotRunner.js # Cálculo de snapshots (1, 7, 30 días)
@@ -118,6 +121,11 @@ TrendFinder/
 - **Protección contra Bloqueos Huérfanos en cPanel (`lockManager.js`)**:
   - Todos los scripts de cron (`scraperRunner.js`, `salesSnapshotRunner.js`) **DEBEN** adquirir y liberar candados con `acquireLock()` y `releaseLock()`.
   - Candados con más de 2 horas de antigüedad se consideran huérfanos (por interrupción de procesos debido a límites LVE/CloudLinux en cPanel) y deben auto-limpiarse.
+- **Guardrails de Ingesta y Detección de Ajustes de Proveedor (`processExistingProductsBatch.js`)**:
+  - **Agotamiento Masivo (Stock Zeroing)**: Si el stock anterior era relevante ($\ge 30$) y cae a $\le 2$ en una sola lectura, se asume vaciado o pausa manual del proveedor. Se actualiza el stock a 0 pero **NO** se generan ventas.
+  - **Velocidad Imposible en un Check**: Si la caída en un solo escaneo supera la velocidad máxima creíble ($\ge 75$ unidades en ~1h), se clasifica como retiro de lote del proveedor; se actualiza el stock sin registrar ventas fraudulentas.
+  - **Rastreo de Estado del Bot (`botState.js`)**: Persiste `lastRunFinishedAt` para medir inactividad real del scraper sin depender del `updatedAt` de cada stock individual.
+  - **Winsorization de Sparklines**: Filtrado estadístico robusto de picos aislados en `salesSnapshotRunner.js` y `ProductPerformanceService.js` mediante `winsorizeDailySales`.
 
 ### 4. Base de Datos y Sequelize ORM
 - La configuración de base de datos es **dual**:
@@ -149,7 +157,7 @@ TrendFinder/
 - **Backend (`api/`)**:
   - Test runner: **Jest** configurado con `--runInBand` para evitar colisiones en la base de datos en memoria.
   - Ejecución: `npm test` en el directorio `api/`.
-  - La suite actual cuenta con **84 pruebas** distribuidas en **14 suites** cubriendo tests unitarios, de integración y flujos end-to-end.
+  - La suite actual cuenta con **98 pruebas** distribuidas en **15 suites** cubriendo tests unitarios, de integración y flujos end-to-end.
   - **REGLA OBLIGATORIA**: Nunca enviar cambios al repositorio sin ejecutar `npm test` y confirmar que el 100% de las pruebas aprueben.
 - **Frontend (`web/`)**:
   - Ejecutar `npm run lint` para verificar cumplimiento de reglas de ESLint y Fast Refresh de React.
