@@ -1,14 +1,17 @@
 function formatPrice(price, country) {
-    if (typeof price !== 'number' || !country) return
+    if (price === null || price === undefined || price === '' || !country) return;
+
+    const num = typeof price === 'number' ? price : parseFloat(price);
+    if (isNaN(num)) return;
 
     const formatOptions = {
         style: 'currency',
         currency: getCurrency(country),
         minimumFractionDigits: getDecimalPlaces(country),
         useGrouping: true,
-    }
+    };
 
-    return new Intl.NumberFormat(getLocale(country), formatOptions).format(price)
+    return new Intl.NumberFormat(getLocale(country), formatOptions).format(num);
 }
 
 function getCurrency(country) {

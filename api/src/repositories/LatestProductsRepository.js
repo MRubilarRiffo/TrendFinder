@@ -7,7 +7,7 @@ const { Product, Stock } = require('../config/database');
  * @returns {Promise<Array>} Regresa arreglo de productos con su stock.
  */
 const getLatestProducts = async (limit = 10, country = null) => {
-    const limitInt = parseInt(limit, 10) || 10;
+    const limitInt = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 50);
 
     let whereClause = {};
     if (country) {

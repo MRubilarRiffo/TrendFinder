@@ -5,12 +5,24 @@ const { config } = require('./config');
 
 const { db_user, db_password, db_host, db_name, db_port } = config;
 
-const sequelize = new Sequelize(db_name, db_user, db_password, {
-	host: db_host,
-	port: db_port,
-	dialect: 'mysql',
-	logging: false,
-});
+const sequelize = process.env.NODE_ENV === 'test'
+	? new Sequelize({
+		dialect: 'sqlite',
+		storage: ':memory:',
+		logging: false,
+	})
+	: new Sequelize(db_name, db_user, db_password, {
+		host: db_host,
+		port: db_port,
+		dialect: 'mysql',
+		logging: false,
+		pool: {
+			max: 5,
+			min: 0,
+			acquire: 30000,
+			idle: 10000,
+		},
+	});
 
 const basename = path.basename(__filename);
 

@@ -7,6 +7,7 @@ const { getProductsFindAll } = require('../../repositories/ProductAdminRepositor
 const { logMessage } = require('../../helpers/logMessage');
 const { fetchDropiProductsPage } = require('../../adapters/dropiApi/dropiApiService');
 const { processExistingProductsBatch, processNonexistentProductsBatch } = require('../../domain/InventorySync');
+const { acquireLock, releaseLock } = require('../../helpers/lockManager');
 
 const LIMIT_PER_PAGE = 40;
 const LOCK_FILE = path.join(__dirname, 'bot.lock');
@@ -216,35 +217,26 @@ const scraperConfig = async () => {
 };
 
 const runBot = async () => {
-    // 1. REVISAR CANDADO
-    if (fs.existsSync(LOCK_FILE)) {
-        logMessage('[BOT] ALERTA: Ejecución solapada detectada. El bot anterior sigue corriendo (o el lock quedó huérfano). Abortando...');
+    // 1. REVISAR CANDADO CON RECUPERACIÓN DE HUÉRFANOS DE CPANEL
+    if (!acquireLock(LOCK_FILE, 2)) {
         process.exit(0);
     }
 
-    // 2. PONER CANDADO
+    // 2. EJECUTAR SCRAPER
     try {
-        fs.writeFileSync(LOCK_FILE, 'locked');
         logMessage('[BOT] Inicializando Bot de Scraper desde API Workers');
         await scraperConfig();
 
         // 3. QUITAR CANDADO AL FINALIZAR
-        if (fs.existsSync(LOCK_FILE)) {
-            fs.unlinkSync(LOCK_FILE);
-            logMessage('[BOT] Archivo candado eliminado exitosamente.');
-        }
+        releaseLock(LOCK_FILE);
         logMessage('[BOT] Cerrando conexión con la base de datos...');
         await conn.close();
         logMessage('[BOT] Proceso finalizado correctamente. Saliendo... (0)');
         process.exit(0);
     } catch (error) {
         logMessage(`[BOT] CRÍTICO - El Bot de scraper ha fallado: ${error.message}`);
+        releaseLock(LOCK_FILE);
 
-        // 3. QUITAR CANDADO EN CASO DE ERROR FATAL
-        if (fs.existsSync(LOCK_FILE)) {
-            fs.unlinkSync(LOCK_FILE);
-            logMessage('[BOT] Archivo candado eliminado tras error crítico.');
-        }
         try {
             await conn.close();
             logMessage('[BOT] Conexión cerrada tras error.');
@@ -255,4 +247,8 @@ const runBot = async () => {
     }
 };
 
-runBot();
+if (require.main === module) {
+    runBot();
+}
+
+module.exports = { runBot, scraperConfig, runScraperByCountry };

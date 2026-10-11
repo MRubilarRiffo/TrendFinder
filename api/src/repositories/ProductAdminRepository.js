@@ -1,7 +1,7 @@
 const { Product } = require('../config/database');
 const { logMessage } = require('../helpers/logMessage');
 
-const createBulkProduct = async (products) => {
+const createBulkProduct = async (products, transaction = null) => {
     try {
         const queryOptions = products.map(product => ({
             dropiId: product.id,
@@ -14,10 +14,15 @@ const createBulkProduct = async (products) => {
         }));
         logMessage(`[DB HANDLER] Recrutando Array para BulkCreate: ${queryOptions.length} items recibidos.`);
 
-        const createdProducts = await Product.bulkCreate(queryOptions, {
+        const bulkOptions = {
             updateOnDuplicate: ['name', 'sale_price', 'suggested_price'],
             ignoreDuplicates: true
-        });
+        };
+        if (transaction) {
+            bulkOptions.transaction = transaction;
+        }
+
+        const createdProducts = await Product.bulkCreate(queryOptions, bulkOptions);
 
         logMessage(`[DB HANDLER] Inserción completada de ${createdProducts.length} productos en DB.`);
         return createdProducts;

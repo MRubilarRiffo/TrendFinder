@@ -1,3 +1,53 @@
+const CANONICAL_COUNTRIES = {
+    'COLOMBIA': 'Colombia',
+    'CHILE': 'Chile',
+    'MÉXICO': 'México',
+    'MEXICO': 'México',
+    'PANAMÁ': 'Panamá',
+    'PANAMA': 'Panamá',
+    'ECUADOR': 'Ecuador',
+    'PERÚ': 'Perú',
+    'PERU': 'Perú',
+    'ESPAÑA': 'España',
+    'ESPANA': 'España'
+};
+
+const normalizeCountry = (country) => {
+    if (!country || typeof country !== 'string') return null;
+    const clean = country.trim().toUpperCase();
+    return CANONICAL_COUNTRIES[clean] || null;
+};
+
+const validatePositiveIntegerId = (id) => {
+    if (id === null || id === undefined || id === '') return false;
+    const num = Number(id);
+    return Number.isInteger(num) && num > 0;
+};
+
+const validateDateRange = (startDate, endDate) => {
+    const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+
+    if (startDate) {
+        if (!isoDateRegex.test(startDate) || isNaN(Date.parse(startDate))) {
+            return { valid: false, error: 'startDate debe tener el formato YYYY-MM-DD y ser una fecha válida.' };
+        }
+    }
+
+    if (endDate) {
+        if (!isoDateRegex.test(endDate) || isNaN(Date.parse(endDate))) {
+            return { valid: false, error: 'endDate debe tener el formato YYYY-MM-DD y ser una fecha válida.' };
+        }
+    }
+
+    if (startDate && endDate) {
+        if (new Date(startDate) > new Date(endDate)) {
+            return { valid: false, error: 'La fecha startDate no puede ser posterior a endDate.' };
+        }
+    }
+
+    return { valid: true };
+};
+
 const validators = {
     string: (value) => typeof value === 'string',
     number: (value) => typeof value === 'number' && !isNaN(value),
@@ -13,7 +63,9 @@ const validators = {
         return true;
     },
     greaterThan: (value, threshold) => value > threshold,
-    lessThan: (value, threshold) => value < threshold
+    lessThan: (value, threshold) => value < threshold,
+    positiveInteger: (value) => validatePositiveIntegerId(value),
+    country: (value) => Boolean(normalizeCountry(value))
 };
 
 const validations = (data, rules) => {
@@ -47,4 +99,10 @@ const validations = (data, rules) => {
     return errors;
 };
 
-module.exports = { validations };
+module.exports = {
+    validators,
+    validations,
+    normalizeCountry,
+    validatePositiveIntegerId,
+    validateDateRange
+};

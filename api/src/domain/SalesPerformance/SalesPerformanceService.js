@@ -1,9 +1,31 @@
 const { getSalesPerformanceData } = require('../../repositories/SalesRepository');
-const { calculateSuggestedPrices } = require('../../functions/financialCalculations');
+const { calculateSuggestedPrices, getHighTicketThreshold } = require('../../functions/financialCalculations');
 const { calculateDropScore } = require('../../functions/salesCalculations');
+const { decodeCursor, buildPaginationCursors } = require('../../helpers/cursorPagination');
 
-const getSalesPerformance = async (days, country, sortBy, limit, cursor) => {
-    const { snapshots, periodDays, nextCursor, prevCursor } = await getSalesPerformanceData(days, country, sortBy, limit, cursor);
+const SORT_OPTIONS = {
+    profit: 'totalProfit',
+    sales: 'totalQuantitySold',
+    revenue: 'totalRevenue',
+    performance: 'performanceRate',
+    trend: 'trendGrowth',
+    breakout: 'breakoutScore'
+};
+
+const getSalesPerformance = async (days = 7, country = null, sortBy = 'profit', limit = 10, cursor = null) => {
+    const periodDays = parseInt(days, 10) || 7;
+    const orderColumn = SORT_OPTIONS[sortBy] || 'totalProfit';
+    const cursorData = decodeCursor(cursor);
+
+    const repoResult = await getSalesPerformanceData({
+        periodDays,
+        country,
+        orderColumn,
+        limit,
+        cursorData
+    });
+
+    const { snapshots, hasMore, isPrev } = repoResult;
 
     const data = snapshots.map(snapshot => {
         const product = snapshot.Product;
@@ -22,7 +44,7 @@ const getSalesPerformance = async (days, country, sortBy, limit, cursor) => {
 
         const trendGrowthVal = parseFloat(snapshot.trendGrowth) || 0;
         const isDeclining = trendGrowthVal <= -50;
-        const isHighTicket = salePrice >= 15000;
+        const isHighTicket = salePrice >= getHighTicketThreshold(product.country);
         const stockQty = product.Stock ? product.Stock.quantity : 0;
         const hasLowStock = stockQty > 0 && stockQty <= 50;
 
@@ -56,9 +78,17 @@ const getSalesPerformance = async (days, country, sortBy, limit, cursor) => {
         };
     });
 
+    const pagination = buildPaginationCursors({
+        results: snapshots,
+        orderColumn,
+        hasMore,
+        isPrev,
+        currentCursor: cursor
+    });
+
     return {
         periodDays,
-        pagination: { prevCursor, nextCursor },
+        pagination,
         data
     };
 };

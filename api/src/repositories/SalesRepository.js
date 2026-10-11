@@ -2,57 +2,64 @@ const { SalesSnapshot, Product, Stock } = require('../config/database');
 const { Op } = require('sequelize');
 
 /**
- * Handler de Ventas: Lee los datos pre-calculados desde SalesSnapshot con Cursor Pagination bidireccional.
+ * Handler de Ventas: Lee los datos pre-calculados desde SalesSnapshot.
+ * Adaptador de persistencia desacoplado de la serialización de transporte HTTP.
  * 
- * @param {number|string} days - Periodo del snapshot (1, 7 o 30).
- * @param {string|null} country - Filtra por país del producto.
- * @param {string} sortBy - Criterio de orden (profit/sales/revenue/performance/trend).
- * @param {number} limit - Cantidad de resultados por página.
- * @param {string|null} cursor - Cursor codificado en base64 (incluye dirección internamente).
- * @returns {Promise<Object>} Regresa los snapshots paginados con cursores bidireccionales.
+ * @param {Object|number} optionsOrDays - Objeto de opciones o días para retrocompatibilidad
+ * @param {string|null} countryArg - Filtro por país (modo posicional)
+ * @param {string} orderColumnArg - Columna de ordenamiento SQL (modo posicional)
+ * @param {number} limitArg - Límite de resultados (modo posicional)
+ * @param {Object|null} cursorDataArg - Datos planos del cursor { value, id, dir } (modo posicional)
+ * @returns {Promise<Object>} Regresa los snapshots encontrados y metadatos de paginación
  */
-const getSalesPerformanceData = async (days = 7, country = null, sortBy = 'profit', limit = 10, cursor = null) => {
-    const periodDays = parseInt(days);
-    const validPeriods = [1, 7, 30];
-    if (!validPeriods.includes(periodDays)) {
-        throw new Error(`Periodo inválido. Usa: ${validPeriods.join(', ')}`);
+const getSalesPerformanceData = async (
+    optionsOrDays = 7,
+    countryArg = null,
+    orderColumnArg = 'totalProfit',
+    limitArg = 10,
+    cursorDataArg = null
+) => {
+    let periodDays, country, orderColumn, limit, cursorData;
+
+    if (typeof optionsOrDays === 'object' && optionsOrDays !== null) {
+        periodDays = optionsOrDays.periodDays !== undefined ? parseInt(optionsOrDays.periodDays, 10) : 7;
+        country = optionsOrDays.country || null;
+        orderColumn = optionsOrDays.orderColumn || 'totalProfit';
+        limit = optionsOrDays.limit || 10;
+        cursorData = optionsOrDays.cursorData || null;
+    } else {
+        periodDays = parseInt(optionsOrDays, 10) || 7;
+        country = countryArg;
+        orderColumn = orderColumnArg;
+        limit = limitArg;
+        cursorData = cursorDataArg;
     }
 
-    const limitInt = Math.min(Math.max(parseInt(limit) || 10, 1), 50);
+    const validPeriods = [1, 7, 30];
+    if (!validPeriods.includes(periodDays)) {
+        const error = new Error(`Periodo inválido. Usa: ${validPeriods.join(', ')}`);
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const limitInt = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 50);
     const whereProduct = country ? { country } : {};
-
-    const sortOptions = {
-        profit: 'totalProfit',
-        sales: 'totalQuantitySold',
-        revenue: 'totalRevenue',
-        performance: 'performanceRate',
-        trend: 'trendGrowth',
-        breakout: 'breakoutScore'
-    };
-    const orderColumn = sortOptions[sortBy] || 'totalProfit';
-
     const whereSnapshot = { periodDays };
-    let isPrev = false;
 
-    if (cursor) {
-        try {
-            const decoded = JSON.parse(Buffer.from(cursor, 'base64').toString('utf-8'));
-            const { value, id, dir } = decoded;
-            isPrev = dir === 'prev';
+    const isPrev = cursorData?.dir === 'prev';
 
-            if (isPrev) {
-                whereSnapshot[Op.or] = [
-                    { [orderColumn]: { [Op.gt]: value } },
-                    { [orderColumn]: value, id: { [Op.lt]: id } }
-                ];
-            } else {
-                whereSnapshot[Op.or] = [
-                    { [orderColumn]: { [Op.lt]: value } },
-                    { [orderColumn]: value, id: { [Op.gt]: id } }
-                ];
-            }
-        } catch {
-            throw new Error('Cursor inválido.');
+    if (cursorData) {
+        const { value, id } = cursorData;
+        if (isPrev) {
+            whereSnapshot[Op.or] = [
+                { [orderColumn]: { [Op.gt]: value } },
+                { [orderColumn]: value, id: { [Op.lt]: id } }
+            ];
+        } else {
+            whereSnapshot[Op.or] = [
+                { [orderColumn]: { [Op.lt]: value } },
+                { [orderColumn]: value, id: { [Op.gt]: id } }
+            ];
         }
     }
 
@@ -75,38 +82,13 @@ const getSalesPerformanceData = async (days = 7, country = null, sortBy = 'profi
 
     if (isPrev) results.reverse();
 
-    let nextCursor = null;
-    let prevCursor = null;
-
-    if (results.length > 0) {
-        const firstItem = results[0];
-        const lastItem = results[results.length - 1];
-
-        // prevCursor: dirección 'prev' codificada dentro del cursor
-        if (cursor) {
-            prevCursor = Buffer.from(JSON.stringify({
-                value: parseFloat(firstItem[orderColumn]),
-                id: firstItem.id,
-                dir: 'prev'
-            })).toString('base64');
-        }
-
-        // nextCursor: dirección 'next' codificada dentro del cursor
-        const hasNext = isPrev ? true : hasMore;
-        if (hasNext) {
-            nextCursor = Buffer.from(JSON.stringify({
-                value: parseFloat(lastItem[orderColumn]),
-                id: lastItem.id,
-                dir: 'next'
-            })).toString('base64');
-        }
-
-        if (isPrev && !hasMore) {
-            prevCursor = null;
-        }
-    }
-
-    return { snapshots: results, periodDays, nextCursor, prevCursor };
+    return {
+        snapshots: results,
+        periodDays,
+        hasMore,
+        isPrev,
+        orderColumn
+    };
 };
 
 module.exports = { getSalesPerformanceData };

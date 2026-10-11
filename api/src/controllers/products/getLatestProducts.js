@@ -1,5 +1,6 @@
 const { getLatestProductCatalogue } = require('../../domain/ProductCatalogue');
 const { formatPrice } = require('../../functions/formatPrice');
+const { normalizeCountry } = require('../../helpers/validations');
 
 const formatLatestProductsResponse = (catalogue) => {
     return catalogue.map(product => {
@@ -34,7 +35,19 @@ const getLatestProducts = async (req, res, next) => {
     try {
         const { limit, country } = req.query;
 
-        const catalogue = await getLatestProductCatalogue(limit, country);
+        let normalizedCountry = null;
+        if (country) {
+            normalizedCountry = normalizeCountry(country);
+            if (!normalizedCountry) {
+                const error = new Error('País no válido. Países soportados: Colombia, Chile, México, Panamá, Ecuador, Perú, España');
+                error.statusCode = 400;
+                throw error;
+            }
+        }
+
+        const limitInt = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 50);
+
+        const catalogue = await getLatestProductCatalogue(limitInt, normalizedCountry);
 
         const formattedProducts = formatLatestProductsResponse(catalogue);
 

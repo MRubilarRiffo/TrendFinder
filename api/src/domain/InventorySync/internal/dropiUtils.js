@@ -1,7 +1,9 @@
+const { config } = require('../../../config/config');
+
 /**
  * Normaliza y une en una cadena separada por comas las imágenes disponibles.
  */
-const DROPI_IMG_URLS3 = "https://d39ru7awumhhs2.cloudfront.net/"
+const DROPI_IMG_URLS3 = config.dropi_img_urls3 || "https://d39ru7awumhhs2.cloudfront.net/";
 
 const updateImages = (gallery) => {
     if (!Array.isArray(gallery)) return '';

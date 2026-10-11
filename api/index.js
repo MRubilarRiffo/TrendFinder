@@ -2,7 +2,7 @@ const server = require('./src/config/server');
 const { conn } = require('./src/config/database');
 const { logMessage } = require('./src/helpers/logMessage');
 
-const PORT = 3005;
+const PORT = process.env.PORT || 3005;
 
 let serverInstance;
 

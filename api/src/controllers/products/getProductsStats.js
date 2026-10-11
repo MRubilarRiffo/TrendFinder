@@ -1,5 +1,6 @@
 const { getProductPerformance } = require('../../domain/ProductPerformance');
 const { formatPrice } = require('../../functions/formatPrice');
+const { validatePositiveIntegerId, validateDateRange, normalizeCountry } = require('../../helpers/validations');
 
 /**
  * Presenter (formateador) para transformar las métricas crudas de dominio en 
@@ -64,14 +65,31 @@ const getProductsStats = async (req, res, next) => {
         const { id } = req.params;
         const { startDate, endDate, country } = req.query;
 
-        if (!id) {
-            const error = new Error('Se requiere un productId');
+        if (!validatePositiveIntegerId(id)) {
+            const error = new Error('ID de producto inválido. Debe ser un número entero positivo.');
             error.statusCode = 400;
             throw error;
         }
 
+        const dateValidation = validateDateRange(startDate, endDate);
+        if (!dateValidation.valid) {
+            const error = new Error(dateValidation.error);
+            error.statusCode = 400;
+            throw error;
+        }
+
+        let normalizedCountry = null;
+        if (country) {
+            normalizedCountry = normalizeCountry(country);
+            if (!normalizedCountry) {
+                const error = new Error('País no válido. Países soportados: Colombia, Chile, México, Panamá, Ecuador, Perú, España');
+                error.statusCode = 400;
+                throw error;
+            }
+        }
+
         // Llamada al módulo profundo (Domain Service)
-        const performanceData = await getProductPerformance(id, startDate, endDate, country);
+        const performanceData = await getProductPerformance(id, startDate, endDate, normalizedCountry);
 
         // Formatear datos crudos para la vista (Presenter)
         const productStats = formatProductStatsResponse(performanceData);

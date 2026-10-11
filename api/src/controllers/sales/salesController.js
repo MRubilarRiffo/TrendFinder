@@ -1,5 +1,9 @@
 const { getSalesPerformance } = require('../../domain/SalesPerformance');
 const { formatPrice } = require('../../functions/formatPrice');
+const { normalizeCountry } = require('../../helpers/validations');
+
+const VALID_PERIODS = [1, 7, 30];
+const VALID_SORT_KEYS = ['profit', 'sales', 'revenue', 'performance', 'trend', 'breakout'];
 
 const formatSalesPerformanceResponse = (performanceResponse) => {
     const formattedData = performanceResponse.data.map(item => {
@@ -57,10 +61,35 @@ const formatSalesPerformanceResponse = (performanceResponse) => {
 
 const getSalesStats = async (req, res, next) => {
     try {
-        const { days, country, sortBy, limit, cursor } = req.query;
+        const { days = 7, country, sortBy = 'profit', limit = 10, cursor } = req.query;
+
+        const periodDays = parseInt(days, 10);
+        if (!VALID_PERIODS.includes(periodDays)) {
+            const error = new Error(`Periodo inválido. Valores permitidos: ${VALID_PERIODS.join(', ')}`);
+            error.statusCode = 400;
+            throw error;
+        }
+
+        if (sortBy && !VALID_SORT_KEYS.includes(sortBy)) {
+            const error = new Error(`Criterio de ordenamiento inválido. Valores permitidos: ${VALID_SORT_KEYS.join(', ')}`);
+            error.statusCode = 400;
+            throw error;
+        }
+
+        let normalizedCountry = null;
+        if (country) {
+            normalizedCountry = normalizeCountry(country);
+            if (!normalizedCountry) {
+                const error = new Error('País no válido. Países soportados: Colombia, Chile, México, Panamá, Ecuador, Perú, España');
+                error.statusCode = 400;
+                throw error;
+            }
+        }
+
+        const limitInt = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 50);
 
         // Llamada al dominio profundo
-        const performanceResponse = await getSalesPerformance(days, country, sortBy, limit, cursor);
+        const performanceResponse = await getSalesPerformance(periodDays, normalizedCountry, sortBy, limitInt, cursor);
 
         // Formatear datos usando el presenter local
         const response = formatSalesPerformanceResponse(performanceResponse);

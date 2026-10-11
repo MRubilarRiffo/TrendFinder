@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getLatestProducts, getTrendingProducts } from '../../services/trendFinder';
 import { FiTrendingUp, FiClock, FiArrowRight, FiEye } from 'react-icons/fi';

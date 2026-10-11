@@ -14,14 +14,8 @@ server.use(morgan('dev'));
 server.use(express.json());
 server.use(cors());
 server.use(helmet({
-    contentSecurityPolicy: {
-        directives: {
-            defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", 'https://example.com'], // Permitir scripts de un dominio específico
-            // ... otras directivas
-        },
-    },
-    crossOriginResourcePolicy: { policy: "cross-origin" }, // Configurar CORS para permitir que clientes como Postman o Axios lo consuman
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
     hsts: {
         maxAge: 31536000,
         includeSubDomains: true,
@@ -30,6 +24,11 @@ server.use(helmet({
 }));
 
 server.use('/api', router);
+
+// Handler 404 JSON para rutas inexistentes
+server.use((req, res) => {
+    res.status(404).json({ success: false, error: 'Ruta no encontrada' });
+});
 
 server.use(errorMiddleware);
 

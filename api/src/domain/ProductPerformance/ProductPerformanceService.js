@@ -1,13 +1,53 @@
 const { getProductPerformanceData } = require('../../repositories/ProductPerformanceRepository');
 const { calculateSalesAverage, calculateTrendGrowth, calculateBreakoutMetrics, calculateDropScore } = require('../../functions/salesCalculations');
-const { calculateSuggestedPrices } = require('../../functions/financialCalculations');
+const { calculateSuggestedPrices, getHighTicketThreshold } = require('../../functions/financialCalculations');
+
+/**
+ * Resuelve el rango de fechas para la evaluación estadística.
+ * Lógica pura de dominio desacoplada del repositorio de base de datos.
+ */
+const resolveEvaluationPeriod = (startDate, endDate) => {
+    const now = new Date();
+    let end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+
+    if (endDate) {
+        const parts = endDate.split('-');
+        if (parts.length === 3) {
+            end = new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 23, 59, 59, 999));
+        } else {
+            const parsed = new Date(endDate);
+            end = new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate(), 23, 59, 59, 999));
+        }
+    }
+
+    let start = new Date(end);
+    start.setUTCDate(start.getUTCDate() - 29);
+    start.setUTCHours(0, 0, 0, 0);
+
+    if (startDate) {
+        const parts = startDate.split('-');
+        if (parts.length === 3) {
+            start = new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10), 0, 0, 0, 0));
+        } else {
+            const parsed = new Date(startDate);
+            start = new Date(Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate(), 0, 0, 0, 0));
+        }
+    }
+
+    const timeDiff = end.getTime() - start.getTime();
+    const daysEvaluated = Math.max(1, Math.round(timeDiff / (1000 * 3600 * 24)));
+    const midDateLimit = new Date(start.getTime() + (timeDiff / 2));
+
+    return { start, end, daysEvaluated, midDateLimit };
+};
 
 /**
  * Orquestador principal de la lógica de dominio para el rendimiento de un producto.
  * Realiza cálculos matemáticos sin preocuparse del formato de la interfaz de usuario.
  */
 const getProductPerformance = async (productId, startDate, endDate, country) => {
-    const { products, daysEvaluated, start, end, midDateLimit } = await getProductPerformanceData(productId, startDate, endDate, country);
+    const { start, end, daysEvaluated, midDateLimit } = resolveEvaluationPeriod(startDate, endDate);
+    const products = await getProductPerformanceData(productId, start, end, country);
 
     if (!products || products.length === 0) {
         const error = new Error('Producto no encontrado o sin datos');
@@ -23,7 +63,8 @@ const getProductPerformance = async (productId, startDate, endDate, country) => 
     let salesHistoryMap = {};
 
     const price = parseFloat(product.sale_price) || 0;
-    const financial = calculateSuggestedPrices(price, { country });
+    const effectiveCountry = product.country || country;
+    const financial = calculateSuggestedPrices(price, { country: effectiveCountry });
     let totalRevenue = 0;
 
     if (product.ProductSales && product.ProductSales.length > 0) {
@@ -57,7 +98,7 @@ const getProductPerformance = async (productId, startDate, endDate, country) => 
             date: dateKey,
             quantity: salesHistoryMap[dateKey] || 0
         });
-        currentDate.setDate(currentDate.getDate() + 1);
+        currentDate.setUTCDate(currentDate.getUTCDate() + 1);
     }
 
     const maxDailySales = salesHistory.length > 0
@@ -92,7 +133,7 @@ const getProductPerformance = async (productId, startDate, endDate, country) => 
     });
     
     const isDeclining = trendGrowth <= -50;
-    const isHighTicket = price >= 15000;
+    const isHighTicket = price >= getHighTicketThreshold(effectiveCountry);
     const hasLowStock = currentStock > 0 && currentStock <= 50;
 
     return {
@@ -130,4 +171,4 @@ const getProductPerformance = async (productId, startDate, endDate, country) => 
     };
 };
 
-module.exports = { getProductPerformance };
+module.exports = { getProductPerformance, resolveEvaluationPeriod };

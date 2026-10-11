@@ -2,8 +2,8 @@ require('dotenv').config({ path: require('path').resolve(__dirname, '../../../.e
 const { conn, ProductSale, Product, SalesSnapshot } = require('../../config/database');
 const { Op } = require('sequelize');
 const { logMessage } = require('../../helpers/logMessage');
+const { acquireLock, releaseLock } = require('../../helpers/lockManager');
 const { calculateTrendGrowth, calculateBreakoutMetrics } = require('../../functions/salesCalculations');
-const fs = require('fs');
 const path = require('path');
 const PERIODS = [1, 7, 30];
 
@@ -14,10 +14,6 @@ const PERIODS = [1, 7, 30];
 const calculateSnapshots = async () => {
     try {
         logMessage('[CRON] Inicializando cálculo de snapshots de ventas...');
-
-        // Sincronizar tabla SalesSnapshot (crearla si no existe)
-        await SalesSnapshot.sync({ alter: true });
-        logMessage('[CRON] Base de datos sincronizada correctamente.');
 
         const now = new Date();
 
@@ -36,14 +32,12 @@ const calculateSnapshots = async () => {
             midDate.setDate(endDate.getDate() - Math.floor(period / 2));
             const midDateStr = midDate.toISOString().slice(0, 19).replace('T', ' ');
 
-            logMessage(`[CRON] Calculando snapshot para ${period} día(s)...`);
-
-            // Query agregado: SUM de ventas, profit, revenue y ventas por mitad de periodo
+            // Query agregado: SUM de ventas, profit, revenue y ventas por mitad de periodo (ANSI SQL compatible)
             const aggregatedData = await ProductSale.findAll({
                 attributes: [
                     'ProductId',
                     [ProductSale.sequelize.fn('SUM', ProductSale.sequelize.col('quantitySold')), 'totalQuantitySold'],
-                    [ProductSale.sequelize.literal('SUM(quantitySold * GREATEST(Product.suggested_price - Product.sale_price, 0))'), 'totalProfit'],
+                    [ProductSale.sequelize.literal('SUM(quantitySold * (CASE WHEN (Product.suggested_price - Product.sale_price) > 0 THEN (Product.suggested_price - Product.sale_price) ELSE 0 END))'), 'totalProfit'],
                     [ProductSale.sequelize.literal('SUM(quantitySold * Product.sale_price)'), 'totalRevenue'],
                     [ProductSale.sequelize.literal(`SUM(CASE WHEN ProductSale.saleDate >= '${midDateStr}' THEN quantitySold ELSE 0 END)`), 'recentSales'],
                     [ProductSale.sequelize.literal(`SUM(CASE WHEN ProductSale.saleDate < '${midDateStr}' THEN quantitySold ELSE 0 END)`), 'oldSales']
@@ -150,35 +144,26 @@ const calculateSnapshots = async () => {
 const LOCK_FILE = path.join(__dirname, 'cron.lock');
 
 const runCron = async () => {
-    // 1. REVISAR CANDADO: Si existe, abortamos inmediatamente.
-    if (fs.existsSync(LOCK_FILE)) {
-        logMessage('[CRON] ALERTA: Ejecución solapada detectada. El cron anterior sigue corriendo (o el lock quedó huérfano). Abortando...');
+    // 1. REVISAR CANDADO CON RECUPERACIÓN DE HUÉRFANOS DE CPANEL
+    if (!acquireLock(LOCK_FILE, 2)) {
         process.exit(0);
     }
 
-    // 2. PONER CANDADO
     try {
-        fs.writeFileSync(LOCK_FILE, 'locked');
         logMessage('[CRON] Inicializando script de snapshots de ventas desde Workers (Cron)');
         await calculateSnapshots();
 
-        // 3. QUITAR CANDADO AL FINALIZAR
-        if (fs.existsSync(LOCK_FILE)) {
-            fs.unlinkSync(LOCK_FILE);
-            logMessage('[CRON] Archivo candado eliminado exitosamente.');
-        }
+        // 2. QUITAR CANDADO AL FINALIZAR
+        releaseLock(LOCK_FILE);
+
         logMessage('[CRON] Cerrando conexión con la base de datos...');
         await conn.close();
         logMessage('[CRON] Proceso finalizado correctamente. Saliendo... (0)');
         process.exit(0);
     } catch (error) {
         logMessage(`[CRON] CRÍTICO - El script de snapshots ha fallado: ${error.message}`);
+        releaseLock(LOCK_FILE);
 
-        // 3. QUITAR CANDADO EN CASO DE ERROR FATAL
-        if (fs.existsSync(LOCK_FILE)) {
-            fs.unlinkSync(LOCK_FILE);
-            logMessage('[CRON] Archivo candado eliminado tras error crítico.');
-        }
         try {
             await conn.close();
             logMessage('[CRON] Conexión cerrada tras error.');
@@ -189,4 +174,8 @@ const runCron = async () => {
     }
 };
 
-runCron();
+if (require.main === module) {
+    runCron();
+}
+
+module.exports = { calculateSnapshots, runCron };

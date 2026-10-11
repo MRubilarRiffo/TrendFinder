@@ -146,8 +146,22 @@ const calculateSuggestedPrices = (costPrice, rawParams = {}) => {
     };
 };
 
+const getHighTicketThreshold = (country) => {
+    switch ((country || '').toUpperCase()) {
+        case 'COLOMBIA': return 100000;
+        case 'CHILE': return 20000;
+        case 'MÉXICO': return 800;
+        case 'PERÚ': return 150;
+        case 'PANAMÁ':
+        case 'ECUADOR':
+        case 'ESPAÑA': return 40;
+        default: return 15000;
+    }
+};
+
 module.exports = {
     DEFAULT_FINANCIAL_PARAMS,
     parseFinancialParams,
-    calculateSuggestedPrices
+    calculateSuggestedPrices,
+    getHighTicketThreshold
 };

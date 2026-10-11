@@ -1,6 +1,7 @@
 const { getCategoryFindAll } = require('../../../repositories/CategoryRepository');
 const { createBulkProduct } = require('../../../repositories/ProductAdminRepository');
-const { Stock } = require('../../../config/database');
+const { createBulkStock } = require('../../../repositories/StockRepository');
+const { runTransaction } = require('../../../repositories/transactionHelper');
 const { logMessage } = require('../../../helpers/logMessage');
 
 const { validateDropiProduct } = require('./dropiValidator');
@@ -8,7 +9,7 @@ const { compareCategories, convertirString, updateImages } = require('./dropiUti
 
 /**
  * Inserta masivamente los productos que el scraper identificó como **nuevos**.
- * Establece su inventario inicial y sus categorías correspondientes haciendo un match con el diccionario.
+ * Establece su inventario inicial en bloque y sus categorías de forma atómica bajo una transacción.
  */
 const processNonexistentProductsBatch = async (nonexistentProducts, DROPI_DETAILS_PRODUCTS, country) => {
     let nonexistentProductsCreating = nonexistentProducts.map(({ id, name, stock, gallery, categories, sale_price, suggested_price, warehouse_product, variations }) => {
@@ -32,11 +33,9 @@ const processNonexistentProductsBatch = async (nonexistentProducts, DROPI_DETAIL
         if (Array.isArray(variations) && variations.length > 0) {
             let totalVariationsStock = 0;
             variations.forEach(variation => {
-                // Stock directo de la variación
                 if (variation.stock !== null && variation.stock !== undefined && !isNaN(parseInt(variation.stock))) {
                     totalVariationsStock += parseInt(variation.stock);
                 } else if (Array.isArray(variation.warehouse_product_variation) && variation.warehouse_product_variation.length > 0) {
-                    // Si no hay stock directo, sumamos el de las bodegas de la variación
                     variation.warehouse_product_variation.forEach(ware => {
                         if (ware.stock !== null && ware.stock !== undefined && !isNaN(parseInt(ware.stock))) {
                             totalVariationsStock += parseInt(ware.stock);
@@ -45,7 +44,6 @@ const processNonexistentProductsBatch = async (nonexistentProducts, DROPI_DETAIL
                 }
             });
 
-            // Si el stock general reportado es menor al de las variaciones o cero, prevalece el de variaciones
             if (totalStock < totalVariationsStock || totalStock === 0) {
                 totalStock = totalVariationsStock;
             }
@@ -67,40 +65,54 @@ const processNonexistentProductsBatch = async (nonexistentProducts, DROPI_DETAIL
         return { id, name, stock: totalStock, image, categories, sale_price: safeSalePrice, suggested_price: safeSuggestedPrice, url, country };
     });
 
-    nonexistentProductsCreating = nonexistentProductsCreating.filter(item => item);
+    nonexistentProductsCreating = nonexistentProductsCreating.filter(Boolean);
+    if (nonexistentProductsCreating.length === 0) return;
 
-    try {
-        const createNonexistentProducts = await createBulkProduct(nonexistentProductsCreating);
+    // Ejecución atómica en transacción
+    await runTransaction(async (transaction) => {
+        const createNonexistentProducts = await createBulkProduct(nonexistentProductsCreating, transaction);
+        const categoriesArray = await getCategoryFindAll();
 
-        let categoriesArray = await getCategoryFindAll();
+        const stockToCreate = [];
+        const categoryAssociationPromises = [];
 
         for (const product of createNonexistentProducts) {
             const correspondingProduct = nonexistentProductsCreating.find(item => item.id == product.dropiId);
-
             if (!correspondingProduct) continue;
 
-            const categoryPromises = correspondingProduct.categories.map(category => {
-                let categoryInstance = categoriesArray.find(({ name }) => compareCategories(name, category.name));
-                if (!categoryInstance) {
-                    categoryInstance = categoriesArray.find(({ name }) => name == 'Otros');
-                }
-                return categoryInstance;
+            // Recopilar stock para inserción masiva en 1 sola query
+            stockToCreate.push({
+                ProductId: product.id,
+                quantity: correspondingProduct.stock
             });
 
-            const findCategory = await Promise.all(categoryPromises);
-            const setFindCategory = [...new Set(findCategory)].filter(item => item);
-
             // Asignar Relaciones de Categoría
-            if (setFindCategory.length > 0) {
-                await product.addCategories(setFindCategory);
-            }
+            if (Array.isArray(correspondingProduct.categories) && correspondingProduct.categories.length > 0) {
+                const matchedCategories = correspondingProduct.categories.map(category => {
+                    let categoryInstance = categoriesArray.find(({ name }) => compareCategories(name, category.name));
+                    if (!categoryInstance) {
+                        categoryInstance = categoriesArray.find(({ name }) => name === 'Otros' || name === 'Otro');
+                    }
+                    return categoryInstance;
+                }).filter(Boolean);
 
-            // Crear el Registro de Stock
-            await Stock.create({ ProductId: product.id, quantity: correspondingProduct.stock });
+                const setFindCategory = [...new Set(matchedCategories)];
+                if (setFindCategory.length > 0 && typeof product.addCategories === 'function') {
+                    categoryAssociationPromises.push(product.addCategories(setFindCategory, { transaction }));
+                }
+            }
         }
-    } catch (error) {
-        throw error;
-    }
+
+        // Inserción en bloque de inventario (elimina N+1 queries)
+        if (stockToCreate.length > 0) {
+            await createBulkStock(stockToCreate, transaction);
+        }
+
+        // Asociaciones en paralelo dentro de la transacción
+        if (categoryAssociationPromises.length > 0) {
+            await Promise.all(categoryAssociationPromises);
+        }
+    });
 };
 
 module.exports = { processNonexistentProductsBatch };
