@@ -17,7 +17,7 @@ Antes de ejecutar cualquier comando `git commit` o `git push`:
    ```bash
    cd api && npm test
    ```
-   Las 98 pruebas de Jest distribuidas en 15 suites deben pasar al 100%. No se admiten commits con tests rotos.
+   Las 124 pruebas de Jest distribuidas en 17 suites deben pasar al 100%. No se admiten commits con tests rotos.
 2. **Validar Frontend**:
    ```bash
    cd web && npm run lint

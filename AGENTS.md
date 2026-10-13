@@ -32,6 +32,7 @@ TrendFinder/
 │   ├── dropscore.md                           # Especificación matemática del DropScore
 │   └── api/                                   # Documentación detallada de endpoints
 │       ├── latest_products_endpoint.md
+│       ├── product_search_endpoint.md
 │       ├── product_stats_endpoint.md
 │       └── sales_stats_endpoint.md
 ├── api/                                       # BACKEND EXPRESS + SEQUELIZE
@@ -45,7 +46,7 @@ TrendFinder/
 │   │   ├── controllers/                       # Controladores HTTP (products, sales)
 │   │   ├── domain/                            # LÓGICA DE NEGOCIO PURA
 │   │   │   ├── InventorySync/                 # Sincronización masiva de inventario y stocks
-│   │   │   ├── ProductCatalogue/              # Catálogo y últimos productos agregados
+│   │   │   ├── ProductCatalogue/              # Catálogo, últimos productos y búsqueda
 │   │   │   ├── ProductPerformance/            # Rendimiento individual y analítica de producto
 │   │   │   └── SalesPerformance/              # Ventas agregadas y paginación por cursor
 │   │   ├── functions/                         # Fórmulas puras y utilidades de cálculo
@@ -61,6 +62,7 @@ TrendFinder/
 │   │   ├── middleware/                        # Rate limiting y error handling global sanitizado
 │   │   ├── models/                            # Modelos Sequelize (Product, Stock, Category, etc.)
 │   │   ├── repositories/                      # Acceso a base de datos y transacciones (SQL puro)
+│   │   │   └── ProductSearchRepository.js     # Búsqueda multi-token, filtros e índices SQL
 │   │   ├── routes/                            # Definición de rutas Express (/api/products, /api/sales)
 │   │   ├── scripts/                           # Scripts de mantenimiento y saneamiento
 │   │   │   └── sanitizeHistoricalSales.js     # Depuración transaccional de ventas anómalas
@@ -83,6 +85,7 @@ TrendFinder/
         ├── components/                        # Componentes reutilizables con CSS Modules
         │   ├── DualLineChart/                 # Gráfica comparativa de ventas
         │   ├── FinancialInputsPanel/          # Calculadora interactiva de márgenes COD y constantes
+        │   ├── ProductSearch/                 # Buscador responsivo con filtros y desglose financiero
         │   ├── SimpleLineChart/               # Gráfica lineal de evolución temporal
         │   └── SmartBadges/                   # Insignias visuales de DropScore y estados
         ├── pages/                             # Vistas de la aplicación
@@ -146,6 +149,7 @@ TrendFinder/
   - Fechas: formato ISO `YYYY-MM-DD` con `startDate <= endDate` (`validateDateRange`).
   - Países: deben validarse contra la lista oficial mediante `normalizeCountry`.
   - Paginación y ordenamiento: `days` en `[1, 7, 30]`, `sortBy` indexado, `limit` acotado estrictamente a `[1, 50]`.
+  - Búsqueda (`/api/products/search`): `q` requerido (2 a 100 caracteres útiles), sanitización de comodines (`%` y `_`), `page` entero positivo $\ge 1$ y `sortBy` en lista blanca permitida.
 - **Handler 404 en JSON**: Rutas inexistentes deben retornar siempre `{ success: false, error: 'Ruta no encontrada' }` con status 404 (nunca HTML por defecto de Express).
 - **Sanitización de Errores 500**: En producción (`NODE_ENV === 'production'`), `errorMiddleware` debe retornar `'Error interno del servidor'` para evitar fugar nombres de tablas o stack traces de MySQL.
 - **Desacoplamiento de Cursores**: La capa de persistencia (`SalesRepository.js`) solo recibe y retorna datos SQL planos. La codificación y decodificación de cursores Base64 es responsabilidad exclusiva de la capa HTTP (`cursorPagination.js`).
@@ -157,7 +161,7 @@ TrendFinder/
 - **Backend (`api/`)**:
   - Test runner: **Jest** configurado con `--runInBand` para evitar colisiones en la base de datos en memoria.
   - Ejecución: `npm test` en el directorio `api/`.
-  - La suite actual cuenta con **98 pruebas** distribuidas en **15 suites** cubriendo tests unitarios, de integración y flujos end-to-end.
+  - La suite actual cuenta con **124 pruebas** distribuidas en **17 suites** cubriendo tests unitarios, de integración y flujos end-to-end.
   - **REGLA OBLIGATORIA**: Nunca enviar cambios al repositorio sin ejecutar `npm test` y confirmar que el 100% de las pruebas aprueben.
 - **Frontend (`web/`)**:
   - Ejecutar `npm run lint` para verificar cumplimiento de reglas de ESLint y Fast Refresh de React.

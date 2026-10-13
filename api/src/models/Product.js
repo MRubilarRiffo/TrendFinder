@@ -30,5 +30,11 @@ module.exports = (sequelize) => {
             type: DataTypes.ENUM('Colombia', 'México', 'Panamá', 'Chile', 'Ecuador', 'Perú', 'España'),
             allowNull: false
         }
+    }, {
+        indexes: [
+            { fields: ['country'] },
+            { fields: ['name'] },
+            { fields: ['dropiId'] }
+        ]
     });
 };

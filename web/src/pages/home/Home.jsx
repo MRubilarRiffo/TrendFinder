@@ -5,6 +5,7 @@ import { FiTrendingUp, FiClock, FiArrowRight, FiEye } from 'react-icons/fi';
 import SimpleLineChart from '../../components/SimpleLineChart/SimpleLineChart';
 import SmartBadges from '../../components/SmartBadges/SmartBadges';
 import FinancialInputsPanel from '../../components/FinancialInputsPanel/FinancialInputsPanel';
+import ProductSearch from '../../components/ProductSearch/ProductSearch';
 import styles from './Home.module.css';
 
 const Home = () => {
@@ -87,6 +88,9 @@ const Home = () => {
                 <h1 className="text-gradient">TrendFinder Dashboard</h1>
                 <p className={styles.subtitle}>Descubre los productos con mejor rendimiento en tiempo real.</p>
             </header>
+
+            {/* Product Search Engine */}
+            <ProductSearch financialParams={financialParams} />
 
             {/* Latest Products Carousel */}
             <section className={styles.section}>

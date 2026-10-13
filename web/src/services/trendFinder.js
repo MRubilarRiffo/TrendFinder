@@ -68,4 +68,24 @@ export const getProductStats = async (productId, startDate, endDate, country, fi
         console.error('Error fetching product stats:', error);
         return { success: false, data: null };
     }
-}
+};
+
+export const searchProducts = async (query, { country, page, limit, sortBy, financialParams } = {}) => {
+    try {
+        const params = new URLSearchParams();
+        if (query) params.append('q', query);
+        if (country) params.append('country', country);
+        if (page) params.append('page', page);
+        if (limit) params.append('limit', limit);
+        if (sortBy) params.append('sortBy', sortBy);
+
+        appendFinancialParams(params, financialParams);
+
+        const { data } = await api.get(`products/search?${params.toString()}`);
+        return data;
+    } catch (error) {
+        console.error('Error searching products:', error);
+        return { success: false, data: [], pagination: { totalMatches: 0, totalPages: 0 } };
+    }
+};
+

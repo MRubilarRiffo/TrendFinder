@@ -1,3 +1,6 @@
-const { getLatestProductCatalogue } = require('./ProductCatalogueService');
+const { getLatestProductCatalogue, searchProductCatalogue } = require('./ProductCatalogueService');
 
-module.exports = { getLatestProductCatalogue };
+module.exports = {
+    getLatestProductCatalogue,
+    searchProductCatalogue
+};

@@ -49,6 +49,9 @@ Los siguientes archivos y carpetas **NUNCA** deben incluirse en commits ni subir
 - **Límites y Paginación**:
   - Los parámetros `limit` deben acotarse a rangos seguros (por defecto 10, máximo 50 por página) para evitar ataques de denegación de servicio por consultas masivas.
   - Para `/api/sales`, la paginación por cursor debe descodificar de forma segura el token Base64 y manejar cursores inválidos o corruptos retornando error 400 limpio sin exponer trazas internas.
+- **Términos de Búsqueda (`/api/products/search`)**:
+  - Validar que el parámetro `q` tenga al menos 2 caracteres útiles y no exceda 100 caracteres.
+  - Neutralizar caracteres comodín SQL (`%` y `_`) mediante tokenización segura (`extractSearchTokens`) para evitar manipulación de consultas `LIKE` y ataques de denegación de servicio por consultas comodín masivas.
 
 ---
 
