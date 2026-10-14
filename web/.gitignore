@@ -1,0 +1,18 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Node dependencies and build
+node_modules
+dist
+dist-ssr
+*.local
+
+# Playwright & Testing artifacts
+test-results/
+playwright-report/
+
+# Environment files
+.env
+.env.*
