@@ -5,7 +5,7 @@ description: Reglas matemáticas, fórmulas financieras (COD vs Prepago), cálcu
 
 # Regla: DropScore y Dominio Financiero
 
-Esta regla define los estándares de cálculo matemático, modelos financieros y métricas de viabilidad que rigen la lógica de negocio de TrendFinder.
+Esta regla define los estándares de cálculo matemático, modelos financieros y métricas de viabilidad que rigen la lógica de negocio de TrendFinder en todo el proyecto.
 
 ---
 
@@ -85,7 +85,7 @@ $$\text{suggestedPrice}_{\text{prepaid}} = \frac{\text{costPrice} + \text{desire
 
 ## 5. Tratamiento Estadístico de Picos y Winsorización (`winsorizeDailySales`)
 
-Para evitar que picos aislados de ventas (por ejemplo, 1.000 unidades en un solo día frente a una media de 10) o anomalías históricas distorsionen las sparklines, gráficos de evolución temporal y métricas de escala visual en el frontend:
+Para evitar que picos aislados de ventas o anomalías históricas distorsionen las sparklines, gráficos de evolución temporal y métricas de escala visual en el frontend:
 
 - **Algoritmo de Winsorización (Valla Superior de Tukey)**:
   - Sobre la serie temporal de ventas diarias, se ordenan los valores y se calculan el percentil 25 ($Q1$) y el percentil 75 ($Q3$).
