@@ -19,21 +19,32 @@ El frontend de **TrendFinder** es una Single Page Application (SPA) moderna desa
 ## 🏛️ Estructura y Arquitectura del Frontend (`src/`)
 
 ```
-web/src/
-├── components/            # Componentes reutilizables con CSS Modules
-│   ├── DualLineChart/     # Gráfica comparativa de ventas temporales
-│   ├── FinancialInputsPanel/ # Calculadora interactiva de márgenes COD y prepago
-│   ├── ProductSearch/     # Buscador responsivo con filtros y desglose financiero
-│   ├── SimpleLineChart/   # Gráfica lineal de evolución temporal (sparklines)
-│   └── SmartBadges/       # Insignias visuales de DropScore y estados de tendencia
-├── pages/                 # Vistas principales de la aplicación
-│   ├── home/              # Dashboard, catálogo con filtros, sorting y paginación
-│   └── product/           # Ficha técnica, simulación financiera y métricas históricas
-├── services/              # Cliente HTTP Axios centralizado
-│   └── trendFinder.js     # Funciones de consulta a la API REST (/api/*)
-├── App.jsx                # Router y layout general de la aplicación
-├── main.jsx               # Punto de entrada de React 19
-└── index.css              # Variables de tema, reset y tipografía global
+web/
+├── e2e/                       # Pruebas End-to-End con Playwright
+│   ├── fixtures/              # Mocking hermético a nivel de red (mockApi.js)
+│   ├── pages/                 # Page Object Models (HomePage.js, ProductPage.js)
+│   └── specs/                 # Especificaciones de flujos críticos de usuario
+├── src/
+│   ├── components/            # Componentes reutilizables con CSS Modules y __tests__/
+│   │   ├── DualLineChart/     # Gráfica comparativa de ventas temporales
+│   │   ├── FinancialInputsPanel/ # Calculadora interactiva de márgenes COD y prepago
+│   │   ├── ProductSearch/     # Buscador responsivo con filtros y desglose financiero
+│   │   ├── SimpleLineChart/   # Gráfica lineal de evolución temporal (sparklines)
+│   │   └── SmartBadges/       # Insignias visuales de DropScore y estados de tendencia
+│   ├── pages/                 # Vistas principales de la aplicación y __tests__/
+│   │   ├── home/              # Dashboard, catálogo con filtros, sorting y paginación
+│   │   └── product/           # Ficha técnica, simulación financiera y métricas históricas
+│   ├── services/              # Cliente HTTP Axios centralizado y __tests__/
+│   │   └── trendFinder.js     # Funciones de consulta a la API REST (/api/*)
+│   ├── test/                  # Infraestructura de pruebas unitarias/integración
+│   │   ├── handlers.js        # Handlers de intercepción MSW (/api/*)
+│   │   ├── server.js          # Servidor MSW Node.js
+│   │   └── setup.js           # Setup global de Vitest, jest-dom y ciclo MSW
+│   ├── App.jsx                # Router y layout general de la aplicación
+│   ├── main.jsx               # Punto de entrada de React 19
+│   └── index.css              # Variables de tema, reset y tipografía global
+├── playwright.config.js       # Configuración de Playwright (Chromium headless)
+└── vite.config.js             # Configuración Vite y Vitest (jsdom)
 ```
 
 ---
@@ -67,9 +78,19 @@ web/src/
 - Mantener navegación fluida, estados de carga accesibles (`skeletons` o spinners no invasivos) y manejo amigable de errores de conexión.
 - Respetar el formateo de monedas por país (`COP`, `CLP`, `MXN`, `USD`) en precios sugeridos y costos.
 
+### 5. Arquitectura y Reglas de Testing Frontend
+- **Pruebas de Componentes e Integración (Vitest + RTL + MSW)**:
+  - Diseñar tests en las costuras públicas (*seams*) verificando comportamiento visible mediante selectores accesibles (`getByRole`, `getByLabelText`), nunca acoplados a clases CSS ni estados internos.
+  - Intercepción real del ciclo de red de Axios mediante **MSW (Mock Service Worker v3)** con `axios.defaults.adapter = 'fetch'`.
+  - Espiar con `vi.spyOn(console, 'error')` en pruebas que deliberadamente induzcan errores 404/500 para mantener limpia la consola.
+- **Pruebas End-to-End (Playwright)**:
+  - Herméticas e independientes: mockear llamadas de red en `e2e/fixtures/mockApi.js` con `page.route()`.
+  - Arquitectura **Page Object Model (POM)** en `e2e/pages/` para desacoplar selectores de los casos de prueba.
+  - Cero esperas fijas (`waitForTimeout` prohibido); utilizar los auto-waits y aserciones reactivas de Playwright.
+
 ---
 
-## 🛠️ Comandos de Desarrollo
+## 🛠️ Comandos de Desarrollo y Testing
 
 ```bash
 # Iniciar servidor de desarrollo con Vite
@@ -80,4 +101,19 @@ npm run build
 
 # Validar calidad y reglas de linter
 npm run lint
+
+# Ejecutar pruebas unitarias y de integración (Vitest)
+npm test
+
+# Ejecutar pruebas en modo observador (TDD)
+npm run test:watch
+
+# Ejecutar pruebas End-to-End (Playwright)
+npm run test:e2e
+
+# Abrir el visor interactivo de Playwright
+npx playwright test --ui
+
+# Ejecutar Playwright en vivo con ventana de Chrome visible
+npx playwright test --headed
 ```

@@ -19,8 +19,8 @@ Los siguientes archivos y carpetas **NUNCA** deben incluirse en commits ni subir
   - `tokens.txt` / `api/src/adapters/dropiApi/config/tokens.txt`
 - **Archivos de Bloqueo y Estado de Procesos (Locks & State)**:
   - `*.lock`, `app.lock`, `bot.lock`, `sales_snapshot.lock`, `bot_state.json`.
-- **Registros y Logs**:
-  - Carpetas `logs/`, archivos `*.log`, `npm-debug.log*`.
+- **Registros, Logs y Reportes de Pruebas**:
+  - Carpetas `logs/`, `test-results/`, `playwright-report/`, archivos `*.log`, `npm-debug.log*`.
 - **Bloqueos de Dependencias**:
   - `package-lock.json` (gestionado en `.gitignore` para este proyecto).
 

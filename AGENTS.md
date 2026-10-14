@@ -28,7 +28,10 @@ TrendFinder/
 │   └── tests/                                 # Suite de pruebas automatizadas (Jest)
 └── web/                                       # FRONTEND REACT 19 + VITE SPA
     ├── AGENTS.md                              # 📖 Guía específica del agente para el Frontend
-    ├── src/                                   # Componentes, vistas (pages) y servicios
+    ├── e2e/                                   # Pruebas End-to-End herméticas (Playwright + POM)
+    ├── src/                                   # Componentes, vistas, servicios y tests (Vitest + MSW)
+    ├── playwright.config.js                   # Configuración Playwright (Chromium)
+    ├── vite.config.js                         # Configuración Vite y Vitest en jsdom
     └── package.json
 ```
 
@@ -46,7 +49,7 @@ TrendFinder adopta una **arquitectura de reglas jerárquica** para evitar la sob
    - Contiene: Clean Architecture en Node.js, Sequelize ORM, Workers de scraping, proxies, candados cPanel, seguridad HTTP y pruebas TDD con Jest.
 3. **Nivel Frontend (`web/AGENTS.md`)**:
    - Cuando trabajes en el frontend (`web/`), consulta prioritariamente [`web/AGENTS.md`](web/AGENTS.md).
-   - Contiene: Arquitectura React 19 SPA, Vite, CSS Modules, cliente Axios centralizado, diseño responsivo y reglas de ESLint / Fast Refresh.
+   - Contiene: Arquitectura React 19 SPA, Vite, CSS Modules, cliente Axios centralizado, diseño responsivo, reglas de testing (Vitest, MSW, Playwright) y ESLint / Fast Refresh.
 
 ---
 
@@ -76,7 +79,7 @@ Los siguientes archivos y carpetas **NUNCA** deben incluirse en commits ni expon
 - Archivos de entorno: `.env`, `.env.*`.
 - Credenciales y proxies: `tokens.txt`, `proxies.txt`.
 - Archivos de bloqueo y estado: `*.lock`, `bot_state.json`.
-- Registros: carpetas `logs/`, archivos `*.log`.
+- Registros y reportes temporales: carpetas `logs/`, `test-results/`, `playwright-report/`, archivos `*.log`.
 - Bloqueos de dependencias: `package-lock.json` (ignorado en este repositorio).
 
 ---
@@ -92,9 +95,11 @@ Antes de cualquier commit o push, ejecutar la verificación completa:
    (El 100% de las suites de Jest debe pasar limpiamente).
 2. **Frontend**:
    ```bash
+   cd web && npm test
+   cd web && npm run test:e2e
    cd web && npm run lint
    ```
-   (0 errores y 0 advertencias de ESLint).
+   (100% de tests unitarios/MSW y E2E Playwright aprobados, 0 errores y 0 advertencias de ESLint).
 3. **Versionado Semántico (SemVer)**:
    - Incrementar versión en `api/package.json` o `web/package.json` según el alcance (MINOR para `feat:`, PATCH para `fix:`/`refactor:`).
 4. **Mensaje de Commit Estructurado**:

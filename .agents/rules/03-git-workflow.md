@@ -13,18 +13,24 @@ Esta regla describe el protocolo obligatorio para preparar, versionar y subir ca
 
 Antes de ejecutar cualquier comando `git commit` o `git push`:
 
-1. **Ejecutar Pruebas Automatizadas**:
+1. **Ejecutar Pruebas Automatizadas Backend**:
    ```bash
    cd api && npm test
    ```
    Las 124 pruebas de Jest distribuidas en 17 suites deben pasar al 100%. No se admiten commits con tests rotos.
-2. **Validar Frontend**:
+2. **Ejecutar Pruebas Automatizadas Frontend**:
+   ```bash
+   cd web && npm test
+   cd web && npm run test:e2e
+   ```
+   Las 34 pruebas de Vitest/MSW y los 3 flujos críticos de Playwright deben pasar al 100%.
+3. **Validar Linter Frontend**:
    ```bash
    cd web && npm run lint
    ```
-   No deben existir errores de sintaxis o variables no utilizadas.
-3. **Auditoría de Archivos en Staging (`git status`)**:
-   - Verificar rigurosamente que archivos sensibles o volátiles (`.env`, `tokens.txt`, `proxies.txt`, `*.lock`, `bot_state.json`, `logs/`, `package-lock.json`) no hayan sido añadidos al índice (`git add`).
+   No deben existir errores de sintaxis o variables no utilizadas (0 errores, 0 advertencias).
+4. **Auditoría de Archivos en Staging (`git status`)**:
+   - Verificar rigurosamente que archivos sensibles, volátiles o generados (`.env`, `tokens.txt`, `proxies.txt`, `*.lock`, `bot_state.json`, `logs/`, `package-lock.json`, `test-results/`, `playwright-report/`) no hayan sido añadidos al índice (`git add`).
 
 ---
 
