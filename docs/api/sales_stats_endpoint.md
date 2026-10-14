@@ -12,7 +12,7 @@ End-point que retorna las estadísticas de ventas pre-calculadas desde snapshots
 | :-------- | :------- | :--------------------------------------------------------------------------- | :--------- | :------- |
 | `days`    | `number` | Periodo del snapshot: `1`, `7` o `30` días.                                  | `7`        | Sí       |
 | `country` | `string` | Nombre exacto del país a filtrar. (ej: `'Chile'`, `'Colombia'`).             | `null`     | Sí       |
-| `sortBy`  | `string` | Criterio de orden: `'profit'` (ganancia), `'sales'` (cantidad), `'revenue'`, `'performance'`, o `'trend'`. | `'profit'` | Sí       |
+| `sortBy`  | `string` | Criterio de orden: `'profit'`, `'sales'`, `'revenue'`, `'performance'`, `'trend'` o `'breakout'`. | `'profit'` | Sí       |
 | `limit`   | `number` | Cantidad de resultados por página (mín: 1, máx: 50).                         | `10`       | Sí       |
 | `cursor`  | `string` | Cursor de paginación obtenido de una respuesta anterior.                     | `null`     | Sí       |
 
@@ -104,7 +104,7 @@ Devuelve status `200 OK` con un JSON estructurado así:
 
 ## Origen de los Datos
 
-Los datos son pre-calculados por el script cron `cron/salesSnapshot.js` y almacenados en la tabla `SalesSnapshots`. El endpoint solo lee de esta tabla, lo que garantiza respuestas rápidas sin importar el volumen de ventas.
+Los datos son pre-calculados por el script cron `api/src/workers/snapshots/salesSnapshotRunner.js` y almacenados en la tabla `SalesSnapshots`. El endpoint solo lee de esta tabla de forma indexada, lo que garantiza respuestas en milisegundos sin importar el volumen de ventas en la base de datos.
 
 ### Métricas Pre-calculadas por el Cron
 
@@ -116,12 +116,12 @@ Los datos son pre-calculados por el script cron `cron/salesSnapshot.js` y almace
 | `performanceRate`  | `(totalProfit / totalRevenue) × 100`                             |
 | `trendGrowth`      | `((recentSales - oldSales) / oldSales) × 100`                   |
 
-> `trendGrowth` divide el periodo en dos mitades iguales. Si no hay ventas en la mitad antigua pero sí en la reciente, retorna `100`. Si no hay ventas en ninguna mitad, retorna `0`.
+> `trendGrowth` divide el periodo en dos mitades iguales. Si no hay ventas en la mitad antigua pero sí en la reciente, aplica suavizado logarítmico para premiar el despegue. Si no hay ventas en ninguna mitad, retorna `0`.
 
 ### Ejecución del Cron
 
 ```bash
-node cron/salesSnapshot.js
+node api/src/workers/snapshots/salesSnapshotRunner.js
 ```
 
-Se recomienda ejecutar una vez al día en horario de baja actividad (ej: 4:00 AM).
+Se ejecuta diariamente a medianoche (00:05 AM) para consolidar días calendario completos. Consultar [`docs/workers/cpanel-crons.md`](../workers/cpanel-crons.md) para más detalles.

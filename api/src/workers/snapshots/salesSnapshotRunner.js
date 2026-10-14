@@ -143,7 +143,7 @@ const calculateSnapshots = async () => {
     }
 };
 
-const LOCK_FILE = path.join(__dirname, 'cron.lock');
+const LOCK_FILE = path.join(__dirname, 'sales_snapshot.lock');
 
 const runCron = async () => {
     // 1. REVISAR CANDADO CON RECUPERACIÓN DE HUÉRFANOS DE CPANEL

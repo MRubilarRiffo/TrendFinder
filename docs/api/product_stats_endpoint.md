@@ -29,20 +29,19 @@ Request GET /api/products/stats/:id
   ├─ Middleware: limiterMiddleware (rate limit: 50 req / 15 min por IP)
   │
   ├─ Controller: getProductsStats (src/controllers/products/getProductsStats.js)
-  │   ├─ Valida que se reciba `id` → 400 si falta
-  │   ├─ Llama al Handler con (id, startDate, endDate, country)
-  │   ├─ Valida que existan resultados → 404 si no hay datos
-  │   └─ Procesa la lógica de negocio:
-  │       ├─ Calcula total de ventas, ingresos
-  │       ├─ Separa ventas recientes vs antiguas (punto medio del rango)
-  │       ├─ Genera historial diario agrupado
-  │       ├─ Calcula promedio diario, máximo diario y % de tendencia
-  │       └─ Retorna JSON con status 200
+  │   ├─ Valida que se reciba `id` positivo → 400 si falta o no es entero
+  │   ├─ Valida formato de fechas (YYYY-MM-DD y startDate <= endDate) → 400
+  │   ├─ Valida país con lista blanca (normalizeCountry) → 400
+  │   ├─ Invoca al Domain Service: getProductPerformance(id, startDate, endDate, country)
+  │   └─ Formatea la respuesta con Presenter (formatPrice, DropScore, etc.) → 200
   │
-  └─ Handler: getProductsStatsFromDb (src/handlers/products/getProductsStatsFromDb.js)
-      ├─ Configura fechas (default: últimos 30 días)
-      ├─ Calcula días evaluados y punto medio para tendencias
-      └─ Consulta DB: Product + Stock + ProductSales (entre fechas)
+  ├─ Domain Service: getProductPerformance (src/domain/ProductPerformance/ProductPerformanceService.js)
+  │   ├─ Resuelve ventana temporal (default: 30 días continuos en UTC)
+  │   ├─ Invoca repositorios (ProductPerformanceRepository)
+  │   └─ Ejecuta funciones matemáticas puras: calculateDropScore, calculateSuggestedPrices, Winsorización
+  │
+  └─ Repository: ProductPerformanceRepository (src/repositories/ProductPerformanceRepository.js)
+      └─ Consultas SQL a Sequelize: Product + Stock + ProductSales
 ```
 
 ---

@@ -23,17 +23,16 @@ Request GET /api/products/latest
   ├─ Middleware: limiterMiddleware (rate limit: 50 req / 15 min por IP)
   │
   ├─ Controller: getLatestProducts (src/controllers/products/getLatestProducts.js)
-  │   ├─ Extrae query params (limit, country)
-  │   ├─ Llama al Handler
-  │   └─ Formatea respuesta:
-  │       ├─ Calcula unitProfit (suggestedPrice - salePrice)
-  │       ├─ Mapea campos del modelo a nombres de la API
-  │       └─ Retorna JSON con status 200
+  │   ├─ Extrae y valida query params (limit entre 1 y 50, país en lista blanca)
+  │   ├─ Invoca al Domain Service: getLatestProductCatalogue(limit, country)
+  │   └─ Formatea respuesta con Presenter (formatPrice, etc.) → 200
   │
-  └─ Handler: getLatestProductsFromDb (src/handlers/products/getLatestProductsFromDb.js)
-      ├─ Parsea limit a entero (default 10)
-      ├─ Aplica filtro de país si existe
-      └─ Consulta DB: Product + Stock, ordenado por createdAt DESC
+  ├─ Domain Service: getLatestProductCatalogue (src/domain/ProductCatalogue/ProductCatalogueService.js)
+  │   ├─ Invoca repositorios (LatestProductsRepository)
+  │   └─ Ejecuta cálculo de márgenes COD y Prepago con calculateSuggestedPrices
+  │
+  └─ Repository: LatestProductsRepository (src/repositories/LatestProductsRepository.js)
+      └─ Consulta DB: Product + Stock, ordenado por createdAt DESC con cota de limit
 ```
 
 ---

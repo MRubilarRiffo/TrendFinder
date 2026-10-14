@@ -1,6 +1,6 @@
 # 🚀 DropScore: Score de Viabilidad de Producto
 
-El **DropScore** es una métrica calculada dinámicamente por la API (de 1 a 100) que determina la viabilidad y rentabilidad general de un producto en base a su rendimiento de ventas reciente, rentabilidad bruta y aceleración de tendencia.
+El **DropScore** es una métrica calculada dinámicamente por la API (de 0 a 100) que determina la viabilidad y rentabilidad general de un producto en base a su rendimiento de ventas reciente, rentabilidad bruta y aceleración de tendencia.
 
 Esta métrica tiene como objetivo reducir la sobrecarga cognitiva al elegir productos, permitiendo al vendedor identificar de un solo vistazo productos "ganadores" sin necesidad de analizar múltiples columnas financieras de forma aislada.
 
